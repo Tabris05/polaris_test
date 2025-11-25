@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Public">
+      <UniqueIdentifier>{c96d1edd-989d-48b5-a726-0ec248996117}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Dependencies">
+      <UniqueIdentifier>{acbfdd4d-d112-443b-ab67-6f8753d3cb22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Private">
+      <UniqueIdentifier>{d771338b-df43-4cec-b19d-9168ecd9e5c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Shaders">
+      <UniqueIdentifier>{3d40c29b-6af7-49b6-a067-3d67e2d0aab9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\polaris\polaris.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\device.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\util_types.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\pod_types.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\queue.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\command_buffer.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\sync.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\sampler.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\texture.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\swapchain.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\buffer.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vk_util.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\buffer_impl.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\command_buffer_impl.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\descriptor_heap.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\device_impl.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\device_memory_allocator.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\queue_impl.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sampler_impl.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\swapchain_impl.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sync_impl.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\texture_impl.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shaders\push_constants.h">
+      <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shaders\blit_comp.h">
+      <Filter>Header Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\pipeline.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pipeline_impl.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\device_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\volk\volk.cpp">
+      <Filter>Source Files\Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="src\queue_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sync_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\command_buffer_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\descriptor_heap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\texture_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\device_memory_allocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\buffer_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sampler_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\swapchain_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pipeline_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

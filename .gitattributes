@@ -1,0 +1,5 @@
+polaris/deps/** linguist-vendored
+polaris_test/lib/** linguist-vendored
+polaris/src/shaders/blit_comp.h linguist-generated
+
+*.h linguist-language=C++
