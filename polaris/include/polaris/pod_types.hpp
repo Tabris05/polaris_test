@@ -124,6 +124,12 @@ namespace pl {
 		ClampToBorder,
 	};
 
+	enum class ReductionMode : u8 {
+		Average,
+		Min,
+		Max
+	};
+
 	enum class CompareOp : u8 {
 		None,
 		Never,
@@ -169,6 +175,79 @@ namespace pl {
 		Discard,
 		None
 	};
+
+	// foo: maybe need index buffer but nvk and mesa don't seem to care
+	enum class PipelineStage : u16 {
+		None = 0,
+
+		PreRasterRead = 1 << 0,
+		PreRasterWrite = 1 << 1,
+
+		FragmentRead = 1 << 2,
+		FragmentWrite = 1 << 3,
+
+		ComputeRead = 1 << 4,
+		ComputeWrite = 1 << 5,
+
+		CopyRead = 1 << 6,
+		CopyWrite = 1 << 7,
+
+		DepthRead = 1 << 8,
+		DepthWrite = 1 << 9,
+
+		ColorRead = 1 << 10,
+		ColorWrite = 1 << 11,
+
+		IndirectRead = 1 << 12,
+
+		Present = ComputeRead,
+
+		PreRaster = PreRasterRead | PreRasterWrite,
+		Fragment = FragmentRead | FragmentWrite,
+		Compute = ComputeRead | ComputeWrite,
+		Copy = CopyRead | CopyWrite,
+		Depth = DepthRead | DepthWrite,
+		Color = ColorRead | ColorWrite,
+
+		RasterRead = PreRasterRead | FragmentRead,
+		RasterWrite = PreRasterWrite | FragmentWrite,
+		Raster = RasterRead | RasterWrite,
+
+		ShaderRead = RasterRead | ComputeRead,
+		ShaderWrite = RasterWrite | ComputeWrite,
+		Shader = ShaderRead | ShaderWrite,
+
+		RenderTargetRead = DepthRead | ColorRead,
+		RenderTargetWrite = DepthWrite | ColorWrite,
+		RenderTarget = RenderTargetRead | RenderTargetWrite,
+
+		Read = ShaderRead | CopyRead | RenderTargetRead | IndirectRead,
+		Write = ShaderWrite | CopyWrite | RenderTargetWrite,
+		All = Read | Write
+	};
+
+	inline PipelineStage operator~(PipelineStage val) {
+		return static_cast<PipelineStage>(~static_cast<u16>(val));
+	}
+
+	inline PipelineStage operator&(PipelineStage lhs, PipelineStage rhs) {
+		return static_cast<PipelineStage>(static_cast<u16>(lhs) & static_cast<u16>(rhs));
+	}
+
+	inline PipelineStage operator|(PipelineStage lhs, PipelineStage rhs) {
+		return static_cast<PipelineStage>(static_cast<u16>(lhs) | static_cast<u16>(rhs));
+	}
+
+	inline PipelineStage& operator&=(PipelineStage& lhs, PipelineStage rhs) {
+		lhs = lhs & rhs;
+		return lhs;
+	}
+
+	inline PipelineStage& operator|=(PipelineStage& lhs, PipelineStage rhs) {
+		lhs = lhs | rhs;
+		return lhs;
+	}
+
 
 	struct DeviceCreateInfo {
 		View<const QueueType> requestedQueueTypes;
@@ -221,6 +300,7 @@ namespace pl {
 		WrapMode wrapU;
 		WrapMode wrapV;
 		WrapMode wrapW;
+		ReductionMode reductionMode;
 		CompareOp compareOp;
 		f32 minLod = 0.0f;
 		f32 maxLod = 1000.0f;
@@ -320,5 +400,19 @@ namespace pl {
 		T y;
 		T width;
 		T height;
+	};
+
+	// foo: maybe have 'entire region' value and store w/h/d in texture
+	struct TextureRegion {
+		u32 x = 0;
+		u32 y = 0;
+		u32 z = 0;
+		u32 baseLevel = 0;
+		u32 baseLayer = 0;
+		u32 width = 1;
+		u32 height = 1;
+		u32 depth = 1;
+		u32 numLevels = 1;
+		u32 numLayers = 1;
 	};
 }

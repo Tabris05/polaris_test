@@ -11,9 +11,9 @@ namespace pl {
 			bool completed() const;
 
 			void wait() const;
-			void signal();
+			void signal(); // foo: const qualifying this does nothing because you can and should be able to make a non const copy of a const object
 
-			Event() = default;
+			Event();
 
 			// "public" functions that should not be included in the public header
 			VkSemaphore vkSemaphore() const;

@@ -5,14 +5,13 @@
 #include <mutex>
 
 namespace pl {
-	struct Allocation {
-		VkDeviceMemory mem = {};
-	};
+	using DeviceMemory = u16;
 
 	class DeviceMemoryAllocator {
 		public:
-			Allocation alloc(VkMemoryRequirements memReqs, VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-			void free(Allocation alloc);
+			DeviceMemory alloc(VkBuffer buffer);
+			DeviceMemory alloc(VkImage image);
+			void free(DeviceMemory alloc);
 
 			DeviceMemoryAllocator(VkPhysicalDevice physicalDevice, VkDevice device);
 			DeviceMemoryAllocator(DeviceMemoryAllocator&& src);
@@ -20,9 +19,8 @@ namespace pl {
 
 			DeviceMemoryAllocator(const DeviceMemoryAllocator&) = delete;
 			DeviceMemoryAllocator& operator=(const DeviceMemoryAllocator&) = delete;
-		private:
-			u32 getMemoryTypeIndex(VkMemoryPropertyFlags flags, u32 mask);
 
+		private:
 			VkDevice m_device = {};
 			VkPhysicalDeviceMemoryProperties m_memProps = {};
 

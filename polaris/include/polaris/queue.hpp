@@ -5,10 +5,15 @@
 #include "sync.hpp"
 
 namespace pl {
+	struct EventInfo {
+		PipelineStage stage;
+		Event event;
+	};
+
 	struct SubmitInfo {
 		CommandBuffer commandBuffer;
-		std::optional<const Event> waitEvent;
-		std::optional<Event> signalEvent;
+		std::optional<const EventInfo> waitEvent;
+		std::optional<EventInfo> signalEvent;
 	};
 
 	class Queue {
@@ -25,6 +30,6 @@ namespace pl {
 			Queue& operator=(const Queue&) = delete;
 
 		private:
-			alignas(8) byte reserved[112];
+			alignas(8) byte reserved[128];
 	};
 }

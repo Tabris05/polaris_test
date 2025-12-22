@@ -41,6 +41,7 @@
     <ClInclude Include="src\sampler_impl.hpp" />
     <ClInclude Include="src\shaders\blit_comp.h" />
     <ClInclude Include="src\shaders\push_constants.h" />
+    <ClInclude Include="src\staging_allocator.hpp" />
     <ClInclude Include="src\swapchain_impl.hpp" />
     <ClInclude Include="src\sync_impl.hpp" />
     <ClInclude Include="src\texture_impl.hpp" />
@@ -59,6 +60,7 @@
     <ClCompile Include="src\pipeline_impl.cpp" />
     <ClCompile Include="src\queue_impl.cpp" />
     <ClCompile Include="src\sampler_impl.cpp" />
+    <ClCompile Include="src\staging_allocator.cpp" />
     <ClCompile Include="src\swapchain_impl.cpp" />
     <ClCompile Include="src\sync_impl.cpp" />
     <ClCompile Include="src\texture_impl.cpp" />
@@ -74,26 +76,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>

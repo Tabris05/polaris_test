@@ -39,6 +39,8 @@ namespace pl {
 		return m_semaphore;
 	}
 
+	Event::Event() = default;
+
 	Event::Event(VkDevice device, VkSemaphore semaphore, u64 value) : m_device(device), m_semaphore(semaphore), m_value(value) {}
 
 	u64 Sync::value() const {

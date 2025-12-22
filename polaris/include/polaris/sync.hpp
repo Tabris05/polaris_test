@@ -12,6 +12,8 @@ namespace pl {
 			void wait() const;
 			void signal();
 
+			Event();
+
 		private:
 			alignas(8) byte reserved[24];
 	};

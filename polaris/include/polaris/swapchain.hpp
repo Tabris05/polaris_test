@@ -8,7 +8,7 @@ namespace pl {
 	struct PresentInfo {
 		SampledHandle texture;
 		Queue& queue;
-		const Event waitEvent;
+		std::optional<const EventInfo> waitEvent;
 	};
 
 	class Swapchain {
@@ -24,6 +24,6 @@ namespace pl {
 			Swapchain(const Swapchain&) = delete;
 			Swapchain& operator=(const Swapchain&) = delete;
 		private:
-			alignas(8) byte reserved[160];
+			alignas(8) byte reserved[136];
 	};
 }

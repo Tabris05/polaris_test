@@ -9,13 +9,19 @@
 #include "command_buffer_impl.hpp"
 #include "sync_impl.hpp"
 #include "descriptor_heap.hpp"
+#include "staging_allocator.hpp"
 
 
 namespace pl {
+	struct EventInfo {
+		PipelineStage stage;
+		Event event;
+	};
+
 	struct SubmitInfo {
 		CommandBuffer commandBuffer;
-		std::optional<const Event> waitEvent;
-		std::optional<Event> signalEvent;
+		std::optional<const EventInfo> waitEvent;
+		std::optional<EventInfo> signalEvent;
 	};
 
 	class Queue {
@@ -32,10 +38,16 @@ namespace pl {
 			Queue& operator=(const Queue&) = delete;
 
 			// "public" functions that should not be included in the public header
-			const Event submit(CommandBuffer commandBuffer, const Event waitEvent, VkSemaphore waitSem, VkSemaphore signalSem);
+			const Event submit(CommandBuffer commandBuffer, std::optional<const EventInfo> waitEvent, VkSemaphore waitSem, VkSemaphore signalSem);
 			VkQueue vkQueue() const;
 
 		private:
+			struct Submission {
+				VkCommandBuffer cmd;
+				Event event;
+				tbrs::Vec<StagingBuffer> stagingBuffers;
+			};
+
 			VkDevice m_device = {};
 			VkQueue m_queue = {};
 			VkCommandPool m_pool = {};
@@ -44,8 +56,10 @@ namespace pl {
 
 			Sync m_sync;
 			tbrs::Vec<VkCommandBuffer> m_freeCmds;
-			tbrs::Vec<std::pair<VkCommandBuffer, const Event>> m_submittedCmds;
+			tbrs::Vec<Submission> m_submittedCmds;
 
-			DescriptorHeap* m_heap;
+			DescriptorHeap* m_heap = nullptr;
+			StagingAllocator* m_allocator = nullptr;
+			std::mutex* m_submissionLock = nullptr;
 	};
 }

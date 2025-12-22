@@ -64,6 +64,6 @@ namespace pl {
 			DescriptorHeap* m_heap = nullptr;
 			DeviceMemoryAllocator* m_allocator = nullptr;
 
-			Allocation m_backingMem = {};
+			DeviceMemory m_backingMem = {};
 	};
 }

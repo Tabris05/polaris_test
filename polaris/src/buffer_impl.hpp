@@ -16,6 +16,9 @@ namespace pl {
 			Buffer(const Buffer&) = delete;
 			Buffer& operator=(const Buffer&) = delete;
 
+			// "public" functions that should not be included in the public header
+			VkBuffer vkBuffer() const;
+
 		private:
 			void* deviceAddressImpl() const;
 
@@ -25,6 +28,6 @@ namespace pl {
 
 			DeviceMemoryAllocator* m_allocator = nullptr;
 
-			Allocation m_backingMem = {};
+			DeviceMemory m_backingMem = {};
 	};
 }

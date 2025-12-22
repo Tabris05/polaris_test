@@ -124,6 +124,14 @@ inline VkSamplerAddressMode vkWrapMode(pl::WrapMode wrap) {
     }
 }
 
+inline VkSamplerReductionMode vkReductionMode(pl::ReductionMode mode) {
+    switch(mode) {
+        case pl::ReductionMode::Average: return VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE;
+        case pl::ReductionMode::Min: return VK_SAMPLER_REDUCTION_MODE_MIN;
+        case pl::ReductionMode::Max: return VK_SAMPLER_REDUCTION_MODE_MAX;
+    }
+}
+
 inline VkCompareOp vkCompareOp(pl::CompareOp op) {
     switch(op) {
         case pl::CompareOp::None: return VK_COMPARE_OP_ALWAYS;
@@ -140,13 +148,13 @@ inline VkCompareOp vkCompareOp(pl::CompareOp op) {
 
 inline VkSampleCountFlagBits vkSampleCount(u8 samples) {
     switch (samples) {
+        case 1: return VK_SAMPLE_COUNT_1_BIT;
         case 2: return VK_SAMPLE_COUNT_2_BIT;
         case 4: return VK_SAMPLE_COUNT_4_BIT;
         case 8: return VK_SAMPLE_COUNT_8_BIT;
         case 16: return VK_SAMPLE_COUNT_16_BIT;
         case 32: return VK_SAMPLE_COUNT_32_BIT;
         case 64: return VK_SAMPLE_COUNT_64_BIT;
-        default: return VK_SAMPLE_COUNT_1_BIT;
     }
 }
 
@@ -222,4 +230,79 @@ inline VkAttachmentStoreOp vkStoreOp(pl::StoreOp op) {
         case pl::StoreOp::Discard: return VK_ATTACHMENT_STORE_OP_DONT_CARE;
         case pl::StoreOp::None: return VK_ATTACHMENT_STORE_OP_NONE;
     }
+}
+
+inline VkPipelineStageFlags2 vkStageMask(pl::PipelineStage stage) {
+    VkPipelineStageFlags2 flags = 0;
+    if((stage & pl::PipelineStage::PreRaster) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT
+              | VK_PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT | VK_PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT;
+    }
+    if((stage & pl::PipelineStage::Fragment) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+    }
+    if((stage & pl::PipelineStage::Compute) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+    }
+    if((stage & pl::PipelineStage::Copy) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+    }
+    if((stage & pl::PipelineStage::Depth) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
+	}
+    if((stage & pl::PipelineStage::Color) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+	}
+    if((stage & pl::PipelineStage::IndirectRead) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT;
+    }
+
+	return flags;
+}
+
+inline VkAccessFlags2 vkAccessMask(pl::PipelineStage stage) {
+    VkAccessFlags2 flags = 0;
+    if((stage & pl::PipelineStage::ShaderRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_SHADER_READ_BIT;
+    }
+    if((stage & pl::PipelineStage::ShaderWrite) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_SHADER_WRITE_BIT;
+    }
+    if((stage & pl::PipelineStage::CopyRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_TRANSFER_READ_BIT;
+    }
+    if((stage & pl::PipelineStage::CopyWrite) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_TRANSFER_WRITE_BIT;
+    }
+    if((stage & pl::PipelineStage::DepthRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+    }
+    if((stage & pl::PipelineStage::DepthWrite) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    }
+    if((stage & pl::PipelineStage::ColorRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT;
+    }
+    if((stage & pl::PipelineStage::ColorWrite) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
+    }
+    if((stage & pl::PipelineStage::IndirectRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT;
+	}
+
+	return flags;
+}
+
+inline u8 getMemoryTypeIndex(VkPhysicalDeviceMemoryProperties memProps, u32 mask, bool host = false) {
+    VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    if(host) {
+        flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    }
+
+    for(u8 idx = 0; idx < memProps.memoryTypeCount; idx++) {
+        if(((1 << idx) & mask) && (memProps.memoryTypes[idx].propertyFlags & flags) == flags) {
+            return idx;
+        }
+    }
+    return ~0;
 }

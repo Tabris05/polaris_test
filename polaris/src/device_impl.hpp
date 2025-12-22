@@ -27,7 +27,7 @@ namespace pl {
 			VkDevice vkDevice() const;
 			u32 vkQueueFamily(QueueType type) const;
 			VkQueue vkQueue(QueueType type) const;
-			View<const u32> vkActiveQueueFamilies() const;
+			std::mutex* vkQueueSubmissionLock(QueueType type) const;
 			DescriptorHeap* descriptorHeap() const;
 			DeviceMemoryAllocator* deviceMemoryAllocator() const;
 
@@ -41,10 +41,10 @@ namespace pl {
 			struct QueueData {
 				u32 family;
 				VkQueue queue;
+				std::mutex* submissionLock = nullptr;
 			};
 
 			QueueData m_queues[3];
-			tbrs::Vec<u32> m_activeQueueFamilies;
 
 			DescriptorHeap* m_heap = nullptr;
 			DeviceMemoryAllocator* m_allocator = nullptr;

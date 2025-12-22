@@ -7,6 +7,7 @@ namespace pl
 	Sampler::Sampler(const SamplerCreateInfo& ci)
 		: m_heap(ci.device.descriptorHeap()),
 		m_handle(m_heap->allocSamplerHandle(ptr(VkSamplerCreateInfo{
+			.pNext = ptr(VkSamplerReductionModeCreateInfo{ .reductionMode = vkReductionMode(ci.reductionMode) }),
 			.magFilter = vkFilter(ci.magFilter),
 			.minFilter = vkFilter(ci.minFilter),
 			.mipmapMode = vkMipFilter(ci.mipFilter),

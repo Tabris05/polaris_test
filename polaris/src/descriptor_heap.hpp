@@ -37,11 +37,11 @@ namespace pl {
 			VkDescriptorPool m_pool = {};
 			VkDescriptorSet m_set = {};
 
-			std::mutex m_imageMutex;
+			std::mutex m_imageLock;
 			FreeRanges m_imageFreeRanges;
 			tbrs::Vec<VkImageView> m_imageViews;
 
-			std::mutex m_samplerMutex;
+			std::mutex m_samplerLock;
 			FreeRanges m_samplerFreeRanges;
 			tbrs::Vec<VkSampler> m_samplers;
 

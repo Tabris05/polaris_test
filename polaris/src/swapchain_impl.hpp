@@ -13,7 +13,7 @@ namespace pl {
 	struct PresentInfo {
 		SampledHandle texture;
 		Queue& queue;
-		const Event waitEvent;
+		std::optional<const EventInfo> waitInfo;
 	};
 
 	class Swapchain {
@@ -48,7 +48,6 @@ namespace pl {
 			};
 
 			tbrs::Vec<SwapchainImage> m_swapchainImages;
-			tbrs::Vec<u32> m_activeQueueFamilies;
 			tbrs::Vec<std::pair<VkSemaphore, const Event>> m_submittedSems;
 			tbrs::Vec<VkSemaphore> m_freeSems;
 

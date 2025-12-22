@@ -62,7 +62,7 @@ namespace pl {
 		}));
 
 		vkCmdBindPipeline(cmd.vkCommandBuffer(), VK_PIPELINE_BIND_POINT_COMPUTE, m_blitPipeline);
-		vkCmdDispatch(cmd.vkCommandBuffer(), (m_width + 7) / 8, (m_height + 7) / 8, 1);
+		cmd.dispatch((m_width + 7) / 8, (m_height + 7) / 8);
 
 		vkCmdPipelineBarrier2(cmd.vkCommandBuffer(), ptr(VkDependencyInfo{
 			.imageMemoryBarrierCount = 1,
@@ -70,7 +70,7 @@ namespace pl {
 				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
 				.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
 				.srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
-				.dstStageMask = VK_PIPELINE_STAGE_NONE,
+				.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
 				.oldLayout = VK_IMAGE_LAYOUT_GENERAL,
 				.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 				.image = m_swapchainImages[acquired].image,
@@ -84,7 +84,7 @@ namespace pl {
 			})
 		}));
 
-		const Event event = info.queue.submit(std::move(cmd), info.waitEvent, sem, m_swapchainImages[acquired].signalSem);
+		const Event event = info.queue.submit(std::move(cmd), info.waitInfo, sem, m_swapchainImages[acquired].signalSem);
 		m_submittedSems.push(sem, event);
 
 		res = vkQueuePresentKHR(info.queue.vkQueue(), ptr(VkPresentInfoKHR{
@@ -117,8 +117,7 @@ namespace pl {
 	}
 
 	Swapchain::Swapchain(const SwapchainCreateInfo& ci)
-		: m_instance(ci.device.vkInstance()), m_device(ci.device.vkDevice()), m_activeQueueFamilies(ci.device.vkActiveQueueFamilies()),
-		m_width(ci.width), m_height(ci.height), m_presentMode(ci.mode), m_heap(ci.device.descriptorHeap()) {
+		: m_instance(ci.device.vkInstance()), m_device(ci.device.vkDevice()), m_width(ci.width), m_height(ci.height), m_presentMode(ci.mode), m_heap(ci.device.descriptorHeap()) {
 
 		switch(ci.nativeWindow.type) {
 			case NativeWindowType::Headless: {
@@ -218,9 +217,6 @@ namespace pl {
 			.imageExtent = { m_width, m_height },
 			.imageArrayLayers = 1,
 			.imageUsage = VK_IMAGE_USAGE_STORAGE_BIT,
-			.imageSharingMode = m_activeQueueFamilies.count() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE,
-			.queueFamilyIndexCount = static_cast<u32>(m_activeQueueFamilies.count()),
-			.pQueueFamilyIndices = m_activeQueueFamilies.data(),
 			.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 			.presentMode = vkPresentMode(m_presentMode),

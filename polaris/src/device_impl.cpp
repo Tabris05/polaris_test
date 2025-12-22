@@ -57,8 +57,9 @@ namespace pl {
 	
 		tbrs::Vec<const char*> deviceExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+			VK_KHR_MAINTENANCE_9_EXTENSION_NAME,
+			VK_KHR_SHADER_MAXIMAL_RECONVERGENCE_EXTENSION_NAME,
 			VK_EXT_MUTABLE_DESCRIPTOR_TYPE_EXTENSION_NAME,
-			VK_KHR_SHADER_MAXIMAL_RECONVERGENCE_EXTENSION_NAME
 		};
 		
 		f32 one = 1.0f;
@@ -77,7 +78,6 @@ namespace pl {
 
 				m_queues[i].family = family;
 				vkqci.queueFamilyIndex = family;
-				m_activeQueueFamilies.push(family);
 				queueCIs.push(vkqci);
 			}
 		}
@@ -89,9 +89,14 @@ namespace pl {
 					.pNext = ptr(VkPhysicalDeviceVulkan12Features{
 						.pNext = ptr(VkPhysicalDeviceVulkan13Features{
 							.pNext = ptr(VkPhysicalDeviceVulkan14Features{
-								.pNext = ptr(VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT{
-									.pNext = ptr(VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{ .shaderMaximalReconvergence = true }),
-									.mutableDescriptorType = true
+								.pNext = ptr(VkPhysicalDeviceMaintenance9FeaturesKHR{
+									.pNext = ptr(VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
+										.pNext = ptr(VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT{
+											.mutableDescriptorType = true
+										}),
+										.shaderMaximalReconvergence = true
+									}),
+									.maintenance9 = true
 								}),
 								.maintenance5 = true,
 								.hostImageCopy = true,
@@ -105,6 +110,7 @@ namespace pl {
 						.descriptorBindingStorageBufferUpdateAfterBind = true,
 						.descriptorBindingPartiallyBound = true,
 						.runtimeDescriptorArray = true,
+						.samplerFilterMinmax = true,
 						.scalarBlockLayout = true,
 						.timelineSemaphore = true,
 						.bufferDeviceAddress = true,
@@ -133,6 +139,7 @@ namespace pl {
 		for(u8 i = 0; i < 3; i++) {
 			if(ci.requestedQueueTypes.contains(static_cast<pl::QueueType>(i))) {
 				vkGetDeviceQueue(m_device, m_queues[i].family, 0, &m_queues[i].queue);
+				m_queues[i].submissionLock = new std::mutex;
 			}
 		}
 
@@ -155,6 +162,10 @@ namespace pl {
 	Device::~Device() {
 		delete m_allocator;
 		delete m_heap;
+
+		for(u8 i = 0; i < 3; i++) {
+			delete m_queues[i].submissionLock;
+		}
 
 		vkDestroyDevice(m_device, nullptr);
 		vkDestroyInstance(m_instance, nullptr);
@@ -180,8 +191,8 @@ namespace pl {
 		return m_queues[static_cast<u8>(type)].queue;
 	}
 
-	View<const u32> Device::vkActiveQueueFamilies() const {
-		return m_activeQueueFamilies;
+	std::mutex* Device::vkQueueSubmissionLock(QueueType type) const {
+		return m_queues[static_cast<u8>(type)].submissionLock;
 	}
 
 	DescriptorHeap* Device::descriptorHeap() const {

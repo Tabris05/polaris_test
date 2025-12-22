@@ -44,7 +44,6 @@ namespace pl {
 	Texture::Texture(const TextureCreateInfo& ci)
 		: m_device(ci.device.vkDevice()), m_physicalDevice(ci.device.vkPhysicalDevice()), m_heap(ci.device.descriptorHeap()), m_allocator(ci.device.deviceMemoryAllocator()) {
 
-		u32 queueFamilyCount = static_cast<u32>(ci.device.vkActiveQueueFamilies().count());
 		VkImageCreateInfo vkci{
 			.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT,
 			.imageType = VK_IMAGE_TYPE_1D,
@@ -57,12 +56,7 @@ namespace pl {
 			.mipLevels = ci.levels,
 			.arrayLayers = ci.layers,
 			.samples = vkSampleCount(ci.samples),
-			.tiling = VK_IMAGE_TILING_OPTIMAL,
 			.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_HOST_TRANSFER_BIT,
-			.sharingMode = queueFamilyCount > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE,
-			.queueFamilyIndexCount = queueFamilyCount,
-			.pQueueFamilyIndices = ci.device.vkActiveQueueFamilies().data(),
-			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 		};
 
 		if(vkFormatIsDepthOrStencil(vkci.format)) {
@@ -84,11 +78,7 @@ namespace pl {
 		}
 
 		vkCreateImage(m_device, &vkci, nullptr, &m_image);
-
-		VkMemoryRequirements mrq;
-		vkGetImageMemoryRequirements(m_device, m_image, &mrq);
-		m_backingMem = m_allocator->alloc(mrq);
-		vkBindImageMemory(m_device, m_image, m_backingMem.mem, 0);
+		m_backingMem = m_allocator->alloc(m_image);
 
 		vkTransitionImageLayout(m_device, 1, ptr(VkHostImageLayoutTransitionInfo{
 			.image = m_image,
@@ -96,9 +86,7 @@ namespace pl {
 			.newLayout = VK_IMAGE_LAYOUT_GENERAL,
 			.subresourceRange = {
 				.aspectMask = vkAspectMask(vkci.format),
-				.baseMipLevel = 0,
 				.levelCount = VK_REMAINING_MIP_LEVELS,
-				.baseArrayLayer = 0,
 				.layerCount = VK_REMAINING_ARRAY_LAYERS,
 			}
 		}));
@@ -109,9 +97,7 @@ namespace pl {
 			.format = vkci.format,
 			.subresourceRange = {
 				.aspectMask = vkAspectMask(vkci.format),
-				.baseMipLevel = 0,
 				.levelCount = VK_REMAINING_MIP_LEVELS,
-				.baseArrayLayer = 0,
 				.layerCount = VK_REMAINING_ARRAY_LAYERS,
 			},
 		};

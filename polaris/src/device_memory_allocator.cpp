@@ -2,19 +2,46 @@
 #include "vk_util.hpp"
 
 namespace pl {
-	Allocation DeviceMemoryAllocator::alloc(VkMemoryRequirements memReqs, VkMemoryPropertyFlags properties) {
-		u32 memTypeIndex = getMemoryTypeIndex(properties, memReqs.memoryTypeBits);
+	DeviceMemory DeviceMemoryAllocator::alloc(VkBuffer buffer) {
+		VkMemoryRequirements mrq;
+		vkGetBufferMemoryRequirements(m_device, buffer, &mrq);
+		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits);
 
 		VkDeviceMemory mem;
 		vkAllocateMemory(m_device, ptr(VkMemoryAllocateInfo{
-			.allocationSize = memReqs.size,
+			.pNext = ptr(VkMemoryAllocateFlagsInfo{.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT }),
+			.allocationSize = mrq.size,
 			.memoryTypeIndex = memTypeIndex
 		}), nullptr, &mem);
+		vkBindBufferMemory(m_device, buffer, mem, 0);
 
-		return Allocation{ mem };
+		std::scoped_lock lock{ m_lock };
+		m_allocations.push(mem);
+		return m_allocations.count() - 1;
 	}
-	void DeviceMemoryAllocator::free(Allocation alloc) {
-		vkFreeMemory(m_device, alloc.mem, nullptr);
+
+	DeviceMemory DeviceMemoryAllocator::alloc(VkImage image) {
+		VkMemoryRequirements mrq;
+		vkGetImageMemoryRequirements(m_device, image, &mrq);
+		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits);
+
+		VkDeviceMemory mem;
+		vkAllocateMemory(m_device, ptr(VkMemoryAllocateInfo{
+			.pNext = ptr(VkMemoryAllocateFlagsInfo{.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT }),
+			.allocationSize = mrq.size,
+			.memoryTypeIndex = memTypeIndex
+		}), nullptr, &mem);
+		vkBindImageMemory(m_device, image, mem, 0);
+
+		std::scoped_lock lock{ m_lock };
+		m_allocations.push(mem);
+		return m_allocations.count() - 1;
+	}
+
+	void DeviceMemoryAllocator::free(DeviceMemory alloc) {
+		std::scoped_lock lock{ m_lock };
+		vkFreeMemory(m_device, m_allocations[alloc], nullptr);
+		m_allocations.remove(alloc);
 	}
 
 	DeviceMemoryAllocator::DeviceMemoryAllocator(VkPhysicalDevice physicalDevice, VkDevice device) :
@@ -30,14 +57,5 @@ namespace pl {
 	DeviceMemoryAllocator& DeviceMemoryAllocator::operator=(DeviceMemoryAllocator&& src) {
 		this->~DeviceMemoryAllocator();
 		new (this) DeviceMemoryAllocator(std::move(src)); return *this;
-	}
-
-	u32 DeviceMemoryAllocator::getMemoryTypeIndex(VkMemoryPropertyFlags flags, u32 mask) {
-		for(u32 idx = 0; idx < m_memProps.memoryTypeCount; idx++) {
-			if(((1 << idx) & mask) && (m_memProps.memoryTypes[idx].propertyFlags & flags) == flags) {
-				return idx;
-			}
-		}
-		return ~0;
 	}
 }

@@ -1,5 +1,4 @@
 #include "vec.hpp"
-#include <cassert>
 #include <cstdlib>
 #include <type_traits>
 #include <iterator>
@@ -86,14 +85,12 @@ namespace tbrs {
 	template<typename T>
 	template<typename Self>
 	decltype(auto) Vec<T>::front(this Self&& self) {
-		assert(self.m_count > 0);
 		return std::forward<Self>(self).m_elems[0];
 	}
 
 	template<typename T>
 	template<typename Self>
 	decltype(auto) Vec<T>::back(this Self&& self) {
-		assert(self.m_count > 0);
 		return std::forward<Self>(self).m_elems[self.m_count - 1];
 	}
 
@@ -117,7 +114,6 @@ namespace tbrs {
 
 	template<typename T>
 	void Vec<T>::pop() {
-		assert(m_count > 0);
 		if constexpr(!std::is_trivially_destructible_v<T>) {
 			m_elems[m_count - 1].~T();
 		}
@@ -184,7 +180,6 @@ namespace tbrs {
 	template<typename T>
 	template<typename Self>
 	decltype(auto) Vec<T>::operator[](this Self&& self, u64 index) {
-		assert(index < self.m_count);
 		return std::forward<Self>(self).m_elems[index];
 	}
 

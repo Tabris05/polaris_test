@@ -17,7 +17,7 @@ namespace pl {
 	}
 
 	u32 DescriptorHeap::allocImageHandle(const VkImageViewCreateInfo* ci, VkDescriptorType type) {
-		std::scoped_lock lock{ m_imageMutex };
+		std::scoped_lock lock{ m_imageLock };
 		u32 handle = acquireHandle(m_imageFreeRanges);
 
 		vkCreateImageView(m_device, ci, nullptr, &m_imageViews[handle]);
@@ -38,13 +38,13 @@ namespace pl {
 	}
 
 	void DescriptorHeap::freeImageHandle(u32 handle) {
-		std::scoped_lock lock{ m_imageMutex };
+		std::scoped_lock lock{ m_imageLock };
 		vkDestroyImageView(m_device, m_imageViews[handle], nullptr);
 		releaseHandle(m_imageFreeRanges, handle);
 	}
 
 	u32 DescriptorHeap::allocSamplerHandle(const VkSamplerCreateInfo* ci) {
-		std::scoped_lock lock{ m_samplerMutex };
+		std::scoped_lock lock{ m_samplerLock };
 		u32 handle = acquireHandle(m_samplerFreeRanges);
 
 		vkCreateSampler(m_device, ci, nullptr, &m_samplers[handle]);
@@ -63,7 +63,7 @@ namespace pl {
 	}
 
 	void DescriptorHeap::freeSamplerHandle(u32 handle) {
-		std::scoped_lock lock{ m_samplerMutex };
+		std::scoped_lock lock{ m_samplerLock };
 		vkDestroySampler(m_device, m_samplers[handle], nullptr);
 		releaseHandle(m_samplerFreeRanges, handle);
 	}

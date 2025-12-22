@@ -9,6 +9,8 @@
 #include <vector>
 #include <fstream>
 
+#include <format>
+
 std::vector<u32> getShaderSource(const char* path) {
 	std::ifstream file(path, std::ios::binary | std::ios::ate);
 	std::vector<u32> ret(file.tellg() / sizeof(u32));
@@ -23,12 +25,17 @@ int main() {
 	GLFWwindow* window = glfwCreateWindow(1920, 1080, "Polaris Test", nullptr, nullptr);
 
 	pl::Device device(pl::DeviceCreateInfo{
-		.requestedQueueTypes = { pl::QueueType::Universal }
+		.requestedQueueTypes = { pl::QueueType::Universal, pl::QueueType::DMA }
 	});
 
-	pl::Queue queue(pl::QueueCreateInfo{
+	pl::Queue gfxQueue(pl::QueueCreateInfo{
 		.device = device,
 		.type = pl::QueueType::Universal
+	});
+
+	pl::Queue transferQueue(pl::QueueCreateInfo{
+		.device = device,
+		.type = pl::QueueType::DMA
 	});
 
 	pl::Texture tex(pl::TextureCreateInfo{
@@ -53,7 +60,7 @@ int main() {
 		},
 		.width = 1920,
 		.height = 1080,
-		.mode = pl::PresentMode::VSync
+		.mode = pl::PresentMode::Immediate
 	});
 
 	std::vector<u32> shaderCode = getShaderSource("shaders/tri.spv");
@@ -75,26 +82,58 @@ int main() {
 		.colorFormats = { pl::Format::RGBA8_SRGB }
 	});
 
+	std::vector<f32> vertices{
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+		 0.5f, 0.5f, 0.0f, 1.0f, 1.0f,
+	};
+
+	pl::Buffer buffer(pl::BufferCreateInfo{
+		.device = device,
+		.size = vertices.size() * sizeof(f32)
+	});
+
+	pl::CommandBuffer cmd = transferQueue.beginRecording();
+	cmd.writeBuffer(buffer, pl::View<const f32>(vertices));
+	transferQueue.submit(pl::SubmitInfo{ .commandBuffer = std::move(cmd) }).wait();
+
+	pl::Event fif[2] = {};
+	u64 frame = 0;
+
 	while(!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
-		pl::CommandBuffer cmd = queue.beginRecording();
-		cmd.setViewport(pl::Rect<f32>{.width = 1920.0f, .height = 1080.0f });
-		cmd.setScissor(pl::Rect<u32>{.width = 1920u, .height = 1080u });
+		fif[frame % 2].wait();
+
+		pl::CommandBuffer cmd = gfxQueue.beginRecording();
+		cmd.setViewport(pl::Rect<f32>{ .width = 1920.0f, .height = 1080.0f });
+		cmd.setScissor(pl::Rect<u32>{ .width = 1920u, .height = 1080u });
+		cmd.bindPipeline(pipeline);
+		cmd.pushConstants(buffer.deviceAddress<f32>());
+		cmd.barrier(pl::PipelineStage::Present, pl::PipelineStage::ColorWrite);
 		cmd.beginRenderPass(pl::RenderPassBeginInfo{
 			.renderArea = {.width = 1920, .height = 1080 },
-			.colorTargets = { { rtHandle } }
+			.colorTargets = { { rtHandle, pl::LoadOp::None } }
 		});
-		cmd.bindPipeline(pipeline);
-		cmd.draw(3);
+		cmd.draw(6);
 		cmd.endRenderPass();
-		const pl::Event event = queue.submit(pl::SubmitInfo{ .commandBuffer = std::move(cmd) });
+
+		pl::Event event = gfxQueue.submit(pl::SubmitInfo{ .commandBuffer = std::move(cmd) });
+		fif[frame % 2] = event;
 
 		swapchain.present(pl::PresentInfo{
 			.texture = sampledHandle,
-			.queue = queue,
-			.waitEvent = event
-		}).wait();
+			.queue = gfxQueue,
+			.waitEvent = pl::EventInfo{
+				.stage = pl::PipelineStage::ColorWrite,
+				.event = event
+			}
+		});
+
+		frame++;
 	}
 
 	device.waitIdle();

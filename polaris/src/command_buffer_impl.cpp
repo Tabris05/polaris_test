@@ -3,6 +3,18 @@
 #include "vk_util.hpp"
 
 namespace pl {
+	void CommandBuffer::barrier(PipelineStage src, PipelineStage dst) {
+		vkCmdPipelineBarrier2(m_cmd, ptr(VkDependencyInfo{
+			.memoryBarrierCount = 1,
+			.pMemoryBarriers = ptr(VkMemoryBarrier2{
+				.srcStageMask = vkStageMask(src),
+				.srcAccessMask = vkAccessMask(src),
+				.dstStageMask = vkStageMask(dst),
+				.dstAccessMask = vkAccessMask(dst)
+			})
+		}));
+	}
+
 	void CommandBuffer::beginRenderPass(const RenderPassBeginInfo& info) {
 		VkRenderingAttachmentInfo colorAttachments[8];
 		for(u8 i = 0; i < info.colorTargets.count(); i++) {
@@ -44,7 +56,7 @@ namespace pl {
 			.pColorAttachments = colorAttachments,
 			.pDepthAttachment = info.depthTarget.has_value() ? &depthAttachment : nullptr,
 			.pStencilAttachment = info.stencilTarget.has_value() ? &stencilAttachment : nullptr
-		}));
+			}));
 	}
 
 	void CommandBuffer::bindPipeline(const Pipeline& pipeline) {
@@ -54,13 +66,18 @@ namespace pl {
 	void CommandBuffer::clearTexture(const Texture& tex, ClearValue value) {
 		if(tex.vkImageViewCreateInfo().subresourceRange.aspectMask & VK_IMAGE_ASPECT_COLOR_BIT) {
 			vkCmdClearColorImage(m_cmd, tex.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearColorValue*>(&value), 1, ptr(tex.vkImageViewCreateInfo().subresourceRange));
-		} else {
+		}
+		else {
 			vkCmdClearDepthStencilImage(m_cmd, tex.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearDepthStencilValue*>(&value), 1, ptr(tex.vkImageViewCreateInfo().subresourceRange));
 		}
 	}
 
 	void CommandBuffer::draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance) {
 		vkCmdDraw(m_cmd, vertexCount, instanceCount, firstVertex, firstInstance);
+	}
+
+	void CommandBuffer::dispatch(u32 groupsX, u32 groupsY, u32 groupsZ) {
+		vkCmdDispatch(m_cmd, groupsX, groupsY, groupsZ);
 	}
 
 	void CommandBuffer::endRenderPass() {
@@ -79,10 +96,45 @@ namespace pl {
 		return m_cmd;
 	}
 
-	CommandBuffer::CommandBuffer(VkCommandBuffer cmd, VkPipelineLayout layout)
-		: m_cmd(cmd), m_layout(layout) {}
+	tbrs::Vec<StagingBuffer>&& CommandBuffer::getStagingBuffers() const {
+		return std::move(m_stagingBuffers);
+	}
+
+	CommandBuffer::CommandBuffer(VkCommandBuffer cmd, VkPipelineLayout layout, StagingAllocator* stagingAllocator)
+		: m_cmd(cmd), m_layout(layout), m_allocator(stagingAllocator) {
+	}
 
 	void CommandBuffer::pushConstantsImpl(const void* constants, u64 size) {
 		vkCmdPushConstants(m_cmd, m_layout, VK_SHADER_STAGE_ALL, 0, size, constants);
+	}
+
+	void CommandBuffer::writeBufferImpl(const Buffer& buffer, const void* data, u64 size, u64 offset) {
+		if(size < 65536) {
+			vkCmdUpdateBuffer(m_cmd, buffer.vkBuffer(), offset, size, data);
+		}
+		else {
+			u64 writtenSize = 0;
+			while(writtenSize < size) {
+				if(m_stagingBuffers.empty() || m_stagingBuffers.back().writeOffset == StagingAllocator::PageSize) {
+					m_stagingBuffers.push(m_allocator->alloc());
+				}
+				StagingBuffer stagingBuffer = m_stagingBuffers.back();
+
+				u64 copySize = std::min(size - writtenSize, StagingAllocator::PageSize - stagingBuffer.writeOffset);
+				memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, static_cast<const byte*>(data) + writtenSize, copySize);
+				vkCmdCopyBuffer(m_cmd, stagingBuffer.buffer, buffer.vkBuffer(), 1, ptr(VkBufferCopy{
+					.srcOffset = stagingBuffer.writeOffset,
+					.dstOffset = offset + writtenSize,
+					.size = copySize
+				}));
+
+				stagingBuffer.writeOffset += copySize;
+				writtenSize += copySize;
+			}
+		}
+	}
+
+	void CommandBuffer::writeTextureImpl(const Texture& texture, const void* data, TextureRegion region) {
+
 	}
 };
