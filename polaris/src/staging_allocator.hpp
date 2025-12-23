@@ -6,15 +6,18 @@
 
 namespace pl {
 	struct StagingBuffer {
-		VkBuffer buffer = {};
-		VkDeviceMemory memory = {};
 		void* mappedPtr = nullptr;
+
+		VkDeviceMemory memory = {};
+		VkBuffer buffer = {};
+
 		u64 writeOffset = 0;
+		u64 size = 0;
 	};
 
 	class StagingAllocator {
 	public:
-		StagingBuffer alloc();
+		StagingBuffer alloc(u64 size);
 		void free(StagingBuffer buffer);
 
 		StagingAllocator(VkPhysicalDevice physicalDevice, VkDevice device);
@@ -25,12 +28,10 @@ namespace pl {
 		StagingAllocator(const StagingAllocator&) = delete;
 		StagingAllocator& operator=(const StagingAllocator&) = delete;
 
-		static constexpr u64 PageSize = 64 * 1024 * 1024;
 	private:
 		VkDevice m_device = {};
 		VkPhysicalDeviceMemoryProperties m_memProps = {};
 
-		tbrs::Vec<StagingBuffer> m_freePages;
-
+		tbrs::Vec<StagingBuffer> m_freeList;
 	};
 }

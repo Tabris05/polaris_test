@@ -395,24 +395,37 @@ namespace pl {
 	};
 
 	template <typename T>
-	struct Rect {
+	struct Rect2D {
 		T x;
 		T y;
 		T width;
 		T height;
 	};
 
-	// foo: maybe have 'entire region' value and store w/h/d in texture
+	template <typename T>
+	struct Rect3D {
+		T x;
+		T y;
+		T z;
+		T width;
+		T height;
+		T depth;
+	};
+
+	// foo: need some way to unify these, cpu vectors with simd, and gpu vectors
+	template<typename T>
+	struct vec3 {
+		T x;
+		T y;
+		T z;
+	};
+
 	struct TextureRegion {
-		u32 x = 0;
-		u32 y = 0;
-		u32 z = 0;
+		static constexpr u32 RemainingLevels = ~0u;
+		static constexpr u32 RemainingLayers = ~0u;
 		u32 baseLevel = 0;
 		u32 baseLayer = 0;
-		u32 width = 1;
-		u32 height = 1;
-		u32 depth = 1;
-		u32 numLevels = 1;
-		u32 numLayers = 1;
+		u32 numLevels = RemainingLevels;
+		u32 numLayers = RemainingLayers;
 	};
 }

@@ -42,7 +42,8 @@ namespace pl {
 	}
 	
 	Texture::Texture(const TextureCreateInfo& ci)
-		: m_device(ci.device.vkDevice()), m_physicalDevice(ci.device.vkPhysicalDevice()), m_heap(ci.device.descriptorHeap()), m_allocator(ci.device.deviceMemoryAllocator()) {
+		: m_device(ci.device.vkDevice()), m_physicalDevice(ci.device.vkPhysicalDevice()), m_dimensions(ci.width, ci.height, ci.depth),
+		m_heap(ci.device.descriptorHeap()), m_allocator(ci.device.deviceMemoryAllocator()) {
 
 		VkImageCreateInfo vkci{
 			.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT,
@@ -86,8 +87,8 @@ namespace pl {
 			.newLayout = VK_IMAGE_LAYOUT_GENERAL,
 			.subresourceRange = {
 				.aspectMask = vkAspectMask(vkci.format),
-				.levelCount = VK_REMAINING_MIP_LEVELS,
-				.layerCount = VK_REMAINING_ARRAY_LAYERS,
+				.levelCount = vkci.mipLevels,
+				.layerCount = vkci.arrayLayers,
 			}
 		}));
 
@@ -97,8 +98,8 @@ namespace pl {
 			.format = vkci.format,
 			.subresourceRange = {
 				.aspectMask = vkAspectMask(vkci.format),
-				.levelCount = VK_REMAINING_MIP_LEVELS,
-				.layerCount = VK_REMAINING_ARRAY_LAYERS,
+				.levelCount = vkci.mipLevels,
+				.layerCount = vkci.arrayLayers,
 			},
 		};
 	}
@@ -135,6 +136,10 @@ namespace pl {
 
 	VkImageViewCreateInfo Texture::vkImageViewCreateInfo() const {
 		return m_imageViewCI;
+	}
+
+	vec3<u32> Texture::dimensions() const {
+		return m_dimensions;
 	}
 
 	Texture::VkImageViewInfo Texture::vkImageViewInfo(const TextureView& view) {

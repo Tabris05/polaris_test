@@ -164,6 +164,8 @@
       <CallingConvention>Cdecl</CallingConvention>
       <EnableFiberSafeOptimizations />
       <CompileAs>Default</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/wd26439  /fsanitize=address %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

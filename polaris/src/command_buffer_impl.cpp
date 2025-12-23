@@ -56,19 +56,24 @@ namespace pl {
 			.pColorAttachments = colorAttachments,
 			.pDepthAttachment = info.depthTarget.has_value() ? &depthAttachment : nullptr,
 			.pStencilAttachment = info.stencilTarget.has_value() ? &stencilAttachment : nullptr
-			}));
+		}));
 	}
 
 	void CommandBuffer::bindPipeline(const Pipeline& pipeline) {
 		pipeline.bind(m_cmd);
 	}
 
-	void CommandBuffer::clearTexture(const Texture& tex, ClearValue value) {
-		if(tex.vkImageViewCreateInfo().subresourceRange.aspectMask & VK_IMAGE_ASPECT_COLOR_BIT) {
-			vkCmdClearColorImage(m_cmd, tex.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearColorValue*>(&value), 1, ptr(tex.vkImageViewCreateInfo().subresourceRange));
+	void CommandBuffer::clearTexture(const Texture& tex, ClearValue value, TextureRegion region) {
+		VkImageSubresourceRange range = tex.vkImageViewCreateInfo().subresourceRange;
+		range.baseMipLevel = region.baseLevel;
+		range.baseArrayLayer = region.baseLayer;
+		range.levelCount = region.numLevels;
+		range.layerCount = region.numLayers;
+		if(range.aspectMask & VK_IMAGE_ASPECT_COLOR_BIT) {
+			vkCmdClearColorImage(m_cmd, tex.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearColorValue*>(&value), 1, &range);
 		}
 		else {
-			vkCmdClearDepthStencilImage(m_cmd, tex.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearDepthStencilValue*>(&value), 1, ptr(tex.vkImageViewCreateInfo().subresourceRange));
+			vkCmdClearDepthStencilImage(m_cmd, tex.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearDepthStencilValue*>(&value), 1, &range);
 		}
 	}
 
@@ -84,11 +89,11 @@ namespace pl {
 		vkCmdEndRendering(m_cmd);
 	}
 
-	void CommandBuffer::setViewport(Rect<f32> viewport) {
+	void CommandBuffer::setViewport(Rect2D<f32> viewport) {
 		vkCmdSetViewport(m_cmd, 0, 1, ptr(VkViewport{ viewport.x, viewport.y, viewport.width, viewport.height }));
 	}
 
-	void CommandBuffer::setScissor(Rect<u32> scissor) {
+	void CommandBuffer::setScissor(Rect2D<u32> scissor) {
 		vkCmdSetScissor(m_cmd, 0, 1, ptr(VkRect2D{ static_cast<i32>(scissor.x), static_cast<i32>(scissor.y), scissor.width, scissor.height }));
 	}
 
@@ -113,28 +118,55 @@ namespace pl {
 			vkCmdUpdateBuffer(m_cmd, buffer.vkBuffer(), offset, size, data);
 		}
 		else {
-			u64 writtenSize = 0;
-			while(writtenSize < size) {
-				if(m_stagingBuffers.empty() || m_stagingBuffers.back().writeOffset == StagingAllocator::PageSize) {
-					m_stagingBuffers.push(m_allocator->alloc());
-				}
-				StagingBuffer stagingBuffer = m_stagingBuffers.back();
-
-				u64 copySize = std::min(size - writtenSize, StagingAllocator::PageSize - stagingBuffer.writeOffset);
-				memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, static_cast<const byte*>(data) + writtenSize, copySize);
-				vkCmdCopyBuffer(m_cmd, stagingBuffer.buffer, buffer.vkBuffer(), 1, ptr(VkBufferCopy{
-					.srcOffset = stagingBuffer.writeOffset,
-					.dstOffset = offset + writtenSize,
-					.size = copySize
-				}));
-
-				stagingBuffer.writeOffset += copySize;
-				writtenSize += copySize;
+			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < size) {
+				m_stagingBuffers.push(m_allocator->alloc(size));
 			}
+			StagingBuffer stagingBuffer = m_stagingBuffers.back();
+
+			memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, data, size);
+			vkCmdCopyBuffer(m_cmd, stagingBuffer.buffer, buffer.vkBuffer(), 1, ptr(VkBufferCopy{
+				.srcOffset = stagingBuffer.writeOffset,
+				.dstOffset = offset,
+				.size = size
+			}));
+
+			stagingBuffer.writeOffset += size;
 		}
 	}
 
 	void CommandBuffer::writeTextureImpl(const Texture& texture, const void* data, TextureRegion region) {
+		u32 maxLevel = region.numLevels == TextureRegion::RemainingLevels ? texture.vkImageViewCreateInfo().subresourceRange.levelCount : region.baseLevel + region.numLevels;
+		for(u32 level = region.baseLevel; level < maxLevel; level++) {
+			u32 width = std::max(texture.dimensions().x >> level, 1u);
+			u32 height = std::max(texture.dimensions().y >> level, 1u);
+			u32 depth = std::max(texture.dimensions().z >> level, 1u);
+			u64 levelSize = width * height * depth * vkFormatTexelBlockSize(texture.vkImageViewCreateInfo().format);
 
+			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < levelSize) {
+				m_stagingBuffers.push(m_allocator->alloc(levelSize));
+			}
+			StagingBuffer stagingBuffer = m_stagingBuffers.back();
+
+			memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, data, levelSize);
+
+			// foo: batch VkBufferImageCopys while staging buffer has room
+			vkCmdCopyBufferToImage(m_cmd, stagingBuffer.buffer, texture.vkImage(), VK_IMAGE_LAYOUT_GENERAL, 1, ptr(VkBufferImageCopy{
+				.bufferOffset = stagingBuffer.writeOffset,
+				.imageSubresource = {
+					.aspectMask = vkAspectMask(texture.vkImageViewCreateInfo().format),
+					.mipLevel = level,
+					.baseArrayLayer = region.baseLayer,
+					.layerCount = region.numLayers
+				},
+				.imageExtent = {
+					width,
+					height,
+					depth
+				}
+			}));
+
+			stagingBuffer.writeOffset += levelSize;
+			data = static_cast<const byte*>(data) + levelSize;
+		}
 	}
 };

@@ -4,24 +4,15 @@
 
 namespace pl {
 	CommandBuffer Queue::beginRecording() {
-		u64 newHead;
-		for(newHead = 0; newHead < m_submittedCmds.count(); newHead++) {
-			if(m_submittedCmds[newHead].event.completed()) {
-				for(StagingBuffer buffer : m_submittedCmds[newHead].stagingBuffers) {
-					m_allocator->free(buffer);
-				};
+		while(!m_submittedCmds.empty() && m_submittedCmds.front().event.completed()) {
+			for(StagingBuffer buffer : m_submittedCmds.front().stagingBuffers) {
+				m_allocator->free(buffer);
+			};
 
-				m_freeCmds.push(m_submittedCmds[newHead].cmd);
-				vkResetCommandBuffer(m_freeCmds.back(), 0);
-			}
-			else {
-				break;
-			}
+			m_freeCmds.push(m_submittedCmds.front().cmd);
+			vkResetCommandBuffer(m_freeCmds.back(), 0);
+			m_submittedCmds.remove(0); // foo: should recycle stagingBuffers vector
 		}
-
-		// really janky way to erase the first N elements
-		memmove(m_submittedCmds.data(), m_submittedCmds.data() + newHead, (m_submittedCmds.count() - newHead) * sizeof(m_submittedCmds.front()));
-		m_submittedCmds.setCount(m_submittedCmds.count() - newHead);
 
 		VkCommandBuffer cmd;
 		if(m_freeCmds.empty()) {

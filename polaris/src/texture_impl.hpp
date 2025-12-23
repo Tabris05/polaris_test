@@ -43,7 +43,7 @@ namespace pl {
 			// "public" functions that should not be included in the public header
 			VkImage vkImage() const;
 			VkImageViewCreateInfo vkImageViewCreateInfo() const;
-
+			vec3<u32> dimensions() const; // foo: should maybe add subresource to this
 		private:
 			struct VkImageViewInfo {
 				VkImageViewCreateInfo viewCI = {};
@@ -57,6 +57,7 @@ namespace pl {
 			VkImage m_image = {};
 
 			VkImageViewCreateInfo m_imageViewCI = {};
+			vec3<u32> m_dimensions;
 
 			tbrs::Vec<VkImageView> m_renderTargetViews;
 			tbrs::Vec<u32> m_shaderResourceViews;
