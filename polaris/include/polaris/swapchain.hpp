@@ -6,9 +6,9 @@
 namespace pl {
 
 	struct PresentInfo {
-		SampledHandle texture;
+		TextureHandle texture;
 		Queue& queue;
-		std::optional<const EventInfo> waitEvent;
+		std::optional<const Event> waitEvent;
 	};
 
 	class Swapchain {

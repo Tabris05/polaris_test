@@ -19,7 +19,7 @@ namespace pl {
 		VkRenderingAttachmentInfo colorAttachments[8];
 		for(u8 i = 0; i < info.colorTargets.count(); i++) {
 			colorAttachments[i] = VkRenderingAttachmentInfo{
-				.imageView = info.colorTargets[i].handle.view,
+				.imageView = info.colorTargets[i].target.vkImageView(),
 				.imageLayout = VK_IMAGE_LAYOUT_GENERAL,
 				.loadOp = vkLoadOp(info.colorTargets[i].loadOp),
 				.storeOp = vkStoreOp(info.colorTargets[i].storeOp),
@@ -30,7 +30,7 @@ namespace pl {
 		VkRenderingAttachmentInfo depthAttachment;
 		if(info.depthTarget.has_value()) {
 			depthAttachment = VkRenderingAttachmentInfo{
-				.imageView = info.depthTarget.value().handle.view,
+				.imageView = info.depthTarget.value().target.vkImageView(),
 				.imageLayout = VK_IMAGE_LAYOUT_GENERAL,
 				.loadOp = vkLoadOp(info.depthTarget.value().loadOp),
 				.storeOp = vkStoreOp(info.depthTarget.value().storeOp),
@@ -41,7 +41,7 @@ namespace pl {
 		VkRenderingAttachmentInfo stencilAttachment;
 		if(info.stencilTarget.has_value()) {
 			stencilAttachment = VkRenderingAttachmentInfo{
-				.imageView = info.stencilTarget.value().handle.view,
+				.imageView = info.stencilTarget.value().target.vkImageView(),
 				.imageLayout = VK_IMAGE_LAYOUT_GENERAL,
 				.loadOp = vkLoadOp(info.stencilTarget.value().loadOp),
 				.storeOp = vkStoreOp(info.stencilTarget.value().storeOp),
@@ -89,8 +89,8 @@ namespace pl {
 		vkCmdEndRendering(m_cmd);
 	}
 
-	void CommandBuffer::setViewport(Rect2D<f32> viewport) {
-		vkCmdSetViewport(m_cmd, 0, 1, ptr(VkViewport{ viewport.x, viewport.y, viewport.width, viewport.height }));
+	void CommandBuffer::setViewport(Rect3D<f32> viewport) {
+		vkCmdSetViewport(m_cmd, 0, 1, ptr(VkViewport{ viewport.x, viewport.y, viewport.width, viewport.height, viewport.z, viewport.z + viewport.depth }));
 	}
 
 	void CommandBuffer::setScissor(Rect2D<u32> scissor) {
@@ -121,7 +121,7 @@ namespace pl {
 			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < size) {
 				m_stagingBuffers.push(m_allocator->alloc(size));
 			}
-			StagingBuffer stagingBuffer = m_stagingBuffers.back();
+			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
 
 			memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, data, size);
 			vkCmdCopyBuffer(m_cmd, stagingBuffer.buffer, buffer.vkBuffer(), 1, ptr(VkBufferCopy{
@@ -145,7 +145,7 @@ namespace pl {
 			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < levelSize) {
 				m_stagingBuffers.push(m_allocator->alloc(levelSize));
 			}
-			StagingBuffer stagingBuffer = m_stagingBuffers.back();
+			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
 
 			memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, data, levelSize);
 

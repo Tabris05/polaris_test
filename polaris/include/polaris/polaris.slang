@@ -1,0 +1,218 @@
+module polaris;
+
+public typedef bool b8;
+
+public typedef int8_t i8;
+public typedef int16_t i16;
+public typedef int32_t i32;
+public typedef int64_t i64;
+
+public typedef uint8_t u8;
+public typedef uint16_t u16;
+public typedef uint32_t u32;
+public typedef uint64_t u64;
+
+public typedef float16_t f16;
+public typedef float32_t f32;
+public typedef float64_t f64;
+
+public typedef bool2 vec2b8;
+public typedef bool3 vec3b8;
+public typedef bool4 vec4b8;
+
+public typedef int8_t2 vec2i8;
+public typedef int8_t3 vec3i8;
+public typedef int8_t4 vec4i8;
+
+public typedef int16_t2 vec2i16;
+public typedef int16_t3 vec3i16;
+public typedef int16_t4 vec4i16;
+
+public typedef int32_t2 vec2i32;
+public typedef int32_t3 vec3i32;
+public typedef int32_t4 vec4i32;
+
+public typedef int64_t2 vec2i64;
+public typedef int64_t3 vec3i64;
+public typedef int64_t4 vec4i64;
+
+public typedef uint8_t2 vec2u8;
+public typedef uint8_t3 vec3u8;
+public typedef uint8_t4 vec4u8;
+
+public typedef uint16_t2 vec2u16;
+public typedef uint16_t3 vec3u16;
+public typedef uint16_t4 vec4u16;
+
+public typedef uint32_t2 vec2u32;
+public typedef uint32_t3 vec3u32;
+public typedef uint32_t4 vec4u32;
+
+public typedef uint64_t2 vec2u64;
+public typedef uint64_t3 vec3u64;
+public typedef uint64_t4 vec4u64;
+
+public typedef float16_t2 vec2f16;
+public typedef float16_t3 vec3f16;
+public typedef float16_t4 vec4f16;
+
+public typedef float32_t2 vec2f32;
+public typedef float32_t3 vec3f32;
+public typedef float32_t4 vec4f32;
+
+public typedef float64_t2 vec2f64;
+public typedef float64_t3 vec3f64;
+public typedef float64_t4 vec4f64;
+
+public typedef bool2x2 mat2b8;
+public typedef bool3x3 mat3b8;
+public typedef bool4x4 mat4b8;
+public typedef bool2x3 mat2x3b8;
+public typedef bool3x2 mat3x2b8;
+public typedef bool2x4 mat2x4b8;
+public typedef bool4x2 mat4x2b8;
+public typedef bool3x4 mat3x4b8;
+public typedef bool4x3 mat4x3b8;
+
+public typedef int8_t2x2 mat2i8;
+public typedef int8_t3x3 mat3i8;
+public typedef int8_t4x4 mat4i8;
+public typedef int8_t2x3 mat2x3i8;
+public typedef int8_t3x2 mat3x2i8;
+public typedef int8_t2x4 mat2x4i8;
+public typedef int8_t4x2 mat4x2i8;
+public typedef int8_t3x4 mat3x4i8;
+public typedef int8_t4x3 mat4x3i8;
+
+public typedef int16_t2x2 mat2i16;
+public typedef int16_t3x3 mat3i16;
+public typedef int16_t4x4 mat4i16;
+public typedef int16_t2x3 mat2x3i16;
+public typedef int16_t3x2 mat3x2i16;
+public typedef int16_t2x4 mat2x4i16;
+public typedef int16_t4x2 mat4x2i16;
+public typedef int16_t3x4 mat3x4i16;
+public typedef int16_t4x3 mat4x3i16;
+
+public typedef int32_t2x2 mat2i32;
+public typedef int32_t3x3 mat3i32;
+public typedef int32_t4x4 mat4i32;
+public typedef int32_t2x3 mat2x3i32;
+public typedef int32_t3x2 mat3x2i32;
+public typedef int32_t2x4 mat2x4i32;
+public typedef int32_t4x2 mat4x2i32;
+public typedef int32_t3x4 mat3x4i32;
+public typedef int32_t4x3 mat4x3i32;
+
+public typedef int64_t2x2 mat2i64;
+public typedef int64_t3x3 mat3i64;
+public typedef int64_t4x4 mat4i64;
+public typedef int64_t2x3 mat2x3i64;
+public typedef int64_t3x2 mat3x2i64;
+public typedef int64_t2x4 mat2x4i64;
+public typedef int64_t4x2 mat4x2i64;
+public typedef int64_t3x4 mat3x4i64;
+public typedef int64_t4x3 mat4x3i64;
+
+public typedef uint8_t2x2 mat2u8;
+public typedef uint8_t3x3 mat3u8;
+public typedef uint8_t4x4 mat4u8;
+public typedef uint8_t2x3 mat2x3u8;
+public typedef uint8_t3x2 mat3x2u8;
+public typedef uint8_t2x4 mat2x4u8;
+public typedef uint8_t4x2 mat4x2u8;
+public typedef uint8_t3x4 mat3x4u8;
+public typedef uint8_t4x3 mat4x3u8;
+
+public typedef uint16_t2x2 mat2u16;
+public typedef uint16_t3x3 mat3u16;
+public typedef uint16_t4x4 mat4u16;
+public typedef uint16_t2x3 mat2x3u16;
+public typedef uint16_t3x2 mat3x2u16;
+public typedef uint16_t2x4 mat2x4u16;
+public typedef uint16_t4x2 mat4x2u16;
+public typedef uint16_t3x4 mat3x4u16;
+public typedef uint16_t4x3 mat4x3u16;
+
+public typedef uint32_t2x2 mat2u32;
+public typedef uint32_t3x3 mat3u32;
+public typedef uint32_t4x4 mat4u32;
+public typedef uint32_t2x3 mat2x3u32;
+public typedef uint32_t3x2 mat3x2u32;
+public typedef uint32_t2x4 mat2x4u32;
+public typedef uint32_t4x2 mat4x2u32;
+public typedef uint32_t3x4 mat3x4u32;
+public typedef uint32_t4x3 mat4x3u32;
+
+public typedef int64_t2x2 mat2u64;
+public typedef int64_t3x3 mat3u64;
+public typedef int64_t4x4 mat4u64;
+public typedef int64_t2x3 mat2x3u64;
+public typedef int64_t3x2 mat3x2u64;
+public typedef int64_t2x4 mat2x4u64;
+public typedef int64_t4x2 mat4x2u64;
+public typedef int64_t3x4 mat3x4u64;
+public typedef int64_t4x3 mat4x3u64;
+
+public typedef float16_t2x2 mat2f16;
+public typedef float16_t3x3 mat3f16;
+public typedef float16_t4x4 mat4f16;
+public typedef float16_t2x3 mat2x3f16;
+public typedef float16_t3x2 mat3x2f16;
+public typedef float16_t2x4 mat2x4f16;
+public typedef float16_t4x2 mat4x2f16;
+public typedef float16_t3x4 mat3x4f16;
+public typedef float16_t4x3 mat4x3f16;
+
+public typedef float32_t2x2 mat2f32;
+public typedef float32_t3x3 mat3f32;
+public typedef float32_t4x4 mat4f32;
+public typedef float32_t2x3 mat2x3f32;
+public typedef float32_t3x2 mat3x2f32;
+public typedef float32_t2x4 mat2x4f32;
+public typedef float32_t4x2 mat4x2f32;
+public typedef float32_t3x4 mat3x4f32;
+public typedef float32_t4x3 mat4x3f32;
+
+public typedef float64_t2x2 mat2f64;
+public typedef float64_t3x3 mat3f64;
+public typedef float64_t4x4 mat4f64;
+public typedef float64_t2x3 mat2x3f64;
+public typedef float64_t3x2 mat3x2f64;
+public typedef float64_t2x4 mat2x4f64;
+public typedef float64_t4x2 mat4x2f64;
+public typedef float64_t3x4 mat3x4f64;
+public typedef float64_t4x3 mat4x3f64;
+
+[[vk::binding(0, 0)]] __DynamicResource<__DynamicResourceKind.General> textureHeap[];
+[[vk::binding(1, 0)]] __DynamicResource<__DynamicResourceKind.Sampler> samplerHeap[];
+
+public struct TextureWrapper<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int, let isMS : int, let access : int> {
+    internal typealias TexType = _Texture<TexelType, Shape, isArray, isMS, 0, access, 0, 0, 0>;
+    internal const u32 handle;
+    internal const static u32 samplerOffset = 20;
+    internal const static u32 textureMask = (1 << samplerOffset) - 1;
+
+    internal TexelType unpackInvalidColor() {
+        return {}; // foo: potentially impossible to implement in this shit language?
+    }
+}
+
+__generic<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int>
+public extension TextureWrapper<TexelType, Shape, isArray, 0, 0> {
+    TexelType load(vector<int, Shape.dimensions + isArray + 1> location) {
+        if ((handle & textureMask) == textureMask) {
+            return unpackInvalidColor();
+        }
+        return textureHeap[NonUniformResourceIndex(handle & textureMask)].asOpaqueDescriptor<TexType>().Load(location);
+    }
+
+    public TexelType sample(vector<float, Shape.dimensions + isArray> location) {
+        if ((handle & textureMask) == textureMask) {
+            return unpackInvalidColor();
+        }
+        return TexType(textureHeap[NonUniformResourceIndex(handle & textureMask)]).Sample(samplerHeap[NonUniformResourceIndex(handle >> samplerOffset)].asOpaqueDescriptor<SamplerState>(), location);
+    }
+}
+
+public typealias Texture2D<TexelType : ITexelElement> = TextureWrapper<TexelType, __Shape2D, 0, 0, 0>;

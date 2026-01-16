@@ -39,7 +39,7 @@ namespace pl {
 
 		CommandBuffer cmd = info.queue.beginRecording();
 
-		cmd.pushConstants(PushConstants{ info.texture.handle, m_swapchainImages[acquired].descriptorHandle });
+		cmd.pushConstants(PushConstants{ std::bit_cast<u32>(info.texture), m_swapchainImages[acquired].descriptorHandle });
 
 		vkCmdPipelineBarrier2(cmd.vkCommandBuffer(), ptr(VkDependencyInfo{
 			.imageMemoryBarrierCount = 1,
@@ -84,7 +84,7 @@ namespace pl {
 			})
 		}));
 
-		const Event event = info.queue.submit(std::move(cmd), info.waitInfo, sem, m_swapchainImages[acquired].signalSem);
+		const Event event = info.queue.submit(std::move(cmd), info.waitEvent, sem, m_swapchainImages[acquired].signalSem);
 		m_submittedSems.push(sem, event);
 
 		res = vkQueuePresentKHR(info.queue.vkQueue(), ptr(VkPresentInfoKHR{

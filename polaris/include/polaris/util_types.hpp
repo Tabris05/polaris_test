@@ -95,6 +95,7 @@ namespace pl {
 			}
 
 			View(T arr[]) : m_elems(arr), m_count(sizeof(arr) / sizeof(T)) {}
+			View(T* data, u64 count) : m_elems(data), m_count(count) {}
 			View(std::initializer_list<T>&& list) : m_elems(std::data(list)), m_count(list.end() - list.begin()) {}
 
 			// foo: should decouple this from std::ranges maybe

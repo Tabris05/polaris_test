@@ -4,13 +4,39 @@
 
 namespace pl {
 
-	SampledHandle::SampledHandle(u32 handle)
+	RenderTarget::RenderTarget(VkImageView view)
+		: view(view) {}
+
+	VkImageView RenderTarget::vkImageView() const {
+		return view;
+	}
+
+	TextureHandle::TextureHandle(u32 handle)
 		: handle(handle) {}
 
-	SampledHandle::SampledHandle(SampledHandle texture, const Sampler& sampler)
+	TextureHandle::TextureHandle(TextureHandle texture, const Sampler& sampler)
 		: handle(texture.handle | sampler.handle() << 20) {}
 
-	RenderTargetHandle Texture::getRenderTargetHandle(const TextureView& view) {
+	TextureHandle::TextureHandle(vec4<f32> invalidColor) {
+		handle = 0x000FFFFF;
+		handle |= static_cast<u32>(invalidColor.x * 7.0f) << 20;
+		handle |= static_cast<u32>(invalidColor.y * 7.0f) << 23;
+		handle |= static_cast<u32>(invalidColor.z * 7.0f) << 26;
+		handle |= static_cast<u32>(invalidColor.w * 7.0f) << 29;
+	}
+
+	ImageHandle::ImageHandle(u32 handle)
+		: handle(handle) {}
+
+	ImageHandle::ImageHandle(vec4<f32> invalidColor) {
+		handle = 0x000FFFFF;
+		handle |= static_cast<u32>(invalidColor.x * 7.0f) << 20;
+		handle |= static_cast<u32>(invalidColor.y * 7.0f) << 23;
+		handle |= static_cast<u32>(invalidColor.z * 7.0f) << 26;
+		handle |= static_cast<u32>(invalidColor.w * 7.0f) << 29;
+	}
+
+	RenderTarget Texture::makeRenderTarget(const TextureView& view) {
 		VkImageViewInfo info = vkImageViewInfo(view);
 		info.viewCI.pNext = &info.viewUsageCI;
 
@@ -18,36 +44,36 @@ namespace pl {
 		vkCreateImageView(m_device, &info.viewCI, nullptr, &viewHandle);
 		m_renderTargetViews.push(viewHandle);
 
-		return RenderTargetHandle{ viewHandle };
+		return RenderTarget{ viewHandle };
 	}
 
-	SampledHandle Texture::getSampledHandle(const TextureView& view) {
+	TextureHandle Texture::makeTextureHandle(const TextureView& view) {
 		VkImageViewInfo info = vkImageViewInfo(view);
 		info.viewCI.pNext = &info.viewUsageCI;
 
 		u32 handle = m_heap->allocImageHandle(&info.viewCI, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
 		m_shaderResourceViews.push(handle);
 
-		return SampledHandle{ handle };
+		return TextureHandle{ handle };
 	}
 
-	RWHandle Texture::getRWHandle(const TextureView& view) {
+	ImageHandle Texture::makeImageHandle(const TextureView& view) {
 		VkImageViewInfo info = vkImageViewInfo(view);
 		info.viewCI.pNext = &info.viewUsageCI;
 
 		u32 handle = m_heap->allocImageHandle(&info.viewCI, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 		m_shaderResourceViews.push(handle);
 
-		return RWHandle{ handle };
+		return ImageHandle{ handle };
 	}
 	
 	Texture::Texture(const TextureCreateInfo& ci)
-		: m_device(ci.device.vkDevice()), m_physicalDevice(ci.device.vkPhysicalDevice()), m_dimensions(ci.width, ci.height, ci.depth),
+		: m_device(ci.device.vkDevice()), m_physicalDevice(ci.device.vkPhysicalDevice()), m_dimensions({ ci.width, ci.height, ci.depth }),
 		m_heap(ci.device.descriptorHeap()), m_allocator(ci.device.deviceMemoryAllocator()) {
 
 		VkImageCreateInfo vkci{
 			.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT,
-			.imageType = VK_IMAGE_TYPE_1D,
+			.imageType = vkImageType(ci.type),
 			.format = vkFormat(ci.format),
 			.extent = VkExtent3D{
 				.width = ci.width,
@@ -56,7 +82,7 @@ namespace pl {
 			},
 			.mipLevels = ci.levels,
 			.arrayLayers = ci.layers,
-			.samples = vkSampleCount(ci.samples),
+			.samples = static_cast<VkSampleCountFlagBits>(ci.samples),
 			.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_HOST_TRANSFER_BIT,
 		};
 
@@ -66,15 +92,7 @@ namespace pl {
 			vkci.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
 
-		if(ci.height > 1) {
-			vkci.imageType = VK_IMAGE_TYPE_2D;
-		}
-
-		if(ci.depth > 1) {
-			vkci.imageType = VK_IMAGE_TYPE_3D;
-		}
-
-		if(vkci.imageType == VK_IMAGE_TYPE_2D && ci.width == ci.height && ci.layers >= 6 && ci.samples == 1) {
+		if(ci.type == TextureType::Type2D && ci.width == ci.height && ci.layers >= 6 && ci.samples == 1) {
 			vkci.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		}
 
@@ -149,16 +167,14 @@ namespace pl {
 			vci.format = vkFormat(view.format);
 		}
 
-		vci.subresourceRange.baseMipLevel = view.baseLevel;
-		vci.subresourceRange.baseArrayLayer = view.baseLayer;
-
-		if(view.levelCount != 0) {
-			vci.subresourceRange.levelCount = view.levelCount;
+		if(view.type != TextureViewType::Default) {
+			vci.viewType = vkImageViewType(view.type);
 		}
 
-		if(view.layerCount != 0) {
-			vci.subresourceRange.layerCount = view.layerCount;
-		}
+		vci.subresourceRange.baseMipLevel = view.region.baseLevel;
+		vci.subresourceRange.baseArrayLayer = view.region.baseLayer;
+		vci.subresourceRange.levelCount = view.region.numLevels;
+		vci.subresourceRange.layerCount = view.region.numLayers;
 
 		vci.components = VkComponentMapping{
 			.r = static_cast<VkComponentSwizzle>(view.swizzleR),

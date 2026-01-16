@@ -9,28 +9,36 @@
 #include "sampler_impl.hpp"
 
 namespace pl {
-	class RenderTargetHandle {
+	class RenderTarget {
 		public:
-			VkImageView view;
+			RenderTarget(VkImageView view);
+			VkImageView vkImageView() const;
+		private:
+			VkImageView view = {};
 	};
 
-	class SampledHandle {
+	class TextureHandle {
 		public:
-			SampledHandle(u32 handle);
-			SampledHandle(SampledHandle texture, const Sampler& sampler);
-			u32 handle = ~0;
+			TextureHandle(u32 handle);
+			TextureHandle(TextureHandle texture, const Sampler& sampler);
+			TextureHandle(vec4<f32> invalidColor);
+		private:
+			u32 handle = 0x000FFFFF;
 	};
 
-	class RWHandle {
+	class ImageHandle {
 		public:
-			u32 handle = ~0;
+			ImageHandle(u32 handle);
+			ImageHandle(vec4<f32> invalidColor);
+		private:
+			u32 handle = 0x000FFFFF;
 	};
 
 	class Texture {
 		public:
-			RenderTargetHandle getRenderTargetHandle(const TextureView& view = {});
-			SampledHandle getSampledHandle(const TextureView& view = {});
-			RWHandle getRWHandle(const TextureView& view = {});
+			RenderTarget makeRenderTarget(const TextureView& view = {});
+			TextureHandle makeTextureHandle(const TextureView& view = {});
+			ImageHandle makeImageHandle(const TextureView& view = {});
 
 			Texture(const TextureCreateInfo& ci);
 			Texture(Texture&& src);

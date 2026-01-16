@@ -65,7 +65,7 @@ namespace pl {
 		return m_sync.current();
 	}
 
-	const Event Queue::submit(CommandBuffer commandBuffer, std::optional<const EventInfo> waitEvent, VkSemaphore waitSem, VkSemaphore signalSem) {
+	const Event Queue::submit(CommandBuffer commandBuffer, std::optional<const Event> waitEvent, VkSemaphore waitSem, VkSemaphore signalSem) {
 		VkCommandBuffer cmd = commandBuffer.vkCommandBuffer();
 		vkEndCommandBuffer(cmd);
 
@@ -79,9 +79,9 @@ namespace pl {
 						.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT
 					},
 					waitEvent.has_value() ? VkSemaphoreSubmitInfo{
-						.semaphore = waitEvent->event.vkSemaphore(),
-						.value = waitEvent->event.value(),
-						.stageMask = vkStageMask(waitEvent->stage)
+						.semaphore = waitEvent->vkSemaphore(),
+						.value = waitEvent->value(),
+						.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT
 					} : VkSemaphoreSubmitInfo{}
 				}),
 				.commandBufferInfoCount = 1,

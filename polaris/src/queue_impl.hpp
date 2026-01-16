@@ -38,7 +38,7 @@ namespace pl {
 			Queue& operator=(const Queue&) = delete;
 
 			// "public" functions that should not be included in the public header
-			const Event submit(CommandBuffer commandBuffer, std::optional<const EventInfo> waitEvent, VkSemaphore waitSem, VkSemaphore signalSem);
+			const Event submit(CommandBuffer commandBuffer, std::optional<const Event> waitEvent, VkSemaphore waitSem, VkSemaphore signalSem);
 			VkQueue vkQueue() const;
 
 		private:

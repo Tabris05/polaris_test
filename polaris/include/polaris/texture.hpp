@@ -4,26 +4,27 @@
 #include "sampler.hpp"
 
 namespace pl {
-	class RenderTargetHandle {
+	class RenderTarget {
 		alignas(8) byte reserved[8];
 	};
 
-	class SampledHandle {
+	class TextureHandle {
 		public:
-			SampledHandle(SampledHandle texture, const Sampler& sampler);
+			TextureHandle(TextureHandle texture, const Sampler& sampler);
+			TextureHandle(vec4<f32> invalidColor);
 		private:
 			alignas(4) byte reserved[4];
 	};
 
-	struct RWHandle {
+	struct ImageHandle {
 		alignas(4) byte reserved[4];
 	};
 
 	class Texture {
 		public:
-			RenderTargetHandle getRenderTargetHandle(const TextureView& view = {});
-			SampledHandle getSampledHandle(const TextureView& view = {});
-			RWHandle getRWHandle(const TextureView& view = {});
+			RenderTarget makeRenderTarget(const TextureView& view = {});
+			TextureHandle makeTextureHandle(const TextureView& view = {});
+			ImageHandle makeImageHandle(const TextureView& view = {});
 
 			Texture(const TextureCreateInfo& ci);
 			Texture(Texture&& src);

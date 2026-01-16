@@ -10,7 +10,7 @@
 
 namespace pl {
 	struct RenderTargetInfo {
-		RenderTargetHandle handle;
+		RenderTarget target;
 		LoadOp loadOp;
 		StoreOp storeOp;
 		ClearValue clearValue;
@@ -36,7 +36,7 @@ namespace pl {
 				static_assert(sizeof(constants) <= 256, "Push constants must be 256 bytes or less.");
 				pushConstantsImpl(&constants, sizeof(constants));
 			}
-			void setViewport(Rect2D<f32> viewport);
+			void setViewport(Rect3D<f32> viewport);
 			void setScissor(Rect2D<u32> scissor);
 
 			CommandBuffer(CommandBuffer&&) = default;

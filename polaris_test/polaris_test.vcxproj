@@ -116,7 +116,6 @@
       <OpenMPSupport>false</OpenMPSupport>
       <CallingConvention>Cdecl</CallingConvention>
       <EnableFiberSafeOptimizations />
-      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
@@ -163,6 +162,9 @@
     <ProjectReference Include="..\polaris\polaris.vcxproj">
       <Project>{7d873b6f-d853-46ef-8087-a9ddcc41367b}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="shared\push_constants.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

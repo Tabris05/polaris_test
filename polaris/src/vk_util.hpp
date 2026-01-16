@@ -89,6 +89,26 @@ inline VkFormat vkFormat(pl::Format format) {
     }
 }
 
+inline VkImageType vkImageType(pl::TextureType type) {
+    switch(type) {
+        case pl::TextureType::Type1D: return VK_IMAGE_TYPE_1D;
+        case pl::TextureType::Type2D: return VK_IMAGE_TYPE_2D;
+        case pl::TextureType::Type3D: return VK_IMAGE_TYPE_3D;
+    }
+}
+
+inline VkImageViewType vkImageViewType(pl::TextureViewType type) {
+    switch(type) {
+        case pl::TextureViewType::Type1D: return VK_IMAGE_VIEW_TYPE_1D;
+        case pl::TextureViewType::Type1DArray: return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+        case pl::TextureViewType::Type2D: return VK_IMAGE_VIEW_TYPE_2D;
+        case pl::TextureViewType::Type2DArray: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+        case pl::TextureViewType::Cubemap: return VK_IMAGE_VIEW_TYPE_CUBE;
+        case pl::TextureViewType::CubemapArray: return VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+		case pl::TextureViewType::Type3D: return VK_IMAGE_VIEW_TYPE_3D;
+    }
+}
+
 inline VkComponentSwizzle vkSwizzle(pl::Swizzle swizzle) {
     switch(swizzle) {
         case pl::Swizzle::Identity: return VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -143,18 +163,6 @@ inline VkCompareOp vkCompareOp(pl::CompareOp op) {
         case pl::CompareOp::GreaterEqual: return VK_COMPARE_OP_GREATER_OR_EQUAL;
         case pl::CompareOp::Greater: return VK_COMPARE_OP_GREATER;
         case pl::CompareOp::Always: return VK_COMPARE_OP_ALWAYS;
-    }
-}
-
-inline VkSampleCountFlagBits vkSampleCount(u8 samples) {
-    switch (samples) {
-        case 1: return VK_SAMPLE_COUNT_1_BIT;
-        case 2: return VK_SAMPLE_COUNT_2_BIT;
-        case 4: return VK_SAMPLE_COUNT_4_BIT;
-        case 8: return VK_SAMPLE_COUNT_8_BIT;
-        case 16: return VK_SAMPLE_COUNT_16_BIT;
-        case 32: return VK_SAMPLE_COUNT_32_BIT;
-        case 64: return VK_SAMPLE_COUNT_64_BIT;
     }
 }
 

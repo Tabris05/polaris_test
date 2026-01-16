@@ -96,6 +96,23 @@ namespace pl {
 		BC7_SRGB
 	};
 
+	enum class TextureType : u8 {
+		Type1D,
+		Type2D,
+		Type3D
+	};
+
+	enum class TextureViewType : u8 {
+		Default,
+		Type1D,
+		Type1DArray,
+		Type2D,
+		Type2DArray,
+		Cubemap,
+		CubemapArray,
+		Type3D
+	};
+
 	enum class Swizzle : u8 {
 		Identity,
 		Zero,
@@ -271,6 +288,7 @@ namespace pl {
 	struct TextureCreateInfo {
 		const class Device& device;
 		Format format;
+		TextureType type = TextureType::Type2D;
 		u32 width = 1;
 		u32 height = 1;
 		u32 depth = 1;
@@ -279,12 +297,19 @@ namespace pl {
 		u32 samples = 1;
 	};
 
+	struct TextureRegion {
+		static constexpr u32 RemainingLevels = ~0u;
+		static constexpr u32 RemainingLayers = ~0u;
+		u32 baseLevel = 0;
+		u32 baseLayer = 0;
+		u32 numLevels = RemainingLevels;
+		u32 numLayers = RemainingLayers;
+	};
+
 	struct TextureView {
 		Format format;
-		u32 baseLevel;
-		u32 levelCount;
-		u32 baseLayer;
-		u32 layerCount;
+		TextureViewType type;
+		TextureRegion region;
 		Swizzle swizzleR;
 		Swizzle swizzleG;
 		Swizzle swizzleB;
@@ -412,7 +437,12 @@ namespace pl {
 		T depth;
 	};
 
-	// foo: need some way to unify these, cpu vectors with simd, and gpu vectors
+	template<typename T>
+	struct vec2 {
+		T x;
+		T y;
+	};
+
 	template<typename T>
 	struct vec3 {
 		T x;
@@ -420,12 +450,11 @@ namespace pl {
 		T z;
 	};
 
-	struct TextureRegion {
-		static constexpr u32 RemainingLevels = ~0u;
-		static constexpr u32 RemainingLayers = ~0u;
-		u32 baseLevel = 0;
-		u32 baseLayer = 0;
-		u32 numLevels = RemainingLevels;
-		u32 numLayers = RemainingLayers;
+	template<typename T>
+	struct vec4 {
+		T x;
+		T y;
+		T z;
+		T w;
 	};
 }
