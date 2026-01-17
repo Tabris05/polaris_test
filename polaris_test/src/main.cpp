@@ -177,7 +177,8 @@ int main() {
 		cmd.pushConstants(PushConstants{
 			.vertices = buffer.deviceAddress<Vertex>(),
 			.mvp = projection * view * model,
-			.texture = pl::TextureHandle(albedoHandle, sampler)
+			//.texture = pl::TextureHandle(albedoHandle, sampler)
+			.texture = pl::TextureHandle(vec4f32(1.0f, 0.0f, 0.0f, 1.0f))
 		});
 
 		cmd.barrier(pl::PipelineStage::Depth | pl::PipelineStage::Present, pl::PipelineStage::DepthWrite | pl::PipelineStage::ColorWrite);

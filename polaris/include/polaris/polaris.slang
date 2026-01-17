@@ -187,32 +187,80 @@ public typedef float64_t4x3 mat4x3f64;
 [[vk::binding(0, 0)]] __DynamicResource<__DynamicResourceKind.General> textureHeap[];
 [[vk::binding(1, 0)]] __DynamicResource<__DynamicResourceKind.Sampler> samplerHeap[];
 
-public struct TextureWrapper<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int, let isMS : int, let access : int> {
-    internal typealias TexType = _Texture<TexelType, Shape, isArray, isMS, 0, access, 0, 0, 0>;
-    internal const u32 handle;
-    internal const static u32 samplerOffset = 20;
-    internal const static u32 textureMask = (1 << samplerOffset) - 1;
+public struct TextureHandle<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int, let isMS : int, let access : int> {
+    typealias TextureType = _Texture<TexelType, Shape, isArray, isMS, 0, access, 0, 0, 0>;
 
-    internal TexelType unpackInvalidColor() {
-        return {}; // foo: potentially impossible to implement in this shit language?
+    const u32 handle;
+    const static u32 samplerOffset = 20;
+    const static u32 textureMask = (1 << samplerOffset) - 1;
+
+    TextureType getTexture() {
+        return textureHeap[NonUniformResourceIndex(handle & textureMask)].asOpaqueDescriptor<TextureType>();
+    }
+
+    SamplerState getSampler() {
+        return samplerHeap[NonUniformResourceIndex(handle >> samplerOffset)].asOpaqueDescriptor<SamplerState>();
+    }
+
+    SamplerComparisonState getComparisonSampler() {
+        return samplerHeap[NonUniformResourceIndex(handle >> samplerOffset)].asOpaqueDescriptor<SamplerComparisonState>();
+    }
+
+    T unpackInvalidColor<T : ITexelElement>() where optional T : IFloat {
+        vector<T.Element, T.elementCount> ret;
+        T.Element normalizer = T.Element(1);
+        if (T is IFloat) {
+            normalizer = T.Element(7);
+        }
+
+        ret[0] = T.Element(((handle >> 20) & 0x7)) / normalizer;
+        if (T.elementCount > 1) {
+            ret[1] = T.Element(((handle >> 23) & 0x7)) / normalizer;
+        }
+        if (T.elementCount > 2) {
+            ret[2] = T.Element(((handle >> 26) & 0x7)) / normalizer;
+        }
+        if (T.elementCount > 3) {
+            ret[3] = T.Element(((handle >> 29) & 0x7)) / normalizer;
+        }
+
+        return reinterpret<T>(ret);
     }
 }
 
 __generic<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int>
-public extension TextureWrapper<TexelType, Shape, isArray, 0, 0> {
+public extension TextureHandle<TexelType, Shape, isArray, 0, 0> {
     TexelType load(vector<int, Shape.dimensions + isArray + 1> location) {
         if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor();
+            return unpackInvalidColor<TexelType>();
         }
-        return textureHeap[NonUniformResourceIndex(handle & textureMask)].asOpaqueDescriptor<TexType>().Load(location);
+        return getTexture().Load(location);
     }
 
     public TexelType sample(vector<float, Shape.dimensions + isArray> location) {
         if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor();
+            return unpackInvalidColor<TexelType>();
         }
-        return TexType(textureHeap[NonUniformResourceIndex(handle & textureMask)]).Sample(samplerHeap[NonUniformResourceIndex(handle >> samplerOffset)].asOpaqueDescriptor<SamplerState>(), location);
+        return getTexture().Sample(getSampler(), location);
     }
 }
 
-public typealias Texture2D<TexelType : ITexelElement> = TextureWrapper<TexelType, __Shape2D, 0, 0, 0>;
+public typealias Texture1D<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape1D, 0, 0, 0>;
+public typealias Texture1DArray<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape1D, 1, 0, 0>;
+public typealias Texture2D<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape2D, 0, 0, 0>;
+public typealias Texture2DArray<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape2D, 1, 0, 0>;
+public typealias Texture2DMS<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape2D, 0, 1, 0>;
+public typealias Texture2DMSArray<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape2D, 1, 1, 0>;
+public typealias TextureCube<TexelType : ITexelElement> = TextureHandle<TexelType, __ShapeCube, 0, 0, 0>;
+public typealias TextureCubeArray<TexelType : ITexelElement> = TextureHandle<TexelType, __ShapeCube, 1, 0, 0>;
+public typealias Texture3D<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape3D, 0, 0, 0>;
+
+public typealias Image1D<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape1D, 0, 0, 1>;
+public typealias Image1DArray<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape1D, 1, 0, 1>;
+public typealias Image2D<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape2D, 0, 0, 1>;
+public typealias Image2DArray<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape2D, 1, 0, 1>;
+public typealias Image2DMS<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape2D, 0, 1, 1>;
+public typealias Image2DMSArray<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape2D, 1, 1, 1>;
+public typealias ImageCube<TexelType : ITexelElement> = TextureHandle<TexelType, __ShapeCube, 0, 0, 1>;
+public typealias ImageCubeArray<TexelType : ITexelElement> = TextureHandle<TexelType, __ShapeCube, 1, 0, 1>;
+public typealias Image3D<TexelType : ITexelElement> = TextureHandle<TexelType, __Shape3D, 0, 0, 1>;
