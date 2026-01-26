@@ -41,7 +41,7 @@ namespace tbrs {
 			
 			template<typename... Args>
 			void insert(u64 index, Args&&... args);
-			void remove(u64 index);
+			void remove(u64 index, u64 count = 1);
 
 			void setCount(u64 newCount);
 			void clear();

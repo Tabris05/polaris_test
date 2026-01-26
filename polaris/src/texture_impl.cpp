@@ -83,8 +83,11 @@ namespace pl {
 			.mipLevels = ci.levels,
 			.arrayLayers = ci.layers,
 			.samples = static_cast<VkSampleCountFlagBits>(ci.samples),
-			.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_HOST_TRANSFER_BIT,
+			.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+			.initialLayout = VK_IMAGE_LAYOUT_GENERAL // this is illegal but vkTransitionImageLayout is a no-op on all MESA drivers implying this is okay
+			// why not just use vkTransitionImageLayout? It requires VK_IMAGE_USAGE_HOST_TRANSFER_BIT which is not supported on AMD and disables DCC on NVIDIA
 		};
+
 
 		if(vkFormatIsDepthOrStencil(vkci.format)) {
 			vkci.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -98,17 +101,6 @@ namespace pl {
 
 		vkCreateImage(m_device, &vkci, nullptr, &m_image);
 		m_backingMem = m_allocator->alloc(m_image);
-
-		vkTransitionImageLayout(m_device, 1, ptr(VkHostImageLayoutTransitionInfo{
-			.image = m_image,
-			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-			.newLayout = VK_IMAGE_LAYOUT_GENERAL,
-			.subresourceRange = {
-				.aspectMask = vkAspectMask(vkci.format),
-				.levelCount = vkci.mipLevels,
-				.layerCount = vkci.arrayLayers,
-			}
-		}));
 
 		m_imageViewCI = VkImageViewCreateInfo{
 			.image = m_image,

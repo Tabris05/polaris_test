@@ -228,9 +228,18 @@ public struct TextureHandle<TexelType : ITexelElement, Shape : __ITextureShape, 
     }
 }
 
+// foo: would like to make a function that takes a lambda so the invalid check is only written once, but that crashes the compiler of this wonderful language
+// also, I don't think I trust the compiler to not generate really bad spirv for that...
 __generic<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int>
 public extension TextureHandle<TexelType, Shape, isArray, 0, 0> {
-    TexelType load(vector<int, Shape.dimensions + isArray + 1> location) {
+    public TexelType __subscript(vector<int, Shape.dimensions + isArray> location) {
+        if ((handle & textureMask) == textureMask) {
+            return unpackInvalidColor<TexelType>();
+        }
+        return getTexture()[location];
+    }
+
+    public TexelType load(vector<int, Shape.dimensions + isArray + 1> location) {
         if ((handle & textureMask) == textureMask) {
             return unpackInvalidColor<TexelType>();
         }
@@ -242,6 +251,54 @@ public extension TextureHandle<TexelType, Shape, isArray, 0, 0> {
             return unpackInvalidColor<TexelType>();
         }
         return getTexture().Sample(getSampler(), location);
+    }
+
+    public TexelType sampleLod(vector<float, Shape.dimensions + isArray> location, float level) {
+        if ((handle & textureMask) == textureMask) {
+            return unpackInvalidColor<TexelType>();
+        }
+        return getTexture().SampleLevel(getSampler(), location, level);
+    }
+
+    public float sampleAndCompare(vector<float, Shape.dimensions + isArray> location, float value) {
+        if ((handle & textureMask) == textureMask) {
+            return 0.0f;
+        }
+        return getTexture().SampleCmp(getComparisonSampler(), location, value);
+    }
+}
+
+__generic<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int>
+public extension TextureHandle<TexelType, Shape, isArray, 0, 1> {
+    __subscript(vector<uint, Shape.dimensions + isArray> location) -> TexelType
+    {
+        get {
+            if ((handle & textureMask) == textureMask) {
+                return unpackInvalidColor<TexelType>();
+            }
+            return getTexture()[location];
+        }
+
+        set(TexelType newValue) {
+            if ((handle & textureMask) == textureMask) {
+                return;
+            }
+            getTexture()[location] =  newValue;
+        }
+    }
+
+    public TexelType load(vector<int, Shape.dimensions + isArray> location) {
+        if ((handle & textureMask) == textureMask) {
+            return unpackInvalidColor<TexelType>();
+        }
+        return getTexture().Load(location);
+    }
+
+    public void store(vector<uint, Shape.dimensions + isArray> location, TexelType texel) {
+        if ((handle & textureMask) == textureMask) {
+            return;
+        }
+        return getTexture().Store(location, texel);
     }
 }
 

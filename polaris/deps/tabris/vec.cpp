@@ -141,13 +141,15 @@ namespace tbrs {
 	}
 
 	template<typename T>
-	void Vec<T>::remove(u64 index) {
+	void Vec<T>::remove(u64 index, u64 count) {
 		if constexpr(!std::is_trivially_destructible_v<T>) {
-			m_elems[index].~T();
+			for(u64  i = index; i < index + count; i++) {
+				m_elems[i].~T();
+			}
 		}
 
-		m_count--;
-		memmove(m_elems + index, m_elems + index + 1, (m_count - index) * sizeof(T));
+		m_count -= count;
+		memmove(m_elems + index, m_elems + index + count, (m_count - index) * sizeof(T));
 	}
 
 	template<typename T>

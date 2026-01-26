@@ -7,19 +7,11 @@
 
 namespace pl {
 	const Event Swapchain::present(const PresentInfo& info) {
-		u64 newHead;
-		for(newHead = 0; newHead < m_submittedSems.count(); newHead++) {
-			if(m_submittedSems[newHead].second.completed()) {
-				m_freeSems.push(m_submittedSems[newHead].first);
-			}
-			else {
-				break;
-			}
+		u64 i;
+		for(i = 0; i < m_submittedSems.count() && m_submittedSems[i].second.completed(); i++) {
+			m_freeSems.push(m_submittedSems[i].first);
 		}
-
-		// really janky way to erase the first N elements
-		memmove(m_submittedSems.data(), m_submittedSems.data() + newHead, (m_submittedSems.count() - newHead) * sizeof(m_submittedSems.front()));
-		m_submittedSems.setCount(m_submittedSems.count() - newHead);
+		m_submittedSems.remove(0, i);
 
 		VkSemaphore sem;
 		if(m_freeSems.empty()) {
@@ -131,7 +123,7 @@ namespace pl {
 				}), nullptr, &m_surface);
 				break;
 			}
-			case NativeWindowType::Xcb: {
+			case NativeWindowType::XCB: {
 				vkCreateXcbSurfaceKHR(m_instance, ptr(VkXcbSurfaceCreateInfoKHR{
 					.connection = ci.nativeWindow.xcb.connection,
 					.window = ci.nativeWindow.xcb.window

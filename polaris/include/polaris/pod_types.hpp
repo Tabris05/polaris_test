@@ -162,7 +162,7 @@ namespace pl {
 	enum class NativeWindowType : u8 {
 		Headless,
 		Win32,
-		Xcb,
+		XCB,
 		Wayland,
 		Metal,
 		Android,
@@ -179,6 +179,19 @@ namespace pl {
 		Compute,
 		Vertex,
 		Fragment
+	};
+
+	enum class Face : u8 {
+		None,
+		Front,
+		Back,
+		Both
+	};
+
+	enum class IndexType : u8 {
+		u8,
+		u16,
+		u32
 	};
 
 	enum class LoadOp : u8 {
@@ -417,6 +430,29 @@ namespace pl {
 		View<const Shader> shaders;
 		View<const Format> colorFormats;
 		Format depthFormat;
+		Face cullFace;
+		CompareOp depthCompareOp;
+		bool depthWriteEnable;
+	};
+
+	struct BufferRegion {
+		const class Buffer& buffer;
+		u64 offset = 0;
+	};
+
+	struct DrawIndirectCommand {
+		u32 vertexCount;
+		u32 instanceCount;
+		u32 firstVertex;
+		u32 firstInstance;
+	};
+
+	struct DrawIndexedIndirectCommand {
+		u32 indexCount;
+		u32 instanceCount;
+		u32 firstIndex;
+		i32 vertexOffset;
+		u32 firstInstance;
 	};
 
 	template <typename T>

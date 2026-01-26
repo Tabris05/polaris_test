@@ -59,6 +59,10 @@ namespace pl {
 		}));
 	}
 
+	void CommandBuffer::bindIndexBuffer(BufferRegion region, IndexType indexType) {
+		vkCmdBindIndexBuffer(m_cmd, region.buffer.vkBuffer(), region.offset, vkIndexType(indexType));
+	}
+
 	void CommandBuffer::bindPipeline(const Pipeline& pipeline) {
 		pipeline.bind(m_cmd);
 	}
@@ -79,6 +83,26 @@ namespace pl {
 
 	void CommandBuffer::draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance) {
 		vkCmdDraw(m_cmd, vertexCount, instanceCount, firstVertex, firstInstance);
+	}
+
+	void CommandBuffer::drawIndexed(u32 indexCount, u32 instanceCount, u32 firstIndex, i32 vertexOffset, u32 firstInstance) {
+		vkCmdDrawIndexed(m_cmd, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+	}
+
+	void CommandBuffer::drawIndexedIndirect(BufferRegion indirectBuffer, u32 drawCount, u32 stride) {
+		vkCmdDrawIndexedIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, drawCount, stride);
+	}
+
+	void CommandBuffer::drawIndexedIndirectCount(BufferRegion indirectBuffer, BufferRegion countBuffer, u32 maxCount, u32 stride) {
+		vkCmdDrawIndexedIndirectCount(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, countBuffer.buffer.vkBuffer(), countBuffer.offset, maxCount, stride);
+	}
+
+	void CommandBuffer::drawIndirect(BufferRegion indirectBuffer, u32 drawCount, u32 stride) {
+		vkCmdDrawIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, drawCount, stride);
+	}
+
+	void CommandBuffer::drawIndirectCount(BufferRegion indirectBuffer, BufferRegion countBuffer, u32 maxCount, u32 stride) {
+		vkCmdDrawIndirectCount(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, countBuffer.buffer.vkBuffer(), countBuffer.offset, maxCount, stride);
 	}
 
 	void CommandBuffer::dispatch(u32 groupsX, u32 groupsY, u32 groupsZ) {

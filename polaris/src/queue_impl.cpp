@@ -4,15 +4,15 @@
 
 namespace pl {
 	CommandBuffer Queue::beginRecording() {
-		while(!m_submittedCmds.empty() && m_submittedCmds.front().event.completed()) {
-			for(StagingBuffer buffer : m_submittedCmds.front().stagingBuffers) {
+		u64 i;
+		for(i = 0; i < m_submittedCmds.count() && m_submittedCmds[i].event.completed(); i++) {
+			for(StagingBuffer buffer : m_submittedCmds[i].stagingBuffers) {
 				m_allocator->free(buffer);
 			};
-
-			m_freeCmds.push(m_submittedCmds.front().cmd);
+			m_freeCmds.push(m_submittedCmds[i].cmd);
 			vkResetCommandBuffer(m_freeCmds.back(), 0);
-			m_submittedCmds.remove(0); // foo: should recycle stagingBuffers vector
 		}
+		m_submittedCmds.remove(0, i); // foo: should recycle stagingBuffers vector
 
 		VkCommandBuffer cmd;
 		if(m_freeCmds.empty()) {
@@ -46,7 +46,7 @@ namespace pl {
 			}) : nullptr,
 			.commandBufferInfoCount = 1,
 			.pCommandBufferInfos = ptr(VkCommandBufferSubmitInfo{ .commandBuffer = cmd }),
-			.signalSemaphoreInfoCount = si.waitEvent.has_value() ? 2u : 1u,
+			.signalSemaphoreInfoCount = si.signalEvent.has_value() ? 2u : 1u,
 			.pSignalSemaphoreInfos = ptr<VkSemaphoreSubmitInfo>({
 				VkSemaphoreSubmitInfo{
 					.semaphore = m_sync.next().vkSemaphore(),
@@ -97,7 +97,7 @@ namespace pl {
 					VkSemaphoreSubmitInfo{
 						.semaphore = m_sync.next().vkSemaphore(),
 						.value = m_sync.current().value(),
-						.stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT
+						.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT
 					}
 				})
 			}), {});

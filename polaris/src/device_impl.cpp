@@ -22,22 +22,22 @@ namespace pl {
 			if(strcmp(prop.extensionName, VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME) == 0) {
 				instanceExtensions.push(prop.extensionName);
 			}
-			else if(strcmp(prop.extensionName, VK_KHR_WIN32_SURFACE_EXTENSION_NAME) == 0) {
+			if(strcmp(prop.extensionName, VK_KHR_WIN32_SURFACE_EXTENSION_NAME) == 0) {
 				instanceExtensions.push(prop.extensionName);
 			}
-			else if(strcmp(prop.extensionName, VK_KHR_XCB_SURFACE_EXTENSION_NAME) == 0) {
+			if(strcmp(prop.extensionName, VK_KHR_XCB_SURFACE_EXTENSION_NAME) == 0) {
 				instanceExtensions.push(prop.extensionName);
 			}
-			else if(strcmp(prop.extensionName, VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME) == 0) {
+			if(strcmp(prop.extensionName, VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME) == 0) {
 				instanceExtensions.push(prop.extensionName);
 			}
-			else if(strcmp(prop.extensionName, VK_EXT_METAL_SURFACE_EXTENSION_NAME) == 0) {
+			if(strcmp(prop.extensionName, VK_EXT_METAL_SURFACE_EXTENSION_NAME) == 0) {
 				instanceExtensions.push(prop.extensionName);
 			}
-			else if(strcmp(prop.extensionName, VK_KHR_ANDROID_SURFACE_EXTENSION_NAME) == 0) {
+			if(strcmp(prop.extensionName, VK_KHR_ANDROID_SURFACE_EXTENSION_NAME) == 0) {
 				instanceExtensions.push(prop.extensionName);
 			}
-			else if(strcmp(prop.extensionName, VK_NN_VI_SURFACE_EXTENSION_NAME) == 0) {
+			if(strcmp(prop.extensionName, VK_NN_VI_SURFACE_EXTENSION_NAME) == 0) {
 				instanceExtensions.push(prop.extensionName);
 			}
 		}
@@ -98,12 +98,13 @@ namespace pl {
 									}),
 									.maintenance9 = true
 								}),
+								.indexTypeUint8 = true,
 								.maintenance5 = true,
-								.hostImageCopy = true,
 							}),
 							.synchronization2 = true,
-							.dynamicRendering = true
+							.dynamicRendering = true,
 						}),
+						.drawIndirectCount = true,
 						.shaderSampledImageArrayNonUniformIndexing = true,
 						.shaderStorageImageArrayNonUniformIndexing = true,
 						.descriptorBindingSampledImageUpdateAfterBind = true,
@@ -124,9 +125,9 @@ namespace pl {
 					.multiDrawIndirect = true,
 					.drawIndirectFirstInstance = true,
 					.samplerAnisotropy = true,
+					.fragmentStoresAndAtomics = true,
 					.shaderStorageImageReadWithoutFormat = true,
 					.shaderStorageImageWriteWithoutFormat = true,
-					.shaderInt64 = true
 				}
 			}),
 			.queueCreateInfoCount = static_cast<u32>(queueCIs.count()),

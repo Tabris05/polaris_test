@@ -322,6 +322,14 @@ inline VkAttachmentStoreOp vkStoreOp(pl::StoreOp op) {
     }
 }
 
+inline VkIndexType vkIndexType(pl::IndexType type) {
+    switch(type) {
+        case pl::IndexType::u8: return VK_INDEX_TYPE_UINT8;
+        case pl::IndexType::u16: return VK_INDEX_TYPE_UINT16;
+        case pl::IndexType::u32: return VK_INDEX_TYPE_UINT32;
+    }
+}
+
 inline VkPipelineStageFlags2 vkStageMask(pl::PipelineStage stage) {
     VkPipelineStageFlags2 flags = 0;
     if((stage & pl::PipelineStage::PreRaster) != pl::PipelineStage::None) {

@@ -120,7 +120,7 @@ int main() {
 		.height = static_cast<u32>(y),
 	});
 	pl::CommandBuffer upload = queue.beginRecording();
-	upload.writeBuffer(buffer, pl::View<const Vertex>(vertices));
+	upload.writeBuffer(pl::BufferRegion{ buffer }, pl::View<const Vertex>(vertices));
 	upload.writeTexture(albedo, pl::View<const byte>(texData, x * y * 4));
 	queue.submit(pl::SubmitInfo{ .commandBuffer = std::move(upload) }).wait();
 
@@ -153,6 +153,9 @@ int main() {
 		},
 		.colorFormats = { pl::Format::RGBA8_SRGB },
 		.depthFormat = pl::Format::D32_SFLOAT,
+		.cullFace = pl::Face::Back,
+		.depthCompareOp = pl::CompareOp::Less,
+		.depthWriteEnable = true
 	});
 
 	pl::Event fif[2] = {};
@@ -177,10 +180,9 @@ int main() {
 		cmd.pushConstants(PushConstants{
 			.vertices = buffer.deviceAddress<Vertex>(),
 			.mvp = projection * view * model,
-			//.texture = pl::TextureHandle(albedoHandle, sampler)
-			.texture = pl::TextureHandle(vec4f32(1.0f, 0.0f, 0.0f, 1.0f))
+			.texture = pl::TextureHandle(albedoHandle, sampler)
 		});
-
+		
 		cmd.barrier(pl::PipelineStage::Depth | pl::PipelineStage::Present, pl::PipelineStage::DepthWrite | pl::PipelineStage::ColorWrite);
 		cmd.beginRenderPass(pl::RenderPassBeginInfo{
 			.renderArea = {.width = 1920, .height = 1080 },
