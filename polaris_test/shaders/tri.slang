@@ -16,6 +16,7 @@ VSOut vsmain(uniform PushConstants pcs, uint vtxIdx: SV_VertexID) {
 
 [shader("fragment")]
 vec4f32 fsmain(uniform PushConstants pcs, VSOut input) : SV_Target {
+    pcs.texture.extent();
     return pcs.texture.sample(input.uv);
 }
 

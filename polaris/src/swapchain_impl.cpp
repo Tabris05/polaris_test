@@ -25,7 +25,7 @@ namespace pl {
 		u32 acquired;
 		VkResult res = vkAcquireNextImageKHR(m_device, m_swapchain, std::numeric_limits<u64>::max(), sem, {}, &acquired);
 		while(res == VK_ERROR_OUT_OF_DATE_KHR) {
-			update(m_width, m_height, m_presentMode);
+			update(m_width, m_height, m_vsync);
 			res = vkAcquireNextImageKHR(m_device, m_swapchain, std::numeric_limits<u64>::max(), sem, {}, &acquired);
 		}
 
@@ -88,19 +88,16 @@ namespace pl {
 		}));
 
 		if(res != VK_SUCCESS) {
-			update(m_width, m_height, m_presentMode);
+			update(m_width, m_height, m_vsync);
 		}
 
 		return event;
 	}
 
-	void Swapchain::update(u32 width, u32 height, PresentMode mode) {
+	void Swapchain::update(u32 width, u32 height, b8 vsync) {
 		m_width = width;
 		m_height = height;
-
-		if(static_cast<u8>(mode) != 0xff) {
-			m_presentMode = mode;
-		}
+		m_vsync = vsync;
 
 		// foo: eventually should try to reuse old swapchain
 		vkDeviceWaitIdle(m_device);
@@ -109,7 +106,7 @@ namespace pl {
 	}
 
 	Swapchain::Swapchain(const SwapchainCreateInfo& ci)
-		: m_instance(ci.device.vkInstance()), m_device(ci.device.vkDevice()), m_width(ci.width), m_height(ci.height), m_presentMode(ci.mode), m_heap(ci.device.descriptorHeap()) {
+		: m_instance(ci.device.vkInstance()), m_device(ci.device.vkDevice()), m_width(ci.width), m_height(ci.height), m_vsync(ci.vsync), m_heap(ci.device.descriptorHeap()) {
 
 		switch(ci.nativeWindow.type) {
 			case NativeWindowType::Headless: {
@@ -211,7 +208,7 @@ namespace pl {
 			.imageUsage = VK_IMAGE_USAGE_STORAGE_BIT,
 			.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode = vkPresentMode(m_presentMode),
+			.presentMode = m_vsync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR,
 			.clipped = true,
 		}), nullptr, &m_swapchain);
 

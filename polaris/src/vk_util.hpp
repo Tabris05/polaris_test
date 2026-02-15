@@ -182,6 +182,15 @@ inline VkImageAspectFlags vkAspectMask(VkFormat format) {
     }
 }
 
+inline VkImageAspectFlags vkAspectMask(pl::DepthStencilAspect aspect) {
+    switch(aspect) {
+        case pl::DepthStencilAspect::Depth:
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+        case pl::DepthStencilAspect::Stencil:
+            return VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+}
+
 inline bool vkFormatIsDepthOrStencil(VkFormat format) {
     switch(format) {
     case VK_FORMAT_D16_UNORM:
@@ -288,14 +297,6 @@ inline VkFormatFeatureFlagBits vkImageUsageToFormatFeatures(VkImageUsageFlagBits
         case VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT: return VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
         default: return VkFormatFeatureFlagBits(0);
 	}
-}
-
-inline VkPresentModeKHR vkPresentMode(pl::PresentMode mode) {
-    switch(mode) {
-        case pl::PresentMode::Immediate: return VK_PRESENT_MODE_IMMEDIATE_KHR;
-        case pl::PresentMode::VSync: return VK_PRESENT_MODE_FIFO_KHR;
-        case pl::PresentMode::FastSync: return VK_PRESENT_MODE_MAILBOX_KHR;
-    }
 }
 
 inline VkShaderStageFlagBits vkShaderStage(pl::ShaderStage stage) {

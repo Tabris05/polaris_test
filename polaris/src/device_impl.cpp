@@ -60,6 +60,7 @@ namespace pl {
 			VK_KHR_MAINTENANCE_9_EXTENSION_NAME,
 			VK_KHR_SHADER_MAXIMAL_RECONVERGENCE_EXTENSION_NAME,
 			VK_EXT_MUTABLE_DESCRIPTOR_TYPE_EXTENSION_NAME,
+			VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME
 		};
 		
 		f32 one = 1.0f;
@@ -92,6 +93,9 @@ namespace pl {
 								.pNext = ptr(VkPhysicalDeviceMaintenance9FeaturesKHR{
 									.pNext = ptr(VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
 										.pNext = ptr(VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT{
+											.pNext = ptr(VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
+												.fragmentShaderPixelInterlock = true,
+											}),
 											.mutableDescriptorType = true
 										}),
 										.shaderMaximalReconvergence = true
@@ -101,10 +105,12 @@ namespace pl {
 								.indexTypeUint8 = true,
 								.maintenance5 = true,
 							}),
+							.shaderDemoteToHelperInvocation = true,
 							.synchronization2 = true,
 							.dynamicRendering = true,
 						}),
 						.drawIndirectCount = true,
+						.shaderInt8 = true,
 						.shaderSampledImageArrayNonUniformIndexing = true,
 						.shaderStorageImageArrayNonUniformIndexing = true,
 						.descriptorBindingSampledImageUpdateAfterBind = true,
@@ -128,6 +134,7 @@ namespace pl {
 					.fragmentStoresAndAtomics = true,
 					.shaderStorageImageReadWithoutFormat = true,
 					.shaderStorageImageWriteWithoutFormat = true,
+				    .shaderInt16 = true,
 				}
 			}),
 			.queueCreateInfoCount = static_cast<u32>(queueCIs.count()),

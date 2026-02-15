@@ -18,7 +18,9 @@ namespace pl
 			.anisotropyEnable = true,
 			.maxAnisotropy = ci.anisotropy,
 			.compareEnable = ci.compareOp != CompareOp::None,
-			.compareOp = vkCompareOp(ci.compareOp)
+			.compareOp = vkCompareOp(ci.compareOp),
+			.minLod = ci.minLod,
+			.maxLod = ci.maxLod
 		}))) {}
 
 	Sampler::Sampler(Sampler&& src) {

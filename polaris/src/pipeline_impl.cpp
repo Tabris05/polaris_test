@@ -58,7 +58,8 @@ namespace pl {
 				}),
 				.stage = vkShaderStage(ci.shader.stage),
 				.pName = ci.shader.entryPoint
-			}
+			},
+			.layout = ci.device.descriptorHeap()->vkPipelineLayout()
 		}), nullptr, &m_pipeline);
 	}
 

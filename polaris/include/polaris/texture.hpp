@@ -10,21 +10,28 @@ namespace pl {
 
 	class TextureHandle {
 		public:
+			TextureHandle();
 			TextureHandle(TextureHandle texture, const Sampler& sampler);
 			TextureHandle(vec4<f32> invalidColor);
+
 		private:
 			alignas(4) byte reserved[4];
 	};
 
-	struct ImageHandle {
-		alignas(4) byte reserved[4];
+	class ImageHandle {
+		public:
+			ImageHandle();
+			ImageHandle(vec4<f32> invalidColor);
+
+		private:
+			alignas(4) byte reserved[4];
 	};
 
 	class Texture {
 		public:
-			RenderTarget makeRenderTarget(const TextureView& view = {});
-			TextureHandle makeTextureHandle(const TextureView& view = {});
-			ImageHandle makeImageHandle(const TextureView& view = {});
+			RenderTarget makeRenderTarget(TextureView view = {});
+			TextureHandle makeTextureHandle(TextureView view = {});
+			ImageHandle makeImageHandle(TextureView view = {});
 
 			Texture(const TextureCreateInfo& ci);
 			Texture(Texture&& src);

@@ -11,6 +11,7 @@
 namespace pl {
 	class RenderTarget {
 		public:
+			// "public" functions that should not be included in the public header
 			RenderTarget(VkImageView view);
 			VkImageView vkImageView() const;
 		private:
@@ -19,26 +20,32 @@ namespace pl {
 
 	class TextureHandle {
 		public:
-			TextureHandle(u32 handle);
+			TextureHandle();
 			TextureHandle(TextureHandle texture, const Sampler& sampler);
 			TextureHandle(vec4<f32> invalidColor);
+
+			// "public" functions that should not be included in the public header
+			TextureHandle(u32 handle);
 		private:
 			u32 handle = 0x000FFFFF;
 	};
 
 	class ImageHandle {
 		public:
-			ImageHandle(u32 handle);
+			ImageHandle();
 			ImageHandle(vec4<f32> invalidColor);
+
+			// "public" functions that should not be included in the public header
+			ImageHandle(u32 handle);
 		private:
 			u32 handle = 0x000FFFFF;
 	};
 
 	class Texture {
 		public:
-			RenderTarget makeRenderTarget(const TextureView& view = {});
-			TextureHandle makeTextureHandle(const TextureView& view = {});
-			ImageHandle makeImageHandle(const TextureView& view = {});
+			RenderTarget makeRenderTarget(TextureView view = {});
+			TextureHandle makeTextureHandle(TextureView view = {});
+			ImageHandle makeImageHandle(TextureView view = {});
 
 			Texture(const TextureCreateInfo& ci);
 			Texture(Texture&& src);
@@ -51,7 +58,7 @@ namespace pl {
 			// "public" functions that should not be included in the public header
 			VkImage vkImage() const;
 			VkImageViewCreateInfo vkImageViewCreateInfo() const;
-			vec3<u32> dimensions() const; // foo: should maybe add subresource to this
+			vec3<u32> extent() const; // foo: should maybe add subresource to this
 		private:
 			struct VkImageViewInfo {
 				VkImageViewCreateInfo viewCI = {};
@@ -65,7 +72,7 @@ namespace pl {
 			VkImage m_image = {};
 
 			VkImageViewCreateInfo m_imageViewCI = {};
-			vec3<u32> m_dimensions;
+			vec3<u32> m_extent;
 
 			tbrs::Vec<VkImageView> m_renderTargetViews;
 			tbrs::Vec<u32> m_shaderResourceViews;

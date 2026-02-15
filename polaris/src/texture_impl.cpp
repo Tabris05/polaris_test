@@ -11,8 +11,7 @@ namespace pl {
 		return view;
 	}
 
-	TextureHandle::TextureHandle(u32 handle)
-		: handle(handle) {}
+	TextureHandle::TextureHandle() = default;
 
 	TextureHandle::TextureHandle(TextureHandle texture, const Sampler& sampler)
 		: handle(texture.handle | sampler.handle() << 20) {}
@@ -25,8 +24,9 @@ namespace pl {
 		handle |= static_cast<u32>(invalidColor.w * 7.0f) << 29;
 	}
 
-	ImageHandle::ImageHandle(u32 handle)
-		: handle(handle) {}
+	TextureHandle::TextureHandle(u32 handle) : handle(handle) {}
+
+	ImageHandle::ImageHandle() = default;
 
 	ImageHandle::ImageHandle(vec4<f32> invalidColor) {
 		handle = 0x000FFFFF;
@@ -36,7 +36,9 @@ namespace pl {
 		handle |= static_cast<u32>(invalidColor.w * 7.0f) << 29;
 	}
 
-	RenderTarget Texture::makeRenderTarget(const TextureView& view) {
+	ImageHandle::ImageHandle(u32 handle) : handle(handle) {}
+
+	RenderTarget Texture::makeRenderTarget(TextureView view) {
 		VkImageViewInfo info = vkImageViewInfo(view);
 		info.viewCI.pNext = &info.viewUsageCI;
 
@@ -47,7 +49,7 @@ namespace pl {
 		return RenderTarget{ viewHandle };
 	}
 
-	TextureHandle Texture::makeTextureHandle(const TextureView& view) {
+	TextureHandle Texture::makeTextureHandle(TextureView view) {
 		VkImageViewInfo info = vkImageViewInfo(view);
 		info.viewCI.pNext = &info.viewUsageCI;
 
@@ -57,7 +59,7 @@ namespace pl {
 		return TextureHandle{ handle };
 	}
 
-	ImageHandle Texture::makeImageHandle(const TextureView& view) {
+	ImageHandle Texture::makeImageHandle(TextureView view) {
 		VkImageViewInfo info = vkImageViewInfo(view);
 		info.viewCI.pNext = &info.viewUsageCI;
 
@@ -68,7 +70,7 @@ namespace pl {
 	}
 	
 	Texture::Texture(const TextureCreateInfo& ci)
-		: m_device(ci.device.vkDevice()), m_physicalDevice(ci.device.vkPhysicalDevice()), m_dimensions({ ci.width, ci.height, ci.depth }),
+		: m_device(ci.device.vkDevice()), m_physicalDevice(ci.device.vkPhysicalDevice()), m_extent({ ci.width, ci.height, ci.depth }),
 		m_heap(ci.device.descriptorHeap()), m_allocator(ci.device.deviceMemoryAllocator()) {
 
 		VkImageCreateInfo vkci{
@@ -84,8 +86,6 @@ namespace pl {
 			.arrayLayers = ci.layers,
 			.samples = static_cast<VkSampleCountFlagBits>(ci.samples),
 			.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-			.initialLayout = VK_IMAGE_LAYOUT_GENERAL // this is illegal but vkTransitionImageLayout is a no-op on all MESA drivers implying this is okay
-			// why not just use vkTransitionImageLayout? It requires VK_IMAGE_USAGE_HOST_TRANSFER_BIT which is not supported on AMD and disables DCC on NVIDIA
 		};
 
 
@@ -101,6 +101,19 @@ namespace pl {
 
 		vkCreateImage(m_device, &vkci, nullptr, &m_image);
 		m_backingMem = m_allocator->alloc(m_image);
+
+		// foo: this is illegal without VK_IMAGE_USAGE_HOST_TRANSFER_BIT, but that disables DCC on NVIDIA
+		// in mesa this function is a NO-OP for all 3 desktop vendors, so this is mainly for tooling (RenderDoc won't track undefined images)
+		vkTransitionImageLayout(m_device, 1, ptr(VkHostImageLayoutTransitionInfo{
+			.image = m_image,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_GENERAL,
+			.subresourceRange = {
+				.aspectMask = vkAspectMask(vkci.format),
+				.levelCount = VK_REMAINING_MIP_LEVELS,
+				.layerCount = VK_REMAINING_ARRAY_LAYERS
+			},
+		}));
 
 		m_imageViewCI = VkImageViewCreateInfo{
 			.image = m_image,
@@ -148,8 +161,8 @@ namespace pl {
 		return m_imageViewCI;
 	}
 
-	vec3<u32> Texture::dimensions() const {
-		return m_dimensions;
+	vec3<u32> Texture::extent() const {
+		return m_extent;
 	}
 
 	Texture::VkImageViewInfo Texture::vkImageViewInfo(const TextureView& view) {
@@ -175,17 +188,8 @@ namespace pl {
 			.a = static_cast<VkComponentSwizzle>(view.swizzleA),
 		};
 
-		if(view.aspect != DepthStencilAspect::Default) {
-			switch(view.aspect) {
-				case DepthStencilAspect::Depth:
-					vci.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-					break;
-				case DepthStencilAspect::Stencil:
-					vci.subresourceRange.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
-					break;
-				default:
-					break;
-			}
+		if(view.region.aspect != DepthStencilAspect::Default) {
+			vci.subresourceRange.aspectMask = vkAspectMask(view.region.aspect);
 		}
 
 		VkImageViewUsageCreateInfo vuci = {};

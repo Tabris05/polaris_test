@@ -169,12 +169,6 @@ namespace pl {
 		Vi
 	};
 
-	enum class PresentMode : u8 {
-		VSync,
-		FastSync,
-		Immediate
-	};
-
 	enum class ShaderStage : u8 {
 		Compute,
 		Vertex,
@@ -311,12 +305,13 @@ namespace pl {
 	};
 
 	struct TextureRegion {
-		static constexpr u32 RemainingLevels = ~0u;
-		static constexpr u32 RemainingLayers = ~0u;
+		static constexpr u32 RemainingLevels = 0xFFFFFFFF;
+		static constexpr u32 RemainingLayers = 0xFFFFFFFF;
 		u32 baseLevel = 0;
 		u32 baseLayer = 0;
 		u32 numLevels = RemainingLevels;
 		u32 numLayers = RemainingLayers;
+		DepthStencilAspect aspect;
 	};
 
 	struct TextureView {
@@ -327,7 +322,6 @@ namespace pl {
 		Swizzle swizzleG;
 		Swizzle swizzleB;
 		Swizzle swizzleA;
-		DepthStencilAspect aspect;
 	};
 
 	struct SamplerCreateInfo {
@@ -383,7 +377,7 @@ namespace pl {
 		NativeWindow nativeWindow;
 		u32 width;
 		u32 height;
-		PresentMode mode;
+		b8 vsync;
 	};
 
 	union ClearValue {
@@ -435,7 +429,7 @@ namespace pl {
 		bool depthWriteEnable;
 	};
 
-	struct BufferRegion {
+	struct BufferOffset {
 		const class Buffer& buffer;
 		u64 offset = 0;
 	};

@@ -59,7 +59,7 @@ namespace pl {
 		}));
 	}
 
-	void CommandBuffer::bindIndexBuffer(BufferRegion region, IndexType indexType) {
+	void CommandBuffer::bindIndexBuffer(BufferOffset region, IndexType indexType) {
 		vkCmdBindIndexBuffer(m_cmd, region.buffer.vkBuffer(), region.offset, vkIndexType(indexType));
 	}
 
@@ -67,18 +67,48 @@ namespace pl {
 		pipeline.bind(m_cmd);
 	}
 
-	void CommandBuffer::clearTexture(const Texture& tex, ClearValue value, TextureRegion region) {
-		VkImageSubresourceRange range = tex.vkImageViewCreateInfo().subresourceRange;
+	void CommandBuffer::clearBuffer(BufferOffset offset, u32 value, u64 size) {
+		vkCmdFillBuffer(m_cmd, offset.buffer.vkBuffer(), offset.offset, size, value);
+	}
+
+	void CommandBuffer::clearTexture(const Texture& texture, ClearValue value, TextureRegion region) {
+		VkImageSubresourceRange range = texture.vkImageViewCreateInfo().subresourceRange;
 		range.baseMipLevel = region.baseLevel;
 		range.baseArrayLayer = region.baseLayer;
 		range.levelCount = region.numLevels;
 		range.layerCount = region.numLayers;
 		if(range.aspectMask & VK_IMAGE_ASPECT_COLOR_BIT) {
-			vkCmdClearColorImage(m_cmd, tex.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearColorValue*>(&value), 1, &range);
+			vkCmdClearColorImage(m_cmd, texture.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearColorValue*>(&value), 1, &range);
 		}
 		else {
-			vkCmdClearDepthStencilImage(m_cmd, tex.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearDepthStencilValue*>(&value), 1, &range);
+			vkCmdClearDepthStencilImage(m_cmd, texture.vkImage(), VK_IMAGE_LAYOUT_GENERAL, reinterpret_cast<VkClearDepthStencilValue*>(&value), 1, &range);
 		}
+	}
+
+	void CommandBuffer::copyTexture(const Texture& src, const Texture& dst, TextureRegion srcRegion, TextureRegion dstRegion) {
+		vkCmdCopyImage(m_cmd, src.vkImage(), VK_IMAGE_LAYOUT_GENERAL, dst.vkImage(), VK_IMAGE_LAYOUT_GENERAL, 1,
+			ptr(VkImageCopy{
+				.srcSubresource{
+					src.vkImageViewCreateInfo().subresourceRange.aspectMask,
+					srcRegion.baseLevel,
+					srcRegion.baseLayer,
+					srcRegion.numLayers
+				},
+				.srcOffset{ 0, 0, 0 },
+				.dstSubresource{
+					dst.vkImageViewCreateInfo().subresourceRange.aspectMask,
+					dstRegion.baseLevel,
+					dstRegion.baseLayer,
+					srcRegion.numLayers
+				},
+				.dstOffset{ 0, 0, 0 },
+				.extent{
+					std::max(src.extent().x >> srcRegion.baseLevel, 1u),
+					std::max(src.extent().y >> srcRegion.baseLevel, 1u),
+					std::max(src.extent().z >> srcRegion.baseLevel, 1u)
+				}
+			})
+		);
 	}
 
 	void CommandBuffer::draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance) {
@@ -89,20 +119,20 @@ namespace pl {
 		vkCmdDrawIndexed(m_cmd, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 
-	void CommandBuffer::drawIndexedIndirect(BufferRegion indirectBuffer, u32 drawCount, u32 stride) {
-		vkCmdDrawIndexedIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, drawCount, stride);
+	void CommandBuffer::drawIndexedIndirect(BufferOffset indirectBuffer, u32 drawCount, u32 stride) {
+		vkCmdDrawIndexedIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, drawCount, stride + sizeof(DrawIndexedIndirectCommand));
 	}
 
-	void CommandBuffer::drawIndexedIndirectCount(BufferRegion indirectBuffer, BufferRegion countBuffer, u32 maxCount, u32 stride) {
-		vkCmdDrawIndexedIndirectCount(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, countBuffer.buffer.vkBuffer(), countBuffer.offset, maxCount, stride);
+	void CommandBuffer::drawIndexedIndirectCount(BufferOffset indirectBuffer, BufferOffset countBuffer, u32 maxCount, u32 stride) {
+		vkCmdDrawIndexedIndirectCount(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, countBuffer.buffer.vkBuffer(), countBuffer.offset, maxCount, stride + sizeof(DrawIndexedIndirectCommand));
 	}
 
-	void CommandBuffer::drawIndirect(BufferRegion indirectBuffer, u32 drawCount, u32 stride) {
-		vkCmdDrawIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, drawCount, stride);
+	void CommandBuffer::drawIndirect(BufferOffset indirectBuffer, u32 drawCount, u32 stride) {
+		vkCmdDrawIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, drawCount, stride + sizeof(DrawIndirectCommand));
 	}
 
-	void CommandBuffer::drawIndirectCount(BufferRegion indirectBuffer, BufferRegion countBuffer, u32 maxCount, u32 stride) {
-		vkCmdDrawIndirectCount(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, countBuffer.buffer.vkBuffer(), countBuffer.offset, maxCount, stride);
+	void CommandBuffer::drawIndirectCount(BufferOffset indirectBuffer, BufferOffset countBuffer, u32 maxCount, u32 stride) {
+		vkCmdDrawIndirectCount(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, countBuffer.buffer.vkBuffer(), countBuffer.offset, maxCount, stride + sizeof(DrawIndirectCommand));
 	}
 
 	void CommandBuffer::dispatch(u32 groupsX, u32 groupsY, u32 groupsZ) {
@@ -137,9 +167,9 @@ namespace pl {
 		vkCmdPushConstants(m_cmd, m_layout, VK_SHADER_STAGE_ALL, 0, size, constants);
 	}
 
-	void CommandBuffer::writeBufferImpl(const Buffer& buffer, const void* data, u64 size, u64 offset) {
+	void CommandBuffer::writeBufferImpl(BufferOffset offset, const void* data, u64 size) {
 		if(size < 65536) {
-			vkCmdUpdateBuffer(m_cmd, buffer.vkBuffer(), offset, size, data);
+			vkCmdUpdateBuffer(m_cmd, offset.buffer.vkBuffer(), offset.offset, size, data);
 		}
 		else {
 			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < size) {
@@ -148,9 +178,9 @@ namespace pl {
 			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
 
 			memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, data, size);
-			vkCmdCopyBuffer(m_cmd, stagingBuffer.buffer, buffer.vkBuffer(), 1, ptr(VkBufferCopy{
+			vkCmdCopyBuffer(m_cmd, stagingBuffer.buffer, offset.buffer.vkBuffer(), 1, ptr(VkBufferCopy{
 				.srcOffset = stagingBuffer.writeOffset,
-				.dstOffset = offset,
+				.dstOffset = offset.offset,
 				.size = size
 			}));
 
@@ -161,9 +191,9 @@ namespace pl {
 	void CommandBuffer::writeTextureImpl(const Texture& texture, const void* data, TextureRegion region) {
 		u32 maxLevel = region.numLevels == TextureRegion::RemainingLevels ? texture.vkImageViewCreateInfo().subresourceRange.levelCount : region.baseLevel + region.numLevels;
 		for(u32 level = region.baseLevel; level < maxLevel; level++) {
-			u32 width = std::max(texture.dimensions().x >> level, 1u);
-			u32 height = std::max(texture.dimensions().y >> level, 1u);
-			u32 depth = std::max(texture.dimensions().z >> level, 1u);
+			u32 width = std::max(texture.extent().x >> level, 1u);
+			u32 height = std::max(texture.extent().y >> level, 1u);
+			u32 depth = std::max(texture.extent().z >> level, 1u);
 			u64 levelSize = width * height * depth * vkFormatTexelBlockSize(texture.vkImageViewCreateInfo().format);
 
 			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < levelSize) {
@@ -177,7 +207,7 @@ namespace pl {
 			vkCmdCopyBufferToImage(m_cmd, stagingBuffer.buffer, texture.vkImage(), VK_IMAGE_LAYOUT_GENERAL, 1, ptr(VkBufferImageCopy{
 				.bufferOffset = stagingBuffer.writeOffset,
 				.imageSubresource = {
-					.aspectMask = vkAspectMask(texture.vkImageViewCreateInfo().format),
+					.aspectMask = region.aspect == DepthStencilAspect::Default ? vkAspectMask(texture.vkImageViewCreateInfo().format) : vkAspectMask(region.aspect),
 					.mipLevel = level,
 					.baseArrayLayer = region.baseLayer,
 					.layerCount = region.numLayers

@@ -15,9 +15,7 @@ namespace pl {
 		}), nullptr, &mem);
 		vkBindBufferMemory(m_device, buffer, mem, 0);
 
-		std::scoped_lock lock{ m_lock };
-		m_allocations.push(mem);
-		return m_allocations.count() - 1;
+		return mem;
 	}
 
 	DeviceMemory DeviceMemoryAllocator::alloc(VkImage image) {
@@ -33,15 +31,11 @@ namespace pl {
 		}), nullptr, &mem);
 		vkBindImageMemory(m_device, image, mem, 0);
 
-		std::scoped_lock lock{ m_lock };
-		m_allocations.push(mem);
-		return m_allocations.count() - 1;
+		return mem;
 	}
 
-	void DeviceMemoryAllocator::free(DeviceMemory alloc) {
-		std::scoped_lock lock{ m_lock };
-		vkFreeMemory(m_device, m_allocations[alloc], nullptr);
-		m_allocations.remove(alloc);
+	void DeviceMemoryAllocator::free(VkDeviceMemory alloc) {
+		vkFreeMemory(m_device, alloc, nullptr);
 	}
 
 	DeviceMemoryAllocator::DeviceMemoryAllocator(VkPhysicalDevice physicalDevice, VkDevice device) :

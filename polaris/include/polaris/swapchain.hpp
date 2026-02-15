@@ -14,7 +14,7 @@ namespace pl {
 	class Swapchain {
 		public:
 			const Event present(const PresentInfo& info);
-			void update(u32 width, u32 height, PresentMode mode = static_cast<PresentMode>(0xff));
+			void update(u32 width, u32 height, b8 vsync);
 
 			Swapchain(const SwapchainCreateInfo& ci);
 			Swapchain(Swapchain&& src);

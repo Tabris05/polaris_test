@@ -5,7 +5,7 @@
 #include <mutex>
 
 namespace pl {
-	using DeviceMemory = u16;
+	using DeviceMemory = VkDeviceMemory;
 
 	class DeviceMemoryAllocator {
 		public:
@@ -23,8 +23,5 @@ namespace pl {
 		private:
 			VkDevice m_device = {};
 			VkPhysicalDeviceMemoryProperties m_memProps = {};
-
-			std::mutex m_lock;
-			tbrs::Vec<VkDeviceMemory> m_allocations;
 	};
 }

@@ -59,7 +59,7 @@ int main() {
 		},
 		.width = 1920,
 		.height = 1080,
-		.mode = pl::PresentMode::Immediate
+		.vsync = true
 	});
 
 	pl::Texture colorBuffer(pl::TextureCreateInfo{
@@ -79,6 +79,9 @@ int main() {
 	pl::RenderTarget colorTarget = colorBuffer.makeRenderTarget();
 	pl::RenderTarget depthTarget = depthBuffer.makeRenderTarget();
 	pl::TextureHandle presentHandle = colorBuffer.makeTextureHandle(pl::TextureView{ .format = pl::Format::RGBA8_UNORM });
+
+	pl::TextureHandle handle;
+	pl::ImageHandle imageHandle = colorBuffer.makeImageHandle();
 
 	// upload model data
 	tinyobj::attrib_t attrib;
@@ -120,7 +123,7 @@ int main() {
 		.height = static_cast<u32>(y),
 	});
 	pl::CommandBuffer upload = queue.beginRecording();
-	upload.writeBuffer(pl::BufferRegion{ buffer }, pl::View<const Vertex>(vertices));
+	upload.writeBuffer(pl::BufferOffset{ buffer }, pl::View<const Vertex>(vertices));
 	upload.writeTexture(albedo, pl::View<const byte>(texData, x * y * 4));
 	queue.submit(pl::SubmitInfo{ .commandBuffer = std::move(upload) }).wait();
 
@@ -180,7 +183,8 @@ int main() {
 		cmd.pushConstants(PushConstants{
 			.vertices = buffer.deviceAddress<Vertex>(),
 			.mvp = projection * view * model,
-			.texture = pl::TextureHandle(albedoHandle, sampler)
+			//.texture = pl::TextureHandle(albedoHandle, sampler)
+			.texture = pl::TextureHandle(pl::vec4<f32>(1.0f))
 		});
 		
 		cmd.barrier(pl::PipelineStage::Depth | pl::PipelineStage::Present, pl::PipelineStage::DepthWrite | pl::PipelineStage::ColorWrite);
@@ -191,7 +195,7 @@ int main() {
 					.target = colorTarget,
 					.loadOp = pl::LoadOp::Clear,
 					.storeOp = pl::StoreOp::Store,
-					.clearValue = pl::ClearValue{.fColor = { 0.0f, 0.0f, 0.0f, 1.0f } }
+					.clearValue = pl::ClearValue{ .fColor = { 0.0f, 0.0f, 0.0f, 1.0f } }
 				}
 			},
 			.depthTarget = pl::RenderTargetInfo{

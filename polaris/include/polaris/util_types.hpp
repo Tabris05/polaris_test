@@ -94,14 +94,14 @@ namespace pl {
 				return m_elems[index];
 			}
 
-			View(T arr[]) : m_elems(arr), m_count(sizeof(arr) / sizeof(T)) {}
-			View(T* data, u64 count) : m_elems(data), m_count(count) {}
-			View(std::initializer_list<T>&& list) : m_elems(std::data(list)), m_count(list.end() - list.begin()) {}
+			View(std::remove_cvref_t<T> arr[]) : m_elems(arr), m_count(sizeof(arr) / sizeof(T)) {}
+			View(std::remove_cvref_t<T>* data, u64 count) : m_elems(data), m_count(count) {}
+			View(std::initializer_list<std::remove_cvref_t<T>>&& list) : m_elems(std::data(list)), m_count(list.end() - list.begin()) {}
 
 			// foo: should decouple this from std::ranges maybe
 			template <std::ranges::contiguous_range R>
 			requires std::same_as<std::remove_cvref_t<std::ranges::range_value_t<R>>, std::remove_cvref_t<T>>
-			View(R&& range) : m_elems(range.data()), m_count(range.end() - range.begin()) {}
+			View(R&& range) : m_elems(std::data(range)), m_count(range.end() - range.begin()) {}
 
 			View() = default;
 
