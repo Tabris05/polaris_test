@@ -183,8 +183,7 @@ int main() {
 		cmd.pushConstants(PushConstants{
 			.vertices = buffer.deviceAddress<Vertex>(),
 			.mvp = projection * view * model,
-			//.texture = pl::TextureHandle(albedoHandle, sampler)
-			.texture = pl::TextureHandle(pl::vec4<f32>(1.0f))
+			.texture = pl::TextureHandle(albedoHandle, sampler)
 		});
 		
 		cmd.barrier(pl::PipelineStage::Depth | pl::PipelineStage::Present, pl::PipelineStage::DepthWrite | pl::PipelineStage::ColorWrite);
