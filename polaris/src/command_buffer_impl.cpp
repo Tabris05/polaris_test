@@ -159,12 +159,18 @@ namespace pl {
 		return std::move(m_stagingBuffers);
 	}
 
-	CommandBuffer::CommandBuffer(VkCommandBuffer cmd, VkPipelineLayout layout, StagingAllocator* stagingAllocator)
-		: m_cmd(cmd), m_layout(layout), m_allocator(stagingAllocator) {
+	CommandBuffer::CommandBuffer(VkCommandBuffer cmd, StagingAllocator* stagingAllocator)
+		: m_cmd(cmd), m_allocator(stagingAllocator) {
 	}
 
 	void CommandBuffer::pushConstantsImpl(const void* constants, u64 size) {
-		vkCmdPushConstants(m_cmd, m_layout, VK_SHADER_STAGE_ALL, 0, size, constants);
+		vkCmdPushDataEXT(m_cmd, ptr(VkPushDataInfoEXT{
+			.offset = 0,
+			.data{
+				.address = constants,
+				.size = size
+			}
+		}));
 	}
 
 	void CommandBuffer::writeBufferImpl(BufferOffset offset, const void* data, u64 size) {

@@ -56,7 +56,7 @@ namespace pl {
 			// "public" functions that should not be included in the public header
 			VkCommandBuffer vkCommandBuffer() const;
 			tbrs::Vec<StagingBuffer>&& getStagingBuffers() const;
-			CommandBuffer(VkCommandBuffer cmd, VkPipelineLayout layout, StagingAllocator* stagingAllocator);
+			CommandBuffer(VkCommandBuffer cmd, StagingAllocator* stagingAllocator);
 
 		private:
 			void pushConstantsImpl(const void* constants, u64 size);
@@ -64,7 +64,6 @@ namespace pl {
 			void writeTextureImpl(const Texture& texture, const void* data, TextureRegion region);
 
 			VkCommandBuffer m_cmd = {};
-			VkPipelineLayout m_layout = {};
 			StagingAllocator* m_allocator = nullptr;
 
 			// mutable is evil but you can't move from const objects and I need to steal this in Queue::Submit

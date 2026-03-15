@@ -28,6 +28,9 @@ namespace pl {
 
 		vkCreateGraphicsPipelines(m_device, nullptr, 1, ptr(VkGraphicsPipelineCreateInfo{
 			.pNext = ptr(VkPipelineRenderingCreateInfo{
+				.pNext = ptr(VkPipelineCreateFlags2CreateInfo{
+					.flags = VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT
+				}),
 				.colorAttachmentCount = static_cast<u32>(ci.colorFormats.count()),
 				.pColorAttachmentFormats = colorFormats,
 				.depthAttachmentFormat = vkFormat(ci.depthFormat)
@@ -44,13 +47,15 @@ namespace pl {
 				.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
 			})}),
 			.pDynamicState = ptr(VkPipelineDynamicStateCreateInfo{.dynamicStateCount = 2, .pDynamicStates = ptr({ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR }) }),
-			.layout = ci.device.descriptorHeap()->vkPipelineLayout()
 		}), nullptr, &m_pipeline);
 	}
 
 	Pipeline::Pipeline(const ComputePipelineCreateInfo& ci)
 		: m_device(ci.device.vkDevice()), m_bindPoint(VK_PIPELINE_BIND_POINT_COMPUTE) {
 		vkCreateComputePipelines(m_device, {}, 1, ptr(VkComputePipelineCreateInfo{
+			.pNext = ptr(VkPipelineCreateFlags2CreateInfo{
+				.flags = VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT
+			}),
 			.stage = {
 				.pNext = ptr(VkShaderModuleCreateInfo{
 					.codeSize = static_cast<u32>(ci.shader.code.size()),
@@ -59,7 +64,6 @@ namespace pl {
 				.stage = vkShaderStage(ci.shader.stage),
 				.pName = ci.shader.entryPoint
 			},
-			.layout = ci.device.descriptorHeap()->vkPipelineLayout()
 		}), nullptr, &m_pipeline);
 	}
 

@@ -58,8 +58,9 @@ namespace pl {
 		tbrs::Vec<const char*> deviceExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 			VK_KHR_MAINTENANCE_9_EXTENSION_NAME,
+			VK_KHR_SHADER_UNTYPED_POINTERS_EXTENSION_NAME,
 			VK_KHR_SHADER_MAXIMAL_RECONVERGENCE_EXTENSION_NAME,
-			VK_EXT_MUTABLE_DESCRIPTOR_TYPE_EXTENSION_NAME,
+			VK_EXT_DESCRIPTOR_HEAP_EXTENSION_NAME,
 			VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME
 		};
 		
@@ -91,14 +92,17 @@ namespace pl {
 						.pNext = ptr(VkPhysicalDeviceVulkan13Features{
 							.pNext = ptr(VkPhysicalDeviceVulkan14Features{
 								.pNext = ptr(VkPhysicalDeviceMaintenance9FeaturesKHR{
-									.pNext = ptr(VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
-										.pNext = ptr(VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT{
-											.pNext = ptr(VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
-												.fragmentShaderPixelInterlock = true,
+									.pNext = ptr(VkPhysicalDeviceShaderUntypedPointersFeaturesKHR{
+										.pNext = ptr(VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
+											.pNext = ptr(VkPhysicalDeviceDescriptorHeapFeaturesEXT{
+												.pNext = ptr(VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
+													.fragmentShaderPixelInterlock = true
+												}),
+												.descriptorHeap = true
 											}),
-											.mutableDescriptorType = true
+											.shaderMaximalReconvergence = true
 										}),
-										.shaderMaximalReconvergence = true
+										.shaderUntypedPointers = true
 									}),
 									.maintenance9 = true
 								}),
@@ -151,8 +155,8 @@ namespace pl {
 			}
 		}
 
-		m_heap = new DescriptorHeap(m_device);
 		m_allocator = new DeviceMemoryAllocator(m_physicalDevice, m_device);
+		m_heap = new DescriptorHeap(m_physicalDevice, m_device, m_allocator);
 	}
 
 	Device::Device(Device&& src) {
@@ -168,8 +172,8 @@ namespace pl {
 	}
 
 	Device::~Device() {
-		delete m_allocator;
 		delete m_heap;
+		delete m_allocator;
 
 		for(u8 i = 0; i < 3; i++) {
 			delete m_queues[i].submissionLock;

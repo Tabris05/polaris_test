@@ -5,12 +5,12 @@
 #include <tabris/vec.hpp>
 #include <polaris/pod_types.hpp>
 #include <mutex>
+#include "device_memory_allocator.hpp"
 
 namespace pl {
 	class DescriptorHeap {
 		public:
-			VkPipelineLayout vkPipelineLayout() const;
-			void bind(VkCommandBuffer cmd, QueueType type) const;
+			void bind(VkCommandBuffer cmd) const;
 
 			u32 allocImageHandle(const VkImageViewCreateInfo* ci, VkDescriptorType type);
 			u32 allocSamplerHandle(const VkSamplerCreateInfo* ci);
@@ -18,7 +18,7 @@ namespace pl {
 			void freeImageHandle(u32 handle);
 			void freeSamplerHandle(u32 handle);
 
-			DescriptorHeap(VkDevice device);
+			DescriptorHeap(VkPhysicalDevice physicalDevice, VkDevice device, DeviceMemoryAllocator* allocator);
 			~DescriptorHeap();
 
 			DescriptorHeap(const DescriptorHeap&) = delete;
@@ -32,18 +32,21 @@ namespace pl {
 			void releaseHandle(FreeRanges& ranges, u32 handle);
 
 			VkDevice m_device = {};
-			VkDescriptorSetLayout m_setLayout = {};
-			VkPipelineLayout m_pipeLayout = {};
-			VkDescriptorPool m_pool = {};
-			VkDescriptorSet m_set = {};
+			VkDeviceMemory m_backingMem = {};
+			VkBuffer m_buffer = {};
+			VkDeviceAddress m_deviceAddr = {};
+			byte* m_hostAddr = nullptr;
+
+			u32 m_imageHeapReservedSize = 0;
+			u16 m_samplerHeapReservedSize = 0;
+			u8 m_imageDescriptorSize = 0;
+			u8 m_samplerDescriptorSize = 0;
 
 			std::mutex m_imageLock;
 			FreeRanges m_imageFreeRanges;
-			tbrs::Vec<VkImageView> m_imageViews;
 
 			std::mutex m_samplerLock;
 			FreeRanges m_samplerFreeRanges;
-			tbrs::Vec<VkSampler> m_samplers;
 
 			static constexpr u32 m_imageHandleCount = 1 << 20;
 			static constexpr u32 m_samplerHandleCount = 1 << 12;

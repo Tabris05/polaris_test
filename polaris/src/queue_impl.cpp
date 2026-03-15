@@ -28,9 +28,12 @@ namespace pl {
 		}
 
 		vkBeginCommandBuffer(cmd, ptr(VkCommandBufferBeginInfo{ .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT }));
-		m_heap->bind(cmd, m_type);
 
-		return CommandBuffer(cmd, m_heap->vkPipelineLayout(), m_allocator);
+		if(m_type != QueueType::DMA) {
+			m_heap->bind(cmd);
+		}
+
+		return CommandBuffer(cmd, m_allocator);
 	}
 
 	const Event Queue::submit(const SubmitInfo& si) {

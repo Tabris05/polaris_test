@@ -154,7 +154,10 @@ namespace pl {
 			}
 		}
 
-		vkCreateComputePipelines(m_device, {}, 1, ptr(VkComputePipelineCreateInfo{
+		vkCreateComputePipelines(m_device, {}, 1, ptr(VkComputePipelineCreateInfo{\
+			.pNext = ptr(VkPipelineCreateFlags2CreateInfo{
+				.flags = VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT
+			}),
 			.stage = {
 				.pNext = ptr(VkShaderModuleCreateInfo{
 					.codeSize = sizeof(blit_comp),
@@ -163,7 +166,6 @@ namespace pl {
 				.stage = VK_SHADER_STAGE_COMPUTE_BIT,
 				.pName = "csmain"
 			},
-			.layout = ci.device.descriptorHeap()->vkPipelineLayout()
 		}), nullptr, &m_blitPipeline);
 
 		createSwapchain();

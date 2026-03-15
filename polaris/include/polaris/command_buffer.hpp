@@ -62,6 +62,6 @@ namespace pl {
 			void writeBufferImpl(BufferOffset offset, const void* data, u64 size);
 			void writeTextureImpl(const Texture& texture, const void* data, TextureRegion region);
 
-			alignas(8) byte reserved[48];
+			alignas(8) byte reserved[40];
 	};
 }

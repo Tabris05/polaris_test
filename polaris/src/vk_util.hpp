@@ -392,12 +392,7 @@ inline VkAccessFlags2 vkAccessMask(pl::PipelineStage stage) {
 	return flags;
 }
 
-inline u8 getMemoryTypeIndex(VkPhysicalDeviceMemoryProperties memProps, u32 mask, bool host = false) {
-    VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-    if(host) {
-        flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
-    }
-
+inline u8 getMemoryTypeIndex(VkPhysicalDeviceMemoryProperties memProps, u32 mask, VkMemoryPropertyFlags flags) {
     for(u8 idx = 0; idx < memProps.memoryTypeCount; idx++) {
         if(((1 << idx) & mask) && (memProps.memoryTypes[idx].propertyFlags & flags) == flags) {
             return idx;

@@ -184,10 +184,6 @@ public typedef float64_t4x2 mat4x2f64;
 public typedef float64_t3x4 mat3x4f64;
 public typedef float64_t4x3 mat4x3f64;
 
-[[vk::binding(0, 0)]] __DynamicResource<__DynamicResourceKind.General> textureHeap[];
-[[vk::binding(1, 0)]] __DynamicResource<__DynamicResourceKind.Sampler> samplerHeap[];
-
-
 public struct TextureHandle<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int, let isMS : int, let access : int> {
     typealias TextureType = _Texture<TexelType, Shape, isArray, isMS, 0, access, 0, 0, 0>;
 
@@ -196,15 +192,15 @@ public struct TextureHandle<TexelType : ITexelElement, Shape : __ITextureShape, 
     const u32 handle = textureMask;
 
     TextureType getTexture() {
-        return textureHeap[NonUniformResourceIndex(handle & textureMask)].asOpaqueDescriptor<TextureType>();
+        return DescriptorHandle<TextureType>(NonUniformResourceIndex(handle & textureMask));
     }
 
     SamplerState getSampler() {
-        return samplerHeap[NonUniformResourceIndex(handle >> samplerOffset)].asOpaqueDescriptor<SamplerState>();
+        return DescriptorHandle<SamplerState>(NonUniformResourceIndex(handle >> samplerOffset));
     }
 
     SamplerComparisonState getComparisonSampler() {
-        return samplerHeap[NonUniformResourceIndex(handle >> samplerOffset)].asOpaqueDescriptor<SamplerComparisonState>();
+        return DescriptorHandle<SamplerComparisonState>(NonUniformResourceIndex(handle >> samplerOffset));
     }
 
     // foo: this generates bad spirv (individual processing per element)

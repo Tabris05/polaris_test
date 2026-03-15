@@ -20,7 +20,7 @@ namespace pl {
 
 		VkMemoryRequirements mrq;
 		vkGetBufferMemoryRequirements(m_device, ret.buffer, &mrq);
-		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits, true);
+		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
 
 		vkAllocateMemory(m_device, ptr(VkMemoryAllocateInfo{
 			.pNext = ptr(VkMemoryAllocateFlagsInfo{.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT }),
