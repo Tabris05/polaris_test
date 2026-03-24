@@ -8,11 +8,11 @@ namespace pl {
 		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 		VkDeviceMemory mem;
-		vkAllocateMemory(m_device, ptr(VkMemoryAllocateInfo{
-			.pNext = ptr(VkMemoryAllocateFlagsInfo{ .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT }),
+		vkAllocateMemory(m_device, &VkMemoryAllocateInfo{
+			.pNext = &VkMemoryAllocateFlagsInfo{ .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT },
 			.allocationSize = mrq.size,
 			.memoryTypeIndex = memTypeIndex
-		}), nullptr, &mem);
+		}, nullptr, &mem);
 		vkBindBufferMemory(m_device, buffer, mem, 0);
 
 		return mem;
@@ -24,11 +24,10 @@ namespace pl {
 		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 		VkDeviceMemory mem;
-		vkAllocateMemory(m_device, ptr(VkMemoryAllocateInfo{
-			.pNext = ptr(VkMemoryAllocateFlagsInfo{ .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT }),
+		vkAllocateMemory(m_device, &VkMemoryAllocateInfo{
 			.allocationSize = mrq.size,
 			.memoryTypeIndex = memTypeIndex
-		}), nullptr, &mem);
+		}, nullptr, &mem);
 		vkBindImageMemory(m_device, image, mem, 0);
 
 		return mem;

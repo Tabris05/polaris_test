@@ -122,6 +122,7 @@ int main() {
 		.width = static_cast<u32>(x),
 		.height = static_cast<u32>(y),
 	});
+
 	pl::CommandBuffer upload = queue.beginRecording();
 	upload.writeBuffer(pl::BufferOffset{ buffer }, pl::View<const Vertex>(vertices));
 	upload.writeTexture(albedo, pl::View<const byte>(texData, x * y * 4));
@@ -140,25 +141,18 @@ int main() {
 	// pipeline
 	std::vector<u32> shaderCode = getShaderSource("shaders/tri.spv");
 
-	pl::Pipeline pipeline(pl::RasterPipelineCreateInfo{
+	pl::Shader meshShader(pl::ShaderCreateInfo{
 		.device = device,
-		.shaders = {
-			pl::Shader{
-				.stage = pl::ShaderStage::Vertex,
-				.entryPoint = "vsmain",
-				.code = shaderCode
-			},
-			pl::Shader{
-				.stage = pl::ShaderStage::Fragment,
-				.entryPoint = "fsmain",
-				.code = shaderCode
-			}
-		},
-		.colorFormats = { pl::Format::RGBA8_SRGB },
-		.depthFormat = pl::Format::D32_SFLOAT,
-		.cullFace = pl::Face::Back,
-		.depthCompareOp = pl::CompareOp::Less,
-		.depthWriteEnable = true
+		.stage = pl::ShaderStage::Mesh,
+		.entryPoint = "msmain",
+		.code = shaderCode
+	});
+
+	pl::Shader fragmentShader(pl::ShaderCreateInfo{
+		.device = device,
+		.stage = pl::ShaderStage::Fragment,
+		.entryPoint = "fsmain",
+		.code = shaderCode
 	});
 
 	pl::Event fif[2] = {};
@@ -177,18 +171,29 @@ int main() {
 
 		pl::CommandBuffer cmd = queue.beginRecording();
 
+		cmd.setDepthStencilState(pl::DepthStencilState{
+			.depthTestEnable = true,
+			.depthWriteEnable = true,
+			.depthCompareOp = pl::CompareOp::Less
+		});
+		cmd.setRasterizerState(pl::RasterizerState{
+			.cullMode = pl::Face::Back,
+			.windingOrder = pl::WindingOrder::CCW
+		});
 		cmd.setViewport(pl::Rect3D<f32>{ .width = 1920.0f, .height = 1080.0f, .depth = 1.0f });
 		cmd.setScissor(pl::Rect2D<u32>{ .width = 1920u, .height = 1080u });
-		cmd.bindPipeline(pipeline);
+		cmd.bindShader(meshShader); // foo: want bindshaders but cant have view of references
+		cmd.bindShader(fragmentShader);
 		cmd.pushConstants(PushConstants{
 			.vertices = buffer.deviceAddress<Vertex>(),
+			.vertexCount = static_cast<u32>(vertices.size()),
 			.mvp = projection * view * model,
 			.texture = pl::TextureHandle(albedoHandle, sampler)
 		});
 		
 		cmd.barrier(pl::PipelineStage::Depth | pl::PipelineStage::Present, pl::PipelineStage::DepthWrite | pl::PipelineStage::ColorWrite);
 		cmd.beginRenderPass(pl::RenderPassBeginInfo{
-			.renderArea = {.width = 1920, .height = 1080 },
+			.renderArea = { .width = 1920, .height = 1080 },
 			.colorTargets = {
 				pl::RenderTargetInfo{
 					.target = colorTarget,
@@ -202,9 +207,9 @@ int main() {
 					.loadOp = pl::LoadOp::Clear,
 					.storeOp = pl::StoreOp::Discard,
 					.clearValue = pl::ClearValue{ .depthStencil = { 1.0f, 0u } }
-				}
+			}
 		});
-		cmd.draw(vertices.size());
+		cmd.draw(((vertices.size() / 3) + 63) / 64);
 		cmd.endRenderPass();
 
 		pl::Event event = queue.submit(pl::SubmitInfo{ .commandBuffer = std::move(cmd) });

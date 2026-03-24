@@ -4,22 +4,22 @@
 namespace pl {
 
 	void DescriptorHeap::bind(VkCommandBuffer cmd) const {
-		vkCmdBindResourceHeapEXT(cmd, ptr(VkBindHeapInfoEXT{
+		vkCmdBindResourceHeapEXT(cmd, &VkBindHeapInfoEXT{
 			.heapRange{
 				.address = m_deviceAddr,
 				.size = m_imageHandleCount * m_imageDescriptorSize
 			},
 			.reservedRangeOffset = m_imageHandleCount * m_imageDescriptorSize - m_imageHeapReservedSize,
 			.reservedRangeSize = m_imageHeapReservedSize,
-		}));
-		vkCmdBindSamplerHeapEXT(cmd, ptr(VkBindHeapInfoEXT{
+		});
+		vkCmdBindSamplerHeapEXT(cmd, &VkBindHeapInfoEXT{
 			.heapRange{
 				.address = m_deviceAddr + m_imageHandleCount * m_imageDescriptorSize,
 				.size = m_samplerHandleCount * m_samplerDescriptorSize
 			},
 			.reservedRangeOffset = m_samplerHandleCount * m_samplerDescriptorSize - m_samplerHeapReservedSize,
 			.reservedRangeSize = m_samplerHeapReservedSize,
-		}));
+		});
 	}
 
 	u32 DescriptorHeap::allocImageHandle(const VkImageViewCreateInfo* ci, VkDescriptorType type) {
@@ -27,19 +27,19 @@ namespace pl {
 		u32 handle = acquireHandle(m_imageFreeRanges);
 
 		vkWriteResourceDescriptorsEXT(m_device, 1,
-			ptr(VkResourceDescriptorInfoEXT{
+			&VkResourceDescriptorInfoEXT{
 				.type = type,
 				.data{
-					.pImage = ptr(VkImageDescriptorInfoEXT{
+					.pImage = &VkImageDescriptorInfoEXT{
 						.pView = ci,
 						.layout = VK_IMAGE_LAYOUT_GENERAL
-					})
+					}
 				}
-			}),
-			ptr(VkHostAddressRangeEXT{
+			},
+			&VkHostAddressRangeEXT{
 				.address = reinterpret_cast<void*>(m_hostAddr + handle * m_imageDescriptorSize),
 				.size = m_imageDescriptorSize,
-			})
+			}
 		);
 
 		return handle;
@@ -54,10 +54,10 @@ namespace pl {
 		std::scoped_lock lock{ m_samplerLock };
 		u32 handle = acquireHandle(m_samplerFreeRanges);
 
-		vkWriteSamplerDescriptorsEXT(m_device, 1, ci, ptr(VkHostAddressRangeEXT{
+		vkWriteSamplerDescriptorsEXT(m_device, 1, ci, &VkHostAddressRangeEXT{
 			.address = reinterpret_cast<void*>(m_hostAddr + m_imageHandleCount * m_imageDescriptorSize + handle * m_samplerDescriptorSize),
 			.size = m_samplerDescriptorSize,
-		}));
+		});
 
 		return handle;
 	}
@@ -72,23 +72,24 @@ namespace pl {
 		m_samplerFreeRanges.push(0, m_samplerHandleCount - 1);
 
 		VkPhysicalDeviceDescriptorHeapPropertiesEXT props{};
-		vkGetPhysicalDeviceProperties2(physicalDevice, ptr(VkPhysicalDeviceProperties2{ .pNext = &props }));
+		vkGetPhysicalDeviceProperties2(physicalDevice, &VkPhysicalDeviceProperties2{ .pNext = &props });
 		m_imageHeapReservedSize = props.minResourceHeapReservedRange;
 		m_samplerHeapReservedSize = props.minSamplerHeapReservedRange;
 		m_imageDescriptorSize = props.imageDescriptorSize;
 		m_samplerDescriptorSize = props.samplerDescriptorSize;
 
-		vkCreateBuffer(m_device, ptr(VkBufferCreateInfo{
+		vkCreateBuffer(m_device, &VkBufferCreateInfo{
 			.size = m_imageHandleCount * m_imageDescriptorSize + m_samplerHandleCount * m_samplerDescriptorSize,
 			.usage = VK_BUFFER_USAGE_DESCRIPTOR_HEAP_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-		}), nullptr, &m_buffer);
+		}, nullptr, &m_buffer);
 		m_backingMem = allocator->alloc(m_buffer);
-		m_deviceAddr = vkGetBufferDeviceAddress(m_device, ptr(VkBufferDeviceAddressInfo{ .buffer = m_buffer }));
+		m_deviceAddr = vkGetBufferDeviceAddress(m_device, &VkBufferDeviceAddressInfo{ .buffer = m_buffer });
 		vkMapMemory(m_device, m_backingMem, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**>(&m_hostAddr));
 	}
 
 	DescriptorHeap::~DescriptorHeap() {
 		if(m_device) {
+			vkDestroyBuffer(m_device, m_buffer, nullptr);
 			vkFreeMemory(m_device, m_backingMem, nullptr);
 		}
 	}

@@ -22,7 +22,7 @@
     <ClInclude Include="include\polaris\buffer.hpp" />
     <ClInclude Include="include\polaris\command_buffer.hpp" />
     <ClInclude Include="include\polaris\device.hpp" />
-    <ClInclude Include="include\polaris\pipeline.hpp" />
+    <ClInclude Include="include\polaris\shader.hpp" />
     <ClInclude Include="include\polaris\polaris.hpp" />
     <ClInclude Include="include\polaris\pod_types.hpp" />
     <ClInclude Include="include\polaris\queue.hpp" />
@@ -36,7 +36,7 @@
     <ClInclude Include="src\descriptor_heap.hpp" />
     <ClInclude Include="src\device_impl.hpp" />
     <ClInclude Include="src\device_memory_allocator.hpp" />
-    <ClInclude Include="src\pipeline_impl.hpp" />
+    <ClInclude Include="src\shader_impl.hpp" />
     <ClInclude Include="src\queue_impl.hpp" />
     <ClInclude Include="src\sampler_impl.hpp" />
     <ClInclude Include="src\shaders\blit_comp.h" />
@@ -57,7 +57,7 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Default</CompileAs>
     </ClCompile>
     <ClCompile Include="src\device_memory_allocator.cpp" />
-    <ClCompile Include="src\pipeline_impl.cpp" />
+    <ClCompile Include="src\shader_impl.cpp" />
     <ClCompile Include="src\queue_impl.cpp" />
     <ClCompile Include="src\sampler_impl.cpp" />
     <ClCompile Include="src\staging_allocator.cpp" />

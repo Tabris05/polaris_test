@@ -9,11 +9,11 @@ namespace pl {
 
 	void Event::wait() const {
 		if(m_device) {
-			vkWaitSemaphores(m_device, ptr(VkSemaphoreWaitInfo{
+			vkWaitSemaphores(m_device, &VkSemaphoreWaitInfo{
 				.semaphoreCount = 1,
 				.pSemaphores = &m_semaphore,
 				.pValues = &m_value,
-			}), std::numeric_limits<u64>::max());
+			}, std::numeric_limits<u64>::max());
 		}
 	}
 
@@ -28,10 +28,10 @@ namespace pl {
 
 	void Event::signal() {
 		if(m_device) {
-			vkSignalSemaphore(m_device, ptr(VkSemaphoreSignalInfo{
+			vkSignalSemaphore(m_device, &VkSemaphoreSignalInfo{
 				.semaphore = m_semaphore,
 				.value = m_value
-			}));
+			});
 		}
 	}
 
@@ -50,21 +50,22 @@ namespace pl {
 		return ret;
 	}
 
-	Event Sync::next() {
-		return Event(m_device, m_semaphore, m_value.fetch_add(1, std::memory_order_relaxed) + 1);
+	Event Sync::advance(u64 amount) {
+		// + amount since fetch_add returns the old value
+		return Event(m_device, m_semaphore, m_value.fetch_add(amount, std::memory_order_relaxed) + amount);
 	}
 
-	Event Sync::current() const {
+	Event Sync::event() const {
 		return Event(m_device, m_semaphore, m_value.load(std::memory_order_relaxed));
 	}
 
 	Sync::Sync(const SyncCreateInfo& ci) : m_device(ci.device.vkDevice()) {
-		vkCreateSemaphore(m_device, ptr(VkSemaphoreCreateInfo{
-			.pNext = ptr(VkSemaphoreTypeCreateInfo {
+		vkCreateSemaphore(m_device, &VkSemaphoreCreateInfo{
+			.pNext = &VkSemaphoreTypeCreateInfo {
 				.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
 				.initialValue = ci.initialValue
-			})
-		}), nullptr, &m_semaphore);
+			}
+		}, nullptr, &m_semaphore);
 	}
 
 	Sync::Sync(Sync&& src) {

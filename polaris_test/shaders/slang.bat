@@ -1,0 +1,2 @@
+@echo off
+"%~dp0/../bin/slangc.exe" -target spirv -profile spirv_1_6 -emit-spirv-directly -capability vk_mem_model -capability SPV_KHR_maximal_reconvergence -capability spvDescriptorHeapEXT -fvk-use-entrypoint-name -fvk-use-c-layout -I "../../polaris/include"  %1 -o %2

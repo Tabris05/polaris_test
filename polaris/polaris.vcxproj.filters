@@ -99,10 +99,10 @@
     <ClInclude Include="src\shaders\blit_comp.h">
       <Filter>Header Files\Shaders</Filter>
     </ClInclude>
-    <ClInclude Include="include\polaris\pipeline.hpp">
+    <ClInclude Include="include\polaris\shader.hpp">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
-    <ClInclude Include="src\pipeline_impl.hpp">
+    <ClInclude Include="src\shader_impl.hpp">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="src\staging_allocator.hpp">
@@ -143,7 +143,7 @@
     <ClCompile Include="src\swapchain_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\pipeline_impl.cpp">
+    <ClCompile Include="src\shader_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\staging_allocator.cpp">

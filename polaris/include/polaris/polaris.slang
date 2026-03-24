@@ -208,25 +208,21 @@ public struct TextureHandle<TexelType : ITexelElement, Shape : __ITextureShape, 
     // until they figure out their generic system a bit more I guess I'm stuck with this
     // this should be a rareish path anyways so it being a few extra ALU ops shouldn't be horrendous
     // (and maybe IHV optimizers can fix it up internally?)
-    T unpackInvalidColor<T : ITexelElement>() where optional T : IFloat {
-        vector<T.Element, T.elementCount> ret;
-        T.Element normalizer = T.Element(1);
-        if (T is IFloat) {
-            normalizer = T.Element(7);
+    TexelType unpackInvalidColor() {
+        vector<TexelType.Element, TexelType.elementCount> ret;
+
+        ret[0] = TexelType.Element(((handle >> 20) & 0x7)) / TexelType.Element(4);
+        if (TexelType.elementCount > 1) {
+            ret[1] = TexelType.Element(((handle >> 23) & 0x7)) / TexelType.Element(4);
+        }
+        if (TexelType.elementCount > 2) {
+            ret[2] = TexelType.Element(((handle >> 26) & 0x7)) / TexelType.Element(4);
+        }
+        if (TexelType.elementCount > 3) {
+            ret[3] = TexelType.Element(((handle >> 29) & 0x7)) / TexelType.Element(4);
         }
 
-        ret[0] = T.Element(((handle >> 20) & 0x7)) / normalizer;
-        if (T.elementCount > 1) {
-            ret[1] = T.Element(((handle >> 23) & 0x7)) / normalizer;
-        }
-        if (T.elementCount > 2) {
-            ret[2] = T.Element(((handle >> 26) & 0x7)) / normalizer;
-        }
-        if (T.elementCount > 3) {
-            ret[3] = T.Element(((handle >> 29) & 0x7)) / normalizer;
-        }
-
-        return reinterpret<T>(ret);
+        return reinterpret<TexelType>(ret);
     }
 }
 
@@ -236,30 +232,30 @@ __generic<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int>
 public extension TextureHandle<TexelType, Shape, isArray, 0, 0> {
     public TexelType __subscript(vector<int, Shape.dimensions + isArray> location) {
         if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor<TexelType>();
+            return unpackInvalidColor();
         }
         return getTexture()[location];
     }
 
     public TexelType load(vector<int, Shape.dimensions + isArray + 1> location) {
         if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor<TexelType>();
+            return unpackInvalidColor();
         }
         return getTexture().Load(location);
     }
 
     public TexelType sample(vector<float, Shape.dimensions + isArray> location) {
         if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor<TexelType>();
+            return unpackInvalidColor();
         }
         return getTexture().Sample(getSampler(), location);
     }
 
-    public TexelType sampleLevel(vector<float, Shape.dimensions + isArray> location, float level) {
+    public TexelType sampleLevel(vector<float, Shape.dimensions + isArray> location, float level, constexpr vector<int, Shape.planeDimensions> offset = vector<int, Shape.planeDimensions>(0)) {
         if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor<TexelType>();
+            return unpackInvalidColor();
         }
-        return getTexture().SampleLevel(getSampler(), location, level);
+        return getTexture().SampleLevel(getSampler(), location, level, offset);
     }
 
     public float sampleAndCompare(vector<float, Shape.dimensions + isArray> location, float value) {
@@ -276,7 +272,7 @@ public extension TextureHandle<TexelType, Shape, isArray, 0, 1> {
     {
         get {
             if ((handle & textureMask) == textureMask) {
-                return unpackInvalidColor<TexelType>();
+                return unpackInvalidColor();
             }
             return getTexture()[location];
         }
@@ -291,7 +287,7 @@ public extension TextureHandle<TexelType, Shape, isArray, 0, 1> {
 
     public TexelType load(vector<int, Shape.dimensions + isArray> location) {
         if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor<TexelType>();
+            return unpackInvalidColor();
         }
         return getTexture().Load(location);
     }

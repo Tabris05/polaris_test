@@ -18,10 +18,10 @@ namespace pl {
 
 	TextureHandle::TextureHandle(vec4<f32> invalidColor) {
 		handle = 0x000FFFFF;
-		handle |= static_cast<u32>(invalidColor.x * 7.0f) << 20;
-		handle |= static_cast<u32>(invalidColor.y * 7.0f) << 23;
-		handle |= static_cast<u32>(invalidColor.z * 7.0f) << 26;
-		handle |= static_cast<u32>(invalidColor.w * 7.0f) << 29;
+		handle |= static_cast<u32>(invalidColor.x * 4.0f) << 20;
+		handle |= static_cast<u32>(invalidColor.y * 4.0f) << 23;
+		handle |= static_cast<u32>(invalidColor.z * 4.0f) << 26;
+		handle |= static_cast<u32>(invalidColor.w * 4.0f) << 29;
 	}
 
 	TextureHandle::TextureHandle(u32 handle) : handle(handle) {}
@@ -30,10 +30,10 @@ namespace pl {
 
 	ImageHandle::ImageHandle(vec4<f32> invalidColor) {
 		handle = 0x000FFFFF;
-		handle |= static_cast<u32>(invalidColor.x * 7.0f) << 20;
-		handle |= static_cast<u32>(invalidColor.y * 7.0f) << 23;
-		handle |= static_cast<u32>(invalidColor.z * 7.0f) << 26;
-		handle |= static_cast<u32>(invalidColor.w * 7.0f) << 29;
+		handle |= static_cast<u32>(invalidColor.x * 4.0f) << 20;
+		handle |= static_cast<u32>(invalidColor.y * 4.0f) << 23;
+		handle |= static_cast<u32>(invalidColor.z * 4.0f) << 26;
+		handle |= static_cast<u32>(invalidColor.w * 4.0f) << 29;
 	}
 
 	ImageHandle::ImageHandle(u32 handle) : handle(handle) {}
@@ -104,7 +104,7 @@ namespace pl {
 
 		// foo: this is illegal without VK_IMAGE_USAGE_HOST_TRANSFER_BIT, but that disables DCC on NVIDIA
 		// in mesa this function is a NO-OP for all 3 desktop vendors, so this is mainly for tooling (RenderDoc won't track undefined images)
-		vkTransitionImageLayout(m_device, 1, ptr(VkHostImageLayoutTransitionInfo{
+		vkTransitionImageLayout(m_device, 1, &VkHostImageLayoutTransitionInfo{
 			.image = m_image,
 			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 			.newLayout = VK_IMAGE_LAYOUT_GENERAL,
@@ -113,7 +113,7 @@ namespace pl {
 				.levelCount = VK_REMAINING_MIP_LEVELS,
 				.layerCount = VK_REMAINING_ARRAY_LAYERS
 			},
-		}));
+		});
 
 		m_imageViewCI = VkImageViewCreateInfo{
 			.image = m_image,

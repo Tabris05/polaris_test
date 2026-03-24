@@ -51,7 +51,7 @@ namespace pl {
 			tbrs::Vec<std::pair<VkSemaphore, const Event>> m_submittedSems;
 			tbrs::Vec<VkSemaphore> m_freeSems;
 
-			VkPipeline m_blitPipeline = {};
+			VkShaderEXT m_blitShader = {};
 
 			DescriptorHeap* m_heap = nullptr;
 	};

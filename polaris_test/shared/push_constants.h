@@ -7,6 +7,7 @@ struct Vertex {
 
 struct PushConstants {
     Vertex* vertices;
+    u32 vertexCount;
     mat4f32 mvp;
     Texture2D<vec4f32> texture;
 };

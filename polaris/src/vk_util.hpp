@@ -4,13 +4,8 @@
 #include <polaris/pod_types.hpp>
 
 template<typename T>
-T* ptr(T&& val) {
+T* operator&(T&& val) {
     return &val;
-}
-
-template<typename T>
-const T* ptr(std::initializer_list<T> val) {
-    return val.begin();
 }
 
 inline VkFormat vkFormat(pl::Format format) {
@@ -149,6 +144,22 @@ inline VkSamplerReductionMode vkReductionMode(pl::ReductionMode mode) {
         case pl::ReductionMode::Average: return VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE;
         case pl::ReductionMode::Min: return VK_SAMPLER_REDUCTION_MODE_MIN;
         case pl::ReductionMode::Max: return VK_SAMPLER_REDUCTION_MODE_MAX;
+    }
+}
+
+inline VkCullModeFlagBits vkCullMode(pl::Face face) {
+    switch(face) {
+        case pl::Face::None: return VK_CULL_MODE_NONE;
+        case pl::Face::Front: return VK_CULL_MODE_FRONT_BIT;
+        case pl::Face::Back: return VK_CULL_MODE_BACK_BIT;
+        case pl::Face::Both: return VK_CULL_MODE_FRONT_AND_BACK;
+    }
+}
+
+inline VkFrontFace vkFrontFace(pl::WindingOrder order) {
+    switch(order) {
+        case pl::WindingOrder::CCW: return VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        case pl::WindingOrder::CW: return VK_FRONT_FACE_CLOCKWISE;
     }
 }
 
@@ -302,7 +313,7 @@ inline VkFormatFeatureFlagBits vkImageUsageToFormatFeatures(VkImageUsageFlagBits
 inline VkShaderStageFlagBits vkShaderStage(pl::ShaderStage stage) {
     switch(stage) {
         case pl::ShaderStage::Compute: return VK_SHADER_STAGE_COMPUTE_BIT;
-        case pl::ShaderStage::Vertex: return VK_SHADER_STAGE_VERTEX_BIT;
+        case pl::ShaderStage::Mesh: return VK_SHADER_STAGE_MESH_BIT_EXT;
         case pl::ShaderStage::Fragment: return VK_SHADER_STAGE_FRAGMENT_BIT;
     }
 }
@@ -333,9 +344,8 @@ inline VkIndexType vkIndexType(pl::IndexType type) {
 
 inline VkPipelineStageFlags2 vkStageMask(pl::PipelineStage stage) {
     VkPipelineStageFlags2 flags = 0;
-    if((stage & pl::PipelineStage::PreRaster) != pl::PipelineStage::None) {
-        flags |= VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_TESSELLATION_CONTROL_SHADER_BIT
-              | VK_PIPELINE_STAGE_2_TESSELLATION_EVALUATION_SHADER_BIT | VK_PIPELINE_STAGE_2_GEOMETRY_SHADER_BIT;
+    if((stage & pl::PipelineStage::Mesh) != pl::PipelineStage::None) {
+		flags |= VK_PIPELINE_STAGE_2_MESH_SHADER_BIT_EXT;
     }
     if((stage & pl::PipelineStage::Fragment) != pl::PipelineStage::None) {
         flags |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;

@@ -13,20 +13,20 @@ namespace pl {
 
 		StagingBuffer ret;
 		ret.size = std::max(size, 64ull * 1024ull * 1024ull);
-		vkCreateBuffer(m_device, ptr(VkBufferCreateInfo{
+		vkCreateBuffer(m_device, &VkBufferCreateInfo{
 			.size = ret.size,
 			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-		}), nullptr, &ret.buffer);
+		}, nullptr, &ret.buffer);
 
 		VkMemoryRequirements mrq;
 		vkGetBufferMemoryRequirements(m_device, ret.buffer, &mrq);
 		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
 
-		vkAllocateMemory(m_device, ptr(VkMemoryAllocateInfo{
-			.pNext = ptr(VkMemoryAllocateFlagsInfo{.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT }),
+		vkAllocateMemory(m_device, &VkMemoryAllocateInfo{
+			.pNext = &VkMemoryAllocateFlagsInfo{.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT },
 			.allocationSize = mrq.size,
 			.memoryTypeIndex = memTypeIndex
-		}), nullptr, &ret.memory);
+		}, nullptr, &ret.memory);
 		vkBindBufferMemory(m_device, ret.buffer, ret.memory, 0);
 		vkMapMemory(m_device, ret.memory, 0, VK_WHOLE_SIZE, 0, &ret.mappedPtr);
 

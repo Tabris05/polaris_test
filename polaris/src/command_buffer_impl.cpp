@@ -4,15 +4,15 @@
 
 namespace pl {
 	void CommandBuffer::barrier(PipelineStage src, PipelineStage dst) {
-		vkCmdPipelineBarrier2(m_cmd, ptr(VkDependencyInfo{
+		vkCmdPipelineBarrier2(m_cmd, &VkDependencyInfo{
 			.memoryBarrierCount = 1,
-			.pMemoryBarriers = ptr(VkMemoryBarrier2{
+			.pMemoryBarriers = &VkMemoryBarrier2{
 				.srcStageMask = vkStageMask(src),
 				.srcAccessMask = vkAccessMask(src),
 				.dstStageMask = vkStageMask(dst),
 				.dstAccessMask = vkAccessMask(dst)
-			})
-		}));
+			}
+		});
 	}
 
 	void CommandBuffer::beginRenderPass(const RenderPassBeginInfo& info) {
@@ -49,22 +49,18 @@ namespace pl {
 			};
 		}
 
-		vkCmdBeginRendering(m_cmd, ptr(VkRenderingInfo{
+		vkCmdBeginRendering(m_cmd, &VkRenderingInfo{
 			.renderArea = { static_cast<i32>(info.renderArea.x), static_cast<i32>(info.renderArea.y), info.renderArea.width, info.renderArea.height },
 			.layerCount = 1,
 			.colorAttachmentCount = static_cast<u32>(info.colorTargets.count()),
 			.pColorAttachments = colorAttachments,
 			.pDepthAttachment = info.depthTarget.has_value() ? &depthAttachment : nullptr,
 			.pStencilAttachment = info.stencilTarget.has_value() ? &stencilAttachment : nullptr
-		}));
+		});
 	}
 
-	void CommandBuffer::bindIndexBuffer(BufferOffset region, IndexType indexType) {
-		vkCmdBindIndexBuffer(m_cmd, region.buffer.vkBuffer(), region.offset, vkIndexType(indexType));
-	}
-
-	void CommandBuffer::bindPipeline(const Pipeline& pipeline) {
-		pipeline.bind(m_cmd);
+	void CommandBuffer::bindShader(const Shader& shader) {
+		shader.bind(m_cmd);
 	}
 
 	void CommandBuffer::clearBuffer(BufferOffset offset, u32 value, u64 size) {
@@ -87,7 +83,7 @@ namespace pl {
 
 	void CommandBuffer::copyTexture(const Texture& src, const Texture& dst, TextureRegion srcRegion, TextureRegion dstRegion) {
 		vkCmdCopyImage(m_cmd, src.vkImage(), VK_IMAGE_LAYOUT_GENERAL, dst.vkImage(), VK_IMAGE_LAYOUT_GENERAL, 1,
-			ptr(VkImageCopy{
+			&VkImageCopy{
 				.srcSubresource{
 					src.vkImageViewCreateInfo().subresourceRange.aspectMask,
 					srcRegion.baseLevel,
@@ -107,48 +103,47 @@ namespace pl {
 					std::max(src.extent().y >> srcRegion.baseLevel, 1u),
 					std::max(src.extent().z >> srcRegion.baseLevel, 1u)
 				}
-			})
+			}
 		);
 	}
 
-	void CommandBuffer::draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance) {
-		vkCmdDraw(m_cmd, vertexCount, instanceCount, firstVertex, firstInstance);
+	void CommandBuffer::draw(u32 groupsX, u32 groupsY, u32 groupsZ) {
+		vkCmdDrawMeshTasksEXT(m_cmd, groupsX, groupsY, groupsZ);
 	}
 
-	void CommandBuffer::drawIndexed(u32 indexCount, u32 instanceCount, u32 firstIndex, i32 vertexOffset, u32 firstInstance) {
-		vkCmdDrawIndexed(m_cmd, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
-	}
-
-	void CommandBuffer::drawIndexedIndirect(BufferOffset indirectBuffer, u32 drawCount, u32 stride) {
-		vkCmdDrawIndexedIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, drawCount, stride + sizeof(DrawIndexedIndirectCommand));
-	}
-
-	void CommandBuffer::drawIndexedIndirectCount(BufferOffset indirectBuffer, BufferOffset countBuffer, u32 maxCount, u32 stride) {
-		vkCmdDrawIndexedIndirectCount(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, countBuffer.buffer.vkBuffer(), countBuffer.offset, maxCount, stride + sizeof(DrawIndexedIndirectCommand));
-	}
-
-	void CommandBuffer::drawIndirect(BufferOffset indirectBuffer, u32 drawCount, u32 stride) {
-		vkCmdDrawIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, drawCount, stride + sizeof(DrawIndirectCommand));
-	}
-
-	void CommandBuffer::drawIndirectCount(BufferOffset indirectBuffer, BufferOffset countBuffer, u32 maxCount, u32 stride) {
-		vkCmdDrawIndirectCount(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, countBuffer.buffer.vkBuffer(), countBuffer.offset, maxCount, stride + sizeof(DrawIndirectCommand));
+	void CommandBuffer::drawIndirect(BufferOffset indirectBuffer) {
+		vkCmdDrawMeshTasksIndirectEXT(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, 1, sizeof(IndirectCommand));
 	}
 
 	void CommandBuffer::dispatch(u32 groupsX, u32 groupsY, u32 groupsZ) {
 		vkCmdDispatch(m_cmd, groupsX, groupsY, groupsZ);
 	}
 
+	void CommandBuffer::dispatchIndirect(BufferOffset indirectBuffer) {
+		vkCmdDispatchIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset);
+	}
+
 	void CommandBuffer::endRenderPass() {
 		vkCmdEndRendering(m_cmd);
 	}
 
-	void CommandBuffer::setViewport(Rect3D<f32> viewport) {
-		vkCmdSetViewport(m_cmd, 0, 1, ptr(VkViewport{ viewport.x, viewport.y, viewport.width, viewport.height, viewport.z, viewport.z + viewport.depth }));
+	void CommandBuffer::setDepthStencilState(DepthStencilState state) {
+		vkCmdSetDepthTestEnable(m_cmd, state.depthTestEnable);
+		vkCmdSetDepthWriteEnable(m_cmd, state.depthWriteEnable);
+		vkCmdSetDepthCompareOp(m_cmd, vkCompareOp(state.depthCompareOp));
+	}
+	
+	void CommandBuffer::setRasterizerState(RasterizerState state) {
+		vkCmdSetCullMode(m_cmd, vkCullMode(state.cullMode));
+		vkCmdSetFrontFace(m_cmd, vkFrontFace(state.windingOrder));
 	}
 
 	void CommandBuffer::setScissor(Rect2D<u32> scissor) {
-		vkCmdSetScissor(m_cmd, 0, 1, ptr(VkRect2D{ static_cast<i32>(scissor.x), static_cast<i32>(scissor.y), scissor.width, scissor.height }));
+		vkCmdSetScissorWithCount(m_cmd, 1, &VkRect2D{ static_cast<i32>(scissor.x), static_cast<i32>(scissor.y), scissor.width, scissor.height });
+	}
+
+	void CommandBuffer::setViewport(Rect3D<f32> viewport) {
+		vkCmdSetViewportWithCount(m_cmd, 1, &VkViewport{ viewport.x, viewport.y, viewport.width, viewport.height, viewport.z, viewport.z + viewport.depth });
 	}
 
 	VkCommandBuffer CommandBuffer::vkCommandBuffer() const {
@@ -164,13 +159,13 @@ namespace pl {
 	}
 
 	void CommandBuffer::pushConstantsImpl(const void* constants, u64 size) {
-		vkCmdPushDataEXT(m_cmd, ptr(VkPushDataInfoEXT{
+		vkCmdPushDataEXT(m_cmd, &VkPushDataInfoEXT{
 			.offset = 0,
 			.data{
 				.address = constants,
 				.size = size
 			}
-		}));
+		});
 	}
 
 	void CommandBuffer::writeBufferImpl(BufferOffset offset, const void* data, u64 size) {
@@ -184,11 +179,11 @@ namespace pl {
 			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
 
 			memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, data, size);
-			vkCmdCopyBuffer(m_cmd, stagingBuffer.buffer, offset.buffer.vkBuffer(), 1, ptr(VkBufferCopy{
+			vkCmdCopyBuffer(m_cmd, stagingBuffer.buffer, offset.buffer.vkBuffer(), 1, &VkBufferCopy{
 				.srcOffset = stagingBuffer.writeOffset,
 				.dstOffset = offset.offset,
 				.size = size
-			}));
+			});
 
 			stagingBuffer.writeOffset += size;
 		}
@@ -210,7 +205,7 @@ namespace pl {
 			memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, data, levelSize);
 
 			// foo: batch VkBufferImageCopys while staging buffer has room
-			vkCmdCopyBufferToImage(m_cmd, stagingBuffer.buffer, texture.vkImage(), VK_IMAGE_LAYOUT_GENERAL, 1, ptr(VkBufferImageCopy{
+			vkCmdCopyBufferToImage(m_cmd, stagingBuffer.buffer, texture.vkImage(), VK_IMAGE_LAYOUT_GENERAL, 1, &VkBufferImageCopy{
 				.bufferOffset = stagingBuffer.writeOffset,
 				.imageSubresource = {
 					.aspectMask = region.aspect == DepthStencilAspect::Default ? vkAspectMask(texture.vkImageViewCreateInfo().format) : vkAspectMask(region.aspect),
@@ -223,7 +218,7 @@ namespace pl {
 					height,
 					depth
 				}
-			}));
+			});
 
 			stagingBuffer.writeOffset += levelSize;
 			data = static_cast<const byte*>(data) + levelSize;

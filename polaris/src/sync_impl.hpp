@@ -29,8 +29,8 @@ namespace pl {
 	public:
 		u64 value() const;
 
-		Event next();
-		Event current() const;
+		Event advance(u64 amount = 1);
+		Event event() const;
 
 		Sync(const SyncCreateInfo& ci);
 		Sync(Sync&& src);

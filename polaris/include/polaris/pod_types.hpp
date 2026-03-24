@@ -171,7 +171,7 @@ namespace pl {
 
 	enum class ShaderStage : u8 {
 		Compute,
-		Vertex,
+		Mesh,
 		Fragment
 	};
 
@@ -180,6 +180,11 @@ namespace pl {
 		Front,
 		Back,
 		Both
+	};
+
+	enum class WindingOrder : u8 {
+		CCW,
+		CW
 	};
 
 	enum class IndexType : u8 {
@@ -200,12 +205,11 @@ namespace pl {
 		None
 	};
 
-	// foo: maybe need index buffer but nvk and mesa don't seem to care
 	enum class PipelineStage : u16 {
 		None = 0,
 
-		PreRasterRead = 1 << 0,
-		PreRasterWrite = 1 << 1,
+		MeshRead = 1 << 0,
+		MeshWrite = 1 << 1,
 
 		FragmentRead = 1 << 2,
 		FragmentWrite = 1 << 3,
@@ -226,15 +230,15 @@ namespace pl {
 
 		Present = ComputeRead,
 
-		PreRaster = PreRasterRead | PreRasterWrite,
+		Mesh = MeshRead | MeshWrite,
 		Fragment = FragmentRead | FragmentWrite,
 		Compute = ComputeRead | ComputeWrite,
 		Copy = CopyRead | CopyWrite,
 		Depth = DepthRead | DepthWrite,
 		Color = ColorRead | ColorWrite,
 
-		RasterRead = PreRasterRead | FragmentRead,
-		RasterWrite = PreRasterWrite | FragmentWrite,
+		RasterRead = MeshRead | FragmentRead,
+		RasterWrite = MeshWrite | FragmentWrite,
 		Raster = RasterRead | RasterWrite,
 
 		ShaderRead = RasterRead | ComputeRead,
@@ -408,25 +412,11 @@ namespace pl {
 		} depthStencil;
 	};
 
-	struct Shader {
+	struct ShaderCreateInfo {
+		const class Device& device;
 		ShaderStage stage;
 		const char* entryPoint = "main";
 		View<const u32> code;
-	};
-
-	struct ComputePipelineCreateInfo {
-		const class Device& device;
-		Shader shader;
-	};
-
-	struct RasterPipelineCreateInfo {
-		const class Device& device;
-		View<const Shader> shaders;
-		View<const Format> colorFormats;
-		Format depthFormat;
-		Face cullFace;
-		CompareOp depthCompareOp;
-		bool depthWriteEnable;
 	};
 
 	struct BufferOffset {
@@ -434,19 +424,21 @@ namespace pl {
 		u64 offset = 0;
 	};
 
-	struct DrawIndirectCommand {
-		u32 vertexCount;
-		u32 instanceCount;
-		u32 firstVertex;
-		u32 firstInstance;
+	struct DepthStencilState {
+		b8 depthTestEnable;
+		b8 depthWriteEnable;
+		CompareOp depthCompareOp;
 	};
 
-	struct DrawIndexedIndirectCommand {
-		u32 indexCount;
-		u32 instanceCount;
-		u32 firstIndex;
-		i32 vertexOffset;
-		u32 firstInstance;
+	struct RasterizerState {
+		Face cullMode;
+		WindingOrder windingOrder;
+	};
+
+	struct IndirectCommand {
+		u32 groupsX;
+		u32 groupsY;
+		u32 groupsZ;
 	};
 
 	template <typename T>

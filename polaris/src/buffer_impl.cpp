@@ -5,13 +5,13 @@
 namespace pl {
 	Buffer::Buffer(const BufferCreateInfo& ci)
 		: m_device(ci.device.vkDevice()), m_allocator(ci.device.deviceMemoryAllocator()) {
-		vkCreateBuffer(m_device, ptr(VkBufferCreateInfo{
+		vkCreateBuffer(m_device, &VkBufferCreateInfo{
 			.size = ci.size,
 			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT| VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-		}), nullptr, &m_buffer);
+		}, nullptr, &m_buffer);
 		m_backingMem = m_allocator->alloc(m_buffer);
 
-		m_bufferDeviceAddress = vkGetBufferDeviceAddress(m_device, ptr(VkBufferDeviceAddressInfo{ .buffer = m_buffer }));
+		m_bufferDeviceAddress = vkGetBufferDeviceAddress(m_device, &VkBufferDeviceAddressInfo{ .buffer = m_buffer });
 	}
 
 	Buffer::Buffer(Buffer&& src) {

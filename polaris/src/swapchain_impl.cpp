@@ -15,7 +15,7 @@ namespace pl {
 
 		VkSemaphore sem;
 		if(m_freeSems.empty()) {
-			vkCreateSemaphore(m_device, ptr(VkSemaphoreCreateInfo{}), nullptr, &sem);
+			vkCreateSemaphore(m_device, &VkSemaphoreCreateInfo{}, nullptr, &sem);
 		}
 		else {
 			sem = m_freeSems.back();
@@ -33,9 +33,9 @@ namespace pl {
 
 		cmd.pushConstants(PushConstants{ std::bit_cast<u32>(info.texture), m_swapchainImages[acquired].descriptorHandle });
 
-		vkCmdPipelineBarrier2(cmd.vkCommandBuffer(), ptr(VkDependencyInfo{
+		vkCmdPipelineBarrier2(cmd.vkCommandBuffer(), &VkDependencyInfo{
 			.imageMemoryBarrierCount = 1,
-			.pImageMemoryBarriers = ptr(VkImageMemoryBarrier2{
+			.pImageMemoryBarriers = &VkImageMemoryBarrier2{
 				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
 				.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
 				.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
@@ -50,15 +50,16 @@ namespace pl {
 					.baseArrayLayer = 0,
 					.layerCount = 1
 				}
-			})
-		}));
+			}
+		});
 
-		vkCmdBindPipeline(cmd.vkCommandBuffer(), VK_PIPELINE_BIND_POINT_COMPUTE, m_blitPipeline);
+		VkShaderStageFlagBits stage = VK_SHADER_STAGE_COMPUTE_BIT;
+		vkCmdBindShadersEXT(cmd.vkCommandBuffer(), 1, &stage, &m_blitShader);
 		cmd.dispatch((m_width + 7) / 8, (m_height + 7) / 8);
 
-		vkCmdPipelineBarrier2(cmd.vkCommandBuffer(), ptr(VkDependencyInfo{
+		vkCmdPipelineBarrier2(cmd.vkCommandBuffer(), &VkDependencyInfo{
 			.imageMemoryBarrierCount = 1,
-			.pImageMemoryBarriers = ptr(VkImageMemoryBarrier2{
+			.pImageMemoryBarriers = &VkImageMemoryBarrier2{
 				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
 				.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
 				.srcAccessMask = VK_ACCESS_2_SHADER_WRITE_BIT,
@@ -73,19 +74,19 @@ namespace pl {
 					.baseArrayLayer = 0,
 					.layerCount = 1
 				}
-			})
-		}));
+			}
+		});
 
 		const Event event = info.queue.submit(std::move(cmd), info.waitEvent, sem, m_swapchainImages[acquired].signalSem);
 		m_submittedSems.push(sem, event);
 
-		res = vkQueuePresentKHR(info.queue.vkQueue(), ptr(VkPresentInfoKHR{
+		res = vkQueuePresentKHR(info.queue.vkQueue(), &VkPresentInfoKHR{
 			.waitSemaphoreCount = 1,
 			.pWaitSemaphores = &m_swapchainImages[acquired].signalSem,
 			.swapchainCount = 1,
 			.pSwapchains = &m_swapchain,
 			.pImageIndices = &acquired
-		}));
+		});
 
 		if(res != VK_SUCCESS) {
 			update(m_width, m_height, m_vsync);
@@ -110,63 +111,58 @@ namespace pl {
 
 		switch(ci.nativeWindow.type) {
 			case NativeWindowType::Headless: {
-				vkCreateHeadlessSurfaceEXT(m_instance, ptr(VkHeadlessSurfaceCreateInfoEXT{}), nullptr, &m_surface);
+				vkCreateHeadlessSurfaceEXT(m_instance, &VkHeadlessSurfaceCreateInfoEXT{}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Win32: {
-				vkCreateWin32SurfaceKHR(m_instance, ptr(VkWin32SurfaceCreateInfoKHR{
+				vkCreateWin32SurfaceKHR(m_instance, &VkWin32SurfaceCreateInfoKHR{
 					.hinstance = ci.nativeWindow.win32.hinstance,
 					.hwnd = ci.nativeWindow.win32.hwnd
-				}), nullptr, &m_surface);
+				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::XCB: {
-				vkCreateXcbSurfaceKHR(m_instance, ptr(VkXcbSurfaceCreateInfoKHR{
+				vkCreateXcbSurfaceKHR(m_instance, &VkXcbSurfaceCreateInfoKHR{
 					.connection = ci.nativeWindow.xcb.connection,
 					.window = ci.nativeWindow.xcb.window
-				}), nullptr, &m_surface);
+				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Wayland: {
-				vkCreateWaylandSurfaceKHR(m_instance, ptr(VkWaylandSurfaceCreateInfoKHR{
+				vkCreateWaylandSurfaceKHR(m_instance, &VkWaylandSurfaceCreateInfoKHR{
 					.display = ci.nativeWindow.wayland.display,
 					.surface = ci.nativeWindow.wayland.surface
-				}), nullptr, &m_surface);
+				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Metal: {
-				vkCreateMetalSurfaceEXT(m_instance, ptr(VkMetalSurfaceCreateInfoEXT{
+				vkCreateMetalSurfaceEXT(m_instance, &VkMetalSurfaceCreateInfoEXT{
 					.pLayer = ci.nativeWindow.metal.pLayer
-				}), nullptr, &m_surface);
+				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Android: {
-				vkCreateAndroidSurfaceKHR(m_instance, ptr(VkAndroidSurfaceCreateInfoKHR{
+				vkCreateAndroidSurfaceKHR(m_instance, &VkAndroidSurfaceCreateInfoKHR{
 					.window = ci.nativeWindow.android.window
-				}), nullptr, &m_surface);
+				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Vi: {
-				vkCreateViSurfaceNN(m_instance, ptr(VkViSurfaceCreateInfoNN{
+				vkCreateViSurfaceNN(m_instance, &VkViSurfaceCreateInfoNN{
 					.window = ci.nativeWindow.vi.window
-				}), nullptr, &m_surface);
+				}, nullptr, &m_surface);
 				break;
 			}
 		}
 
-		vkCreateComputePipelines(m_device, {}, 1, ptr(VkComputePipelineCreateInfo{\
-			.pNext = ptr(VkPipelineCreateFlags2CreateInfo{
-				.flags = VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT
-			}),
-			.stage = {
-				.pNext = ptr(VkShaderModuleCreateInfo{
-					.codeSize = sizeof(blit_comp),
-					.pCode = blit_comp
-				}),
-				.stage = VK_SHADER_STAGE_COMPUTE_BIT,
-				.pName = "csmain"
-			},
-		}), nullptr, &m_blitPipeline);
+		vkCreateShadersEXT(m_device, 1, &VkShaderCreateInfoEXT{
+			.flags = VK_SHADER_CREATE_DESCRIPTOR_HEAP_BIT_EXT,
+			.stage = VK_SHADER_STAGE_COMPUTE_BIT,
+			.codeType = VK_SHADER_CODE_TYPE_SPIRV_EXT,
+			.codeSize = sizeof(blit_comp),
+			.pCode = blit_comp,
+			.pName = "csmain"
+		}, nullptr, &m_blitShader);
 
 		createSwapchain();
 	}
@@ -194,13 +190,13 @@ namespace pl {
 				vkDestroySemaphore(m_device, sem, nullptr);
 			}
 
-			vkDestroyPipeline(m_device, m_blitPipeline, nullptr);
+			vkDestroyShaderEXT(m_device, m_blitShader, nullptr);
 			vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
 		}
 	}
 
 	void Swapchain::createSwapchain() {
-		vkCreateSwapchainKHR(m_device, ptr(VkSwapchainCreateInfoKHR{
+		vkCreateSwapchainKHR(m_device, &VkSwapchainCreateInfoKHR{
 			.surface = m_surface,
 			.minImageCount = 3,
 			.imageFormat = VK_FORMAT_R8G8B8A8_UNORM,
@@ -212,7 +208,7 @@ namespace pl {
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 			.presentMode = m_vsync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR,
 			.clipped = true,
-		}), nullptr, &m_swapchain);
+		}, nullptr, &m_swapchain);
 
 		u32 count;
 		vkGetSwapchainImagesKHR(m_device, m_swapchain, &count, nullptr);
@@ -222,8 +218,8 @@ namespace pl {
 
 		VkSemaphore sem;
 		for(VkImage& img : images) {
-			vkCreateSemaphore(m_device, ptr(VkSemaphoreCreateInfo{}), nullptr, &sem);
-			m_swapchainImages.push(img, sem, m_heap->allocImageHandle(ptr(VkImageViewCreateInfo{
+			vkCreateSemaphore(m_device, &VkSemaphoreCreateInfo{}, nullptr, &sem);
+			m_swapchainImages.push(img, sem, m_heap->allocImageHandle(&VkImageViewCreateInfo{
 				.image = img,
 				.viewType = VK_IMAGE_VIEW_TYPE_2D,
 				.format = VK_FORMAT_R8G8B8A8_UNORM,
@@ -234,7 +230,7 @@ namespace pl {
 					.baseArrayLayer = 0,
 					.layerCount = 1
 				}
-			}), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE));
+			}, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE));
 		}
 	}
 

@@ -60,6 +60,5 @@ namespace pl {
 
 			DescriptorHeap* m_heap = nullptr;
 			StagingAllocator* m_allocator = nullptr;
-			std::mutex* m_submissionLock = nullptr;
 	};
 }

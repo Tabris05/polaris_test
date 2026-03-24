@@ -42,24 +42,30 @@ namespace pl {
 			}
 		}
 	
-		vkCreateInstance(ptr(VkInstanceCreateInfo{
-				.pApplicationInfo = ptr(VkApplicationInfo{
+		vkCreateInstance(&VkInstanceCreateInfo{
+				.pApplicationInfo = &VkApplicationInfo{
 				.apiVersion = VK_API_VERSION_1_4
-			}),
+			},
 			.enabledExtensionCount = static_cast<u32>(instanceExtensions.count()),
 			.ppEnabledExtensionNames = instanceExtensions.data()
-		}), nullptr, &m_instance);
+		}, nullptr, &m_instance);
 	
 		volkLoadInstanceOnly(m_instance);
 	
 		// foo: eventually should "properly" select physical device
-		vkEnumeratePhysicalDevices(m_instance, ptr(1u), &m_physicalDevice);
+		{
+			u32 one = 1;
+			vkEnumeratePhysicalDevices(m_instance, &one, &m_physicalDevice);
+		}
 	
 		tbrs::Vec<const char*> deviceExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 			VK_KHR_MAINTENANCE_9_EXTENSION_NAME,
+			VK_KHR_MAINTENANCE_10_EXTENSION_NAME,
 			VK_KHR_SHADER_UNTYPED_POINTERS_EXTENSION_NAME,
 			VK_KHR_SHADER_MAXIMAL_RECONVERGENCE_EXTENSION_NAME,
+			VK_EXT_MESH_SHADER_EXTENSION_NAME,
+			VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
 			VK_EXT_DESCRIPTOR_HEAP_EXTENSION_NAME,
 			VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME
 		};
@@ -85,34 +91,43 @@ namespace pl {
 		}
 	
 		// foo: determine which device features/extensions are definitely required (and think of a way to optionally enable more)
-		vkCreateDevice(m_physicalDevice, ptr(VkDeviceCreateInfo{
-			.pNext = ptr(VkPhysicalDeviceFeatures2{
-				.pNext = ptr(VkPhysicalDeviceVulkan11Features{
-					.pNext = ptr(VkPhysicalDeviceVulkan12Features{
-						.pNext = ptr(VkPhysicalDeviceVulkan13Features{
-							.pNext = ptr(VkPhysicalDeviceVulkan14Features{
-								.pNext = ptr(VkPhysicalDeviceMaintenance9FeaturesKHR{
-									.pNext = ptr(VkPhysicalDeviceShaderUntypedPointersFeaturesKHR{
-										.pNext = ptr(VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
-											.pNext = ptr(VkPhysicalDeviceDescriptorHeapFeaturesEXT{
-												.pNext = ptr(VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
-													.fragmentShaderPixelInterlock = true
-												}),
-												.descriptorHeap = true
-											}),
-											.shaderMaximalReconvergence = true
-										}),
-										.shaderUntypedPointers = true
-									}),
+		vkCreateDevice(m_physicalDevice, &VkDeviceCreateInfo{
+			.pNext = &VkPhysicalDeviceFeatures2{
+				.pNext = &VkPhysicalDeviceVulkan11Features{
+					.pNext = &VkPhysicalDeviceVulkan12Features{
+						.pNext = &VkPhysicalDeviceVulkan13Features{
+							.pNext = &VkPhysicalDeviceVulkan14Features{
+								.pNext = &VkPhysicalDeviceMaintenance9FeaturesKHR{
+									.pNext = &VkPhysicalDeviceMaintenance10FeaturesKHR{
+										.pNext = &VkPhysicalDeviceShaderUntypedPointersFeaturesKHR{
+											.pNext = &VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
+												.pNext = &VkPhysicalDeviceMeshShaderFeaturesEXT{
+													.pNext = &VkPhysicalDeviceShaderObjectFeaturesEXT{
+														.pNext = &VkPhysicalDeviceDescriptorHeapFeaturesEXT{
+															.pNext = &VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
+																.fragmentShaderPixelInterlock = true
+															},
+															.descriptorHeap = true
+														},
+														.shaderObject = true
+													},
+													.meshShader = true
+												},
+												.shaderMaximalReconvergence = true
+											},
+											.shaderUntypedPointers = true
+										},
+										.maintenance10 = true
+									},
 									.maintenance9 = true
-								}),
+								},
 								.indexTypeUint8 = true,
 								.maintenance5 = true,
-							}),
+							},
 							.shaderDemoteToHelperInvocation = true,
 							.synchronization2 = true,
 							.dynamicRendering = true,
-						}),
+						},
 						.drawIndirectCount = true,
 						.shaderInt8 = true,
 						.shaderSampledImageArrayNonUniformIndexing = true,
@@ -128,9 +143,9 @@ namespace pl {
 						.vulkanMemoryModel = true,
 						.vulkanMemoryModelDeviceScope = true,
 						.vulkanMemoryModelAvailabilityVisibilityChains = true
-					}),
+					},
 					.shaderDrawParameters = true,
-				}),
+				},
 				.features{
 					.multiDrawIndirect = true,
 					.drawIndirectFirstInstance = true,
@@ -138,20 +153,20 @@ namespace pl {
 					.fragmentStoresAndAtomics = true,
 					.shaderStorageImageReadWithoutFormat = true,
 					.shaderStorageImageWriteWithoutFormat = true,
-				    .shaderInt16 = true,
+					.shaderInt64 = true,
+				    .shaderInt16 = true
 				}
-			}),
+			},
 			.queueCreateInfoCount = static_cast<u32>(queueCIs.count()),
 			.pQueueCreateInfos = queueCIs.data(),
 			.enabledExtensionCount = static_cast<u32>(deviceExtensions.count()),
 			.ppEnabledExtensionNames = deviceExtensions.data(),
-		}), nullptr, &m_device);
+		}, nullptr, &m_device);
 		volkLoadDevice(m_device);
 
 		for(u8 i = 0; i < 3; i++) {
 			if(ci.requestedQueueTypes.contains(static_cast<pl::QueueType>(i))) {
 				vkGetDeviceQueue(m_device, m_queues[i].family, 0, &m_queues[i].queue);
-				m_queues[i].submissionLock = new std::mutex;
 			}
 		}
 
@@ -175,10 +190,6 @@ namespace pl {
 		delete m_heap;
 		delete m_allocator;
 
-		for(u8 i = 0; i < 3; i++) {
-			delete m_queues[i].submissionLock;
-		}
-
 		vkDestroyDevice(m_device, nullptr);
 		vkDestroyInstance(m_instance, nullptr);
 	}
@@ -201,10 +212,6 @@ namespace pl {
 
 	VkQueue Device::vkQueue(QueueType type) const {
 		return m_queues[static_cast<u8>(type)].queue;
-	}
-
-	std::mutex* Device::vkQueueSubmissionLock(QueueType type) const {
-		return m_queues[static_cast<u8>(type)].submissionLock;
 	}
 
 	DescriptorHeap* Device::descriptorHeap() const {

@@ -6,8 +6,8 @@ namespace pl
 {
 	Sampler::Sampler(const SamplerCreateInfo& ci)
 		: m_heap(ci.device.descriptorHeap()),
-		m_handle(m_heap->allocSamplerHandle(ptr(VkSamplerCreateInfo{
-			.pNext = ptr(VkSamplerReductionModeCreateInfo{ .reductionMode = vkReductionMode(ci.reductionMode) }),
+		m_handle(m_heap->allocSamplerHandle(&VkSamplerCreateInfo{
+			.pNext = &VkSamplerReductionModeCreateInfo{ .reductionMode = vkReductionMode(ci.reductionMode) },
 			.magFilter = vkFilter(ci.magFilter),
 			.minFilter = vkFilter(ci.minFilter),
 			.mipmapMode = vkMipFilter(ci.mipFilter),
@@ -21,7 +21,7 @@ namespace pl
 			.compareOp = vkCompareOp(ci.compareOp),
 			.minLod = ci.minLod,
 			.maxLod = ci.maxLod
-		}))) {}
+		})) {}
 
 	Sampler::Sampler(Sampler&& src) {
 		memcpy(this, &src, sizeof(Sampler));

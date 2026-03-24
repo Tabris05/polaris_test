@@ -10,7 +10,7 @@
 #include "command_buffer.hpp"
 #include "texture.hpp"
 #include "swapchain.hpp"
-#include "pipeline.hpp"
+#include "shader.hpp"
 
 using vec2f32 = pl::vec2<f32>;
 using vec3f32 = pl::vec3<f32>;
