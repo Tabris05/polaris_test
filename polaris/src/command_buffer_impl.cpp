@@ -59,8 +59,10 @@ namespace pl {
 		});
 	}
 
-	void CommandBuffer::bindShader(const Shader& shader) {
-		shader.bind(m_cmd);
+	void CommandBuffer::bindShaders(const View<const std::reference_wrapper<const Shader>> shaders) {
+		for(const Shader& shader : shaders) {
+			shader.bind(m_cmd);
+		}
 	}
 
 	void CommandBuffer::clearBuffer(BufferOffset offset, u32 value, u64 size) {

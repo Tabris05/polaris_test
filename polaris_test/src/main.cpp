@@ -182,8 +182,7 @@ int main() {
 		});
 		cmd.setViewport(pl::Rect3D<f32>{ .width = 1920.0f, .height = 1080.0f, .depth = 1.0f });
 		cmd.setScissor(pl::Rect2D<u32>{ .width = 1920u, .height = 1080u });
-		cmd.bindShader(meshShader); // foo: want bindshaders but cant have view of references
-		cmd.bindShader(fragmentShader);
+		cmd.bindShaders({ meshShader, fragmentShader });
 		cmd.pushConstants(PushConstants{
 			.vertices = buffer.deviceAddress<Vertex>(),
 			.vertexCount = static_cast<u32>(vertices.size()),
@@ -194,13 +193,11 @@ int main() {
 		cmd.barrier(pl::PipelineStage::Depth | pl::PipelineStage::Present, pl::PipelineStage::DepthWrite | pl::PipelineStage::ColorWrite);
 		cmd.beginRenderPass(pl::RenderPassBeginInfo{
 			.renderArea = { .width = 1920, .height = 1080 },
-			.colorTargets = {
-				pl::RenderTargetInfo{
+			.colorTargets = pl::RenderTargetInfo{
 					.target = colorTarget,
 					.loadOp = pl::LoadOp::Clear,
 					.storeOp = pl::StoreOp::Store,
 					.clearValue = pl::ClearValue{ .fColor = { 0.0f, 0.0f, 0.0f, 1.0f } }
-				}
 			},
 			.depthTarget = pl::RenderTargetInfo{
 					.target = depthTarget,

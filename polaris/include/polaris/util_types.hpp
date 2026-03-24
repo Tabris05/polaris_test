@@ -86,6 +86,7 @@ namespace pl {
 			T& front() const {
 				return m_elems[0];
 			}
+
 			T& back() const {
 				return m_elems[m_count - 1];
 			}
@@ -94,6 +95,7 @@ namespace pl {
 				return m_elems[index];
 			}
 
+			View(std::remove_cvref_t<T> elem) : m_elems(&elem), m_count(1) {}
 			View(std::remove_cvref_t<T> arr[]) : m_elems(arr), m_count(sizeof(arr) / sizeof(T)) {}
 			View(std::remove_cvref_t<T>* data, u64 count) : m_elems(data), m_count(count) {}
 			View(std::initializer_list<std::remove_cvref_t<T>>&& list) : m_elems(std::data(list)), m_count(list.end() - list.begin()) {}
