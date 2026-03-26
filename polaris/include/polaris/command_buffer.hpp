@@ -24,7 +24,8 @@ namespace pl {
 		public:
 			void barrier(PipelineStage src, PipelineStage dst);
 			void beginRenderPass(const RenderPassBeginInfo& info);
-			void bindShaders(View<const std::reference_wrapper<const Shader>> shaders);
+			void bindShaders(View<std::reference_wrapper<const Shader>> shaders);
+			void bindShaders(const Shader& shader) { bindShaders({ shader }); }
 			void clearBuffer(BufferOffset offset, u32 value, u64 size = 0xFFFFFFFFFFFFFFFF);
 			void clearTexture(const Texture& texture, ClearValue value, TextureRegion region = {});
 			void copyTexture(const Texture& src, const Texture& dst, TextureRegion srcRegion = {}, TextureRegion dstRegion = {});
@@ -41,6 +42,7 @@ namespace pl {
 			void setRasterizerState(RasterizerState state);
 			void setScissor(Rect2D<u32> scissor);
 			void setViewport(Rect3D<f32> viewport);
+			void unbindShaders(View<ShaderStage> stages);
 			template<typename T> void writeBuffer(BufferOffset offset, View<const T> data) {
 				writeBufferImpl(offset, data.data(), data.size());
 			}

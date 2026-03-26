@@ -72,7 +72,7 @@ namespace pl {
 		VkCommandBuffer cmd = si.commandBuffer.vkCommandBuffer();
 		vkEndCommandBuffer(cmd);
 
-		tbrs::Vec<VkSemaphoreSubmitInfo> signalSemaphors = {
+		VkSemaphoreSubmitInfo signalSemaphores[2] = {
 			VkSemaphoreSubmitInfo{
 				.semaphore = m_sync.advance().vkSemaphore(),
 				.value = m_sync.event().value(),
@@ -81,11 +81,11 @@ namespace pl {
 		};
 
 		if(si.signalEvent.has_value()) {
-			signalSemaphors.push(VkSemaphoreSubmitInfo{
+			signalSemaphores[1] = VkSemaphoreSubmitInfo{
 				.semaphore = si.signalEvent->event.vkSemaphore(),
 				.value = si.signalEvent->event.value(),
 				.stageMask = vkStageMask(si.signalEvent->stage)
-			});
+			};
 		}
 
 		vkQueueSubmit2(m_queue, 1, &VkSubmitInfo2{
@@ -97,8 +97,8 @@ namespace pl {
 			} : nullptr,
 			.commandBufferInfoCount = 1,
 			.pCommandBufferInfos = &VkCommandBufferSubmitInfo{ .commandBuffer = cmd },
-			.signalSemaphoreInfoCount = static_cast<u32>(signalSemaphors.count()),
-			.pSignalSemaphoreInfos = signalSemaphors.data()
+			.signalSemaphoreInfoCount = si.signalEvent.has_value() ? 2u : 1u,
+			.pSignalSemaphoreInfos = signalSemaphores
 		}, {});
 
 		m_submittedCmds.push(cmd, m_sync.event(), si.commandBuffer.getStagingBuffers());
@@ -109,7 +109,7 @@ namespace pl {
 		VkCommandBuffer cmd = commandBuffer.vkCommandBuffer();
 		vkEndCommandBuffer(cmd);
 
-		tbrs::Vec<VkSemaphoreSubmitInfo> waitSemaphores = {
+		VkSemaphoreSubmitInfo waitSemaphores[2] = {
 			VkSemaphoreSubmitInfo{
 				.semaphore = waitSem,
 				.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT
@@ -117,14 +117,14 @@ namespace pl {
 		};
 
 		if(waitEvent.has_value()) {
-			waitSemaphores.push(VkSemaphoreSubmitInfo{
+			waitSemaphores[1] = VkSemaphoreSubmitInfo{
 				.semaphore = waitEvent->vkSemaphore(),
 				.value = waitEvent->value(),
 				.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT
-			});
+			};
 		}
 
-		tbrs::Vec<VkSemaphoreSubmitInfo> signalSemaphores = {
+		VkSemaphoreSubmitInfo signalSemaphores[2] = {
 			VkSemaphoreSubmitInfo{
 				.semaphore = signalSem,
 				.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT
@@ -137,14 +137,14 @@ namespace pl {
 		};
 
 		vkQueueSubmit2(m_queue, 1, &VkSubmitInfo2{
-			.waitSemaphoreInfoCount = static_cast<u32>(waitSemaphores.count()),
-			.pWaitSemaphoreInfos = waitSemaphores.data(),
+			.waitSemaphoreInfoCount = waitEvent.has_value() ? 2u : 1u,
+			.pWaitSemaphoreInfos = waitSemaphores,
 			.commandBufferInfoCount = 1,
 			.pCommandBufferInfos = &VkCommandBufferSubmitInfo{
 				.commandBuffer = cmd
 			},
-			.signalSemaphoreInfoCount = static_cast<u32>(signalSemaphores.count()),
-			.pSignalSemaphoreInfos = signalSemaphores.data()
+			.signalSemaphoreInfoCount = 2,
+			.pSignalSemaphoreInfos = signalSemaphores
 		}, {});
 
 		m_submittedCmds.push(cmd, m_sync.event());

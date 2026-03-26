@@ -138,7 +138,7 @@ int main() {
 		.magFilter = pl::Filter::Linear
 	});
 
-	// pipeline
+	// shaders
 	std::vector<u32> shaderCode = getShaderSource("shaders/tri.spv");
 
 	pl::Shader meshShader(pl::ShaderCreateInfo{

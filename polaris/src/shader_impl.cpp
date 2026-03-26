@@ -34,7 +34,11 @@ namespace pl {
 		}
 	}
 
-	void Shader::bind(VkCommandBuffer cmd) const {
-		vkCmdBindShadersEXT(cmd, 1, &m_stage, &m_shader);
+	VkShaderEXT Shader::vkShader() const {
+		return m_shader;
+	}
+
+	VkShaderStageFlagBits Shader::vkShaderStageBits() const {
+		return m_stage;
 	}
 }

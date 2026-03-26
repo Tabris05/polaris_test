@@ -47,6 +47,8 @@ using byte = u8;
 namespace pl {
 	template <typename T>
 	class View {
+		using ElemType = std::remove_reference_t<T>;
+
 		public:
 
 			u64 size() const {
@@ -61,7 +63,7 @@ namespace pl {
 				return m_count == 0;
 			}
 
-			bool contains(const T& element) const {
+			bool contains(const ElemType& element) const {
 				for(u64 i = 0; i < m_count; i++) {
 					if(m_elems[i] == element) {
 						return true;
@@ -71,44 +73,49 @@ namespace pl {
 				return false;
 			}
 
-			T* begin() const {
+			ElemType* begin() const {
 				return m_elems;
 			}
 
-			T* end() const {
+			ElemType* end() const {
 				return m_elems + m_count;
 			}
 
-			T* data() const {
+			ElemType* data() const {
 				return m_elems;
 			}
 
-			T& front() const {
+			ElemType& front() const {
 				return m_elems[0];
 			}
 
-			T& back() const {
+			ElemType& back() const {
 				return m_elems[m_count - 1];
 			}
 
-			T& operator[](u64 index) const {
+			ElemType& operator[](u64 index) const {
 				return m_elems[index];
 			}
 
-			View(std::remove_cvref_t<T> elem) : m_elems(&elem), m_count(1) {}
-			View(std::remove_cvref_t<T> arr[]) : m_elems(arr), m_count(sizeof(arr) / sizeof(T)) {}
-			View(std::remove_cvref_t<T>* data, u64 count) : m_elems(data), m_count(count) {}
-			View(std::initializer_list<std::remove_cvref_t<T>>&& list) : m_elems(std::data(list)), m_count(list.end() - list.begin()) {}
+			View(ElemType* data, u64 count) : m_elems(data), m_count(count) {}
 
-			// foo: should decouple this from std::ranges maybe
-			template <std::ranges::contiguous_range R>
-			requires std::same_as<std::remove_cvref_t<std::ranges::range_value_t<R>>, std::remove_cvref_t<T>>
-			View(R&& range) : m_elems(std::data(range)), m_count(range.end() - range.begin()) {}
+			View(const ElemType& elem) : m_elems(const_cast<ElemType*>(&elem)), m_count(1) {}
+
+			View(std::initializer_list<std::remove_cvref_t<T>> list): m_elems(const_cast<ElemType*>(std::data(list))), m_count(list.size()) {}
+
+			template <std::ranges::contiguous_range R> requires
+				std::same_as<std::ranges::range_value_t<R>, std::remove_cvref_t<T>> &&
+				std::convertible_to<decltype(std::ranges::data(std::declval<R&>())), ElemType*>
+			View(R&& range) : m_elems(range.data()), m_count(range.end() - range.begin()) {}
+
+			template <typename U> requires !std::same_as<U, T> && std::convertible_to<std::remove_reference_t<U>*, ElemType*>
+			View(View<U> other) : m_elems(other.data()), m_count(other.count()) {}
 
 			View() = default;
 
+
 		private:
-			T* m_elems = nullptr;
+			ElemType* m_elems = nullptr;
 			u64 m_count = 0;
 	};
 }

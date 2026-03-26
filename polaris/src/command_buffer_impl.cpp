@@ -59,10 +59,16 @@ namespace pl {
 		});
 	}
 
-	void CommandBuffer::bindShaders(const View<const std::reference_wrapper<const Shader>> shaders) {
-		for(const Shader& shader : shaders) {
-			shader.bind(m_cmd);
+	void CommandBuffer::bindShaders(View<std::reference_wrapper<const Shader>> shaders) {
+		VkShaderStageFlagBits stages[3];
+		VkShaderEXT shaderHandles[3];
+
+		for(u8 i = 0; i < shaders.count(); i++) {
+			stages[i] = shaders[i].get().vkShaderStageBits();
+			shaderHandles[i] = shaders[i].get().vkShader();
 		}
+
+		vkCmdBindShadersEXT(m_cmd, shaders.count(), stages, shaderHandles);
 	}
 
 	void CommandBuffer::clearBuffer(BufferOffset offset, u32 value, u64 size) {
@@ -146,6 +152,15 @@ namespace pl {
 
 	void CommandBuffer::setViewport(Rect3D<f32> viewport) {
 		vkCmdSetViewportWithCount(m_cmd, 1, &VkViewport{ viewport.x, viewport.y, viewport.width, viewport.height, viewport.z, viewport.z + viewport.depth });
+	}
+
+	void CommandBuffer::unbindShaders(View<ShaderStage> stages) {
+		VkShaderStageFlagBits stageBits[3];
+		for(u8 i = 0; i < stages.count(); i++) {
+			stageBits[i] = vkShaderStage(stages[i]);
+		}
+
+		vkCmdBindShadersEXT(m_cmd, stages.count(), stageBits, nullptr);
 	}
 
 	VkCommandBuffer CommandBuffer::vkCommandBuffer() const {
