@@ -5,8 +5,6 @@
 #include <ranges>
 #include <optional>
 
-#pragma once
-
 using f64 = double;
 static_assert(sizeof(f64) == 8, "f64 must alias a 64-bit floating point type.");
 

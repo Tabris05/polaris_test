@@ -105,21 +105,21 @@ namespace pl {
 													.pNext = &VkPhysicalDeviceShaderObjectFeaturesEXT{
 														.pNext = &VkPhysicalDeviceDescriptorHeapFeaturesEXT{
 															.pNext = &VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
-																.fragmentShaderPixelInterlock = true
+																.fragmentShaderPixelInterlock = true,
 															},
-															.descriptorHeap = true
+															.descriptorHeap = true,
 														},
-														.shaderObject = true
+														.shaderObject = true,
 													},
-													.meshShader = true
+													.meshShader = true,
 												},
-												.shaderMaximalReconvergence = true
+												.shaderMaximalReconvergence = true,
 											},
-											.shaderUntypedPointers = true
+											.shaderUntypedPointers = true,
 										},
-										.maintenance10 = true
+										.maintenance10 = true,
 									},
-									.maintenance9 = true
+									.maintenance9 = true,
 								},
 								.indexTypeUint8 = true,
 								.maintenance5 = true,
@@ -129,6 +129,8 @@ namespace pl {
 							.dynamicRendering = true,
 						},
 						.drawIndirectCount = true,
+						.storageBuffer8BitAccess = true,
+						.storagePushConstant8 = true,
 						.shaderInt8 = true,
 						.shaderSampledImageArrayNonUniformIndexing = true,
 						.shaderStorageImageArrayNonUniformIndexing = true,
@@ -142,8 +144,9 @@ namespace pl {
 						.bufferDeviceAddress = true,
 						.vulkanMemoryModel = true,
 						.vulkanMemoryModelDeviceScope = true,
-						.vulkanMemoryModelAvailabilityVisibilityChains = true
+						.vulkanMemoryModelAvailabilityVisibilityChains = true,
 					},
+					.storageBuffer16BitAccess = true,
 					.shaderDrawParameters = true,
 				},
 				.features{
@@ -154,7 +157,7 @@ namespace pl {
 					.shaderStorageImageReadWithoutFormat = true,
 					.shaderStorageImageWriteWithoutFormat = true,
 					.shaderInt64 = true,
-				    .shaderInt16 = true
+				    .shaderInt16 = true,
 				}
 			},
 			.queueCreateInfoCount = static_cast<u32>(queueCIs.count()),

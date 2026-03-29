@@ -1,10 +1,12 @@
+#include <polaris/polaris.hpp>
+
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <glfw/glfw3.h>
 
 #define WIN32_LEAN_AND_MEAN
-
 #include <glfw/glfw3native.h>
-#include <polaris/polaris.hpp>
+
+#include <meshopt/meshoptimizer.h>
 
 #include <vector>
 #include <fstream>
@@ -23,6 +25,136 @@
 
 using mat4f32 = glm::mat4;
 #include "../shared/push_constants.h"
+
+struct Mesh {
+	u64 drawCount;
+	pl::Buffer vertexBuffer;
+	pl::Buffer triangleBuffer;
+	pl::Buffer meshletBuffer;
+	pl::Texture texture;
+};
+
+Mesh makeMesh(const pl::Device& device) {
+	pl::Queue uploadQueue(pl::QueueCreateInfo{
+		.device = device,
+		.type = pl::QueueType::DMA
+	});
+
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn, err;
+
+	// load mesh
+	std::vector<Vertex> vertices1;
+	tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "viking_room.obj");
+	for(const auto& shape : shapes) {
+		for(const auto& index : shape.mesh.indices) {
+			vertices1.emplace_back(
+				vec3f32(
+					attrib.vertices[3 * index.vertex_index + 0],
+					attrib.vertices[3 * index.vertex_index + 1],
+					attrib.vertices[3 * index.vertex_index + 2]
+				),
+
+				vec2f32(
+					attrib.texcoords[2 * index.texcoord_index + 0],
+					1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+				)
+			);
+		}
+	}
+
+	// index mesh
+	u64 indexCount = vertices1.size();
+	std::vector<u32> remap(indexCount);
+	u64 vertexCount = meshopt_generateVertexRemap(remap.data(), nullptr, indexCount, vertices1.data(), indexCount, sizeof(Vertex));
+
+	std::vector<u32> indices(indexCount);
+	meshopt_remapIndexBuffer(indices.data(), nullptr, indexCount, remap.data());
+
+	std::vector<Vertex> vertices2(vertexCount);
+	meshopt_remapVertexBuffer(vertices2.data(), vertices1.data(), indexCount, sizeof(Vertex), remap.data());
+
+	// meshletize mesh
+	u64 maxMeshlets = meshopt_buildMeshletsBound(indices.size(), Meshlet::MaxVertexCount, Meshlet::MaxTriangleCount);
+
+	std::vector<meshopt_Meshlet> meshlets(maxMeshlets);
+	std::vector<u32> meshletVertices(indices.size());
+	std::vector<u8> meshletTriangles(indices.size());
+
+	u64 meshletCount = meshopt_buildMeshlets(meshlets.data(), meshletVertices.data(), meshletTriangles.data(), indices.data(), indices.size(),
+											 reinterpret_cast<f32*>(vertices2.data()), vertices2.size(), sizeof(Vertex), Meshlet::MaxVertexCount, Meshlet::MaxTriangleCount, 0.0f);
+	
+	meshlets.resize(meshletCount);
+
+	meshopt_Meshlet last = meshlets.back();
+	meshletVertices.resize(last.vertex_offset + last.vertex_count);
+	meshletTriangles.resize(last.triangle_offset + last.triangle_count * 3);
+
+	// optimize meshlets
+	for(meshopt_Meshlet meshlet : meshlets) {
+		meshopt_optimizeMeshlet(meshletVertices.data() + meshlet.vertex_offset, meshletTriangles.data() + meshlet.triangle_offset, meshlet.triangle_count, meshlet.vertex_count);
+	}
+
+	// create final vertex buffer
+	std::vector<Vertex> vertices3(meshletVertices.size());
+	for(u64 i = 0; i < meshletVertices.size(); i++) {
+		vertices3[i] = vertices2[meshletVertices[i]];
+	}
+
+	pl::Buffer vertexBuffer(pl::BufferCreateInfo{
+		.device = device,
+		.size = vertices3.size() * sizeof(Vertex)
+	});
+
+	pl::Buffer triangleBuffer(pl::BufferCreateInfo{
+		.device = device,
+		.size = meshletTriangles.size() * sizeof(u8)
+	});
+
+	pl::Buffer meshletBuffer(pl::BufferCreateInfo{
+		.device = device,
+		.size = meshlets.size() * sizeof(Meshlet)
+	});
+
+	std::vector<Meshlet> meshlets2(meshlets.size());
+	for(u64 i = 0; i < meshlets.size(); i++) {
+		meshlets2[i] = Meshlet{
+			vertexBuffer.deviceAddress<Vertex>() + meshlets[i].vertex_offset,
+			triangleBuffer.deviceAddress<vec3u8>() + meshlets[i].triangle_offset / 3,
+			static_cast<u8>(meshlets[i].vertex_count),
+			static_cast<u8>(meshlets[i].triangle_count)
+		};
+	}
+
+	i32 x, y;
+	byte* textureData = stbi_load("viking_room.png", &x, &y, nullptr, 4);
+	
+	pl::Texture texture(pl::TextureCreateInfo{
+		.device = device,
+		.format = pl::Format::RGBA8_SRGB,
+		.width = static_cast<u32>(x),
+		.height = static_cast<u32>(y),
+	});
+	
+	pl::CommandBuffer upload = uploadQueue.beginRecording();
+	upload.writeBuffer(pl::BufferOffset{ vertexBuffer }, pl::View<const Vertex>(vertices3));
+	upload.writeBuffer(pl::BufferOffset{ triangleBuffer }, pl::View<const u8>(meshletTriangles));
+	upload.writeBuffer(pl::BufferOffset{ meshletBuffer }, pl::View<const Meshlet>(meshlets2));
+	upload.writeTexture(texture, pl::View<const byte>(textureData, x * y * 4));
+	uploadQueue.submit(pl::SubmitInfo{ .commandBuffer = std::move(upload) }).wait();
+	
+	stbi_image_free(textureData);
+	
+	return Mesh{
+		meshlets.size(),
+		std::move(vertexBuffer),
+		std::move(triangleBuffer),
+		std::move(meshletBuffer),
+		std::move(texture)
+	};
+}
 
 std::vector<u32> getShaderSource(const char* path) {
 	std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -83,59 +215,15 @@ int main() {
 	pl::TextureHandle handle;
 	pl::ImageHandle imageHandle = colorBuffer.makeImageHandle();
 
-	// upload model data
-	tinyobj::attrib_t attrib;
-	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials;
-	std::string warn, err;
 
-	std::vector<Vertex> vertices;
-	tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "viking_room.obj");
-	for(const auto& shape : shapes) {
-		for(const auto& index : shape.mesh.indices) {
-			vertices.emplace_back(
-				vec3f32(
-					attrib.vertices[3 * index.vertex_index + 0],
-					attrib.vertices[3 * index.vertex_index + 1],
-					attrib.vertices[3 * index.vertex_index + 2]
-				),
-
-				vec2f32(
-						   attrib.texcoords[2 * index.texcoord_index + 0],
-					1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-				)
-			);
-		}
-	}
-
-	pl::Buffer buffer(pl::BufferCreateInfo{
-		.device = device,
-		.size = vertices.size() * sizeof(Vertex)
-	});
-
-	i32 x, y;
-	byte* texData = stbi_load("viking_room.png", &x, &y, nullptr, 4);
-
-	pl::Texture albedo(pl::TextureCreateInfo{
-		.device = device,
-		.format = pl::Format::RGBA8_SRGB,
-		.width = static_cast<u32>(x),
-		.height = static_cast<u32>(y),
-	});
-
-	pl::CommandBuffer upload = queue.beginRecording();
-	upload.writeBuffer(pl::BufferOffset{ buffer }, pl::View<const Vertex>(vertices));
-	upload.writeTexture(albedo, pl::View<const byte>(texData, x * y * 4));
-	queue.submit(pl::SubmitInfo{ .commandBuffer = std::move(upload) }).wait();
-
-	stbi_image_free(texData);
-
-	pl::TextureHandle albedoHandle = albedo.makeTextureHandle();
+	Mesh mesh = makeMesh(device);
+	pl::TextureHandle albedoHandle = mesh.texture.makeTextureHandle();
 
 	pl::Sampler sampler(pl::SamplerCreateInfo{
 		.device = device,
 		.minFilter = pl::Filter::Linear,
-		.magFilter = pl::Filter::Linear
+		.magFilter = pl::Filter::Linear,
+		.anisotropy = 16.0f,
 	});
 
 	// shaders
@@ -184,8 +272,7 @@ int main() {
 		cmd.setScissor(pl::Rect2D<u32>{ .width = 1920u, .height = 1080u });
 		cmd.bindShaders({ meshShader, fragmentShader });
 		cmd.pushConstants(PushConstants{
-			.vertices = buffer.deviceAddress<Vertex>(),
-			.vertexCount = static_cast<u32>(vertices.size()),
+			.meshlets = mesh.meshletBuffer.deviceAddress<Meshlet>(),
 			.mvp = projection * view * model,
 			.texture = pl::TextureHandle(albedoHandle, sampler)
 		});
@@ -206,7 +293,7 @@ int main() {
 					.clearValue = pl::ClearValue{ .depthStencil = { 1.0f, 0u } }
 			}
 		});
-		cmd.draw(((vertices.size() / 3) + 63) / 64);
+		cmd.draw(mesh.drawCount);
 		cmd.endRenderPass();
 
 		pl::Event event = queue.submit(pl::SubmitInfo{ .commandBuffer = std::move(cmd) });

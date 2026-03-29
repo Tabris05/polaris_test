@@ -3,26 +3,27 @@
 struct MSOut {
     vec4f32 position : SV_Position;
     vec2f32 uv;
-}
+};
 
-[shader("mesh"), outputtopology("triangle"), NumThreads(64)]
-void msmain(uniform PushConstants pcs, u32 globalID: SV_DispatchThreadID, u32 localID: SV_GroupThreadID, out vertices MSOut verts[192], out indices uint3 tris[64]) {
-    if (localID == 0) {
-        u32 remainingVerts = pcs.vertexCount - globalID * 3;
-        u32 vertsThisGroup = min(192, remainingVerts);
-        SetMeshOutputCounts(vertsThisGroup, vertsThisGroup / 3);
+struct ThreadId {
+    u32 groupId : SV_GroupID;
+    u32 threadId : SV_GroupThreadID;
+};
+
+static const u8 WorkGroupSize = Meshlet::MaxVertexCount;
+
+[shader("mesh"), outputtopology("triangle"), NumThreads(WorkGroupSize)]
+void msmain(uniform PushConstants pcs, ThreadId id, out vertices MSOut vertices[Meshlet::MaxVertexCount], out indices vec3u8 triangles[Meshlet::MaxTriangleCount]) {
+    Meshlet meshlet = pcs.meshlets[id.groupId];
+    SetMeshOutputCounts(meshlet.vertexCount, meshlet.triangleCount);
+
+    if (id.threadId < meshlet.vertexCount) {
+        vertices[id.threadId].position = mul(pcs.mvp, vec4f32(meshlet.vertices[id.threadId].position, 1.0f));
+        vertices[id.threadId].uv = meshlet.vertices[id.threadId].uv;
     }
 
-    if (globalID * 3 < pcs.vertexCount) {
-        for (u32 i = 0; i < 3; i++) {
-            u32 localIndex = localID * 3 + i;
-            u32 globalIndex = globalID * 3 + i;
-
-            verts[localIndex].position = mul(pcs.mvp, vec4f32(pcs.vertices[globalIndex].position, 1.0f));
-            verts[localIndex].uv = pcs.vertices[globalIndex].uv;
-
-            tris[localID][i] = localIndex;
-        }
+    for (u8 i = id.threadId; i < meshlet.triangleCount; i += WorkGroupSize) {
+        triangles[i] = meshlet.triangles[i];
     }
 }
 

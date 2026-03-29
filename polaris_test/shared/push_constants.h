@@ -5,9 +5,17 @@ struct Vertex {
     vec2f32 uv;
 };
 
-struct PushConstants {
+struct Meshlet {
+    static const u8 MaxVertexCount = 64;
+    static const u8 MaxTriangleCount = 126;
     Vertex* vertices;
-    u32 vertexCount;
+    vec3u8* triangles;
+    u8 vertexCount;
+    u8 triangleCount;
+};
+
+struct PushConstants {
+    Meshlet* meshlets;
     mat4f32 mvp;
     Texture2D<vec4f32> texture;
 };

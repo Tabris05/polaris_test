@@ -12,6 +12,8 @@
 #include "swapchain.hpp"
 #include "shader.hpp"
 
+using vec3u8 = pl::vec3<u8>;
+
 using vec2f32 = pl::vec2<f32>;
 using vec3f32 = pl::vec3<f32>;
 using vec4f32 = pl::vec4<f32>;
