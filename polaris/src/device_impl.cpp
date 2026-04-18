@@ -195,6 +195,8 @@ namespace pl {
 
 		vkDestroyDevice(m_device, nullptr);
 		vkDestroyInstance(m_instance, nullptr);
+
+		volkFinalize();
 	}
 
 	VkInstance Device::vkInstance() const {

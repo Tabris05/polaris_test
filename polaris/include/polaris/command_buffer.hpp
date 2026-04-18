@@ -38,7 +38,10 @@ namespace pl {
 				static_assert(sizeof(T) <= 256, "Push constants must be 256 bytes or less.");
 				pushConstantsImpl(&constants, sizeof(T));
 			}
+			void setAttachmentColorState(AttachmentColorState state);
+			void setColorState(ColorState state);
 			void setDepthStencilState(DepthStencilState state);
+			void setMultisampleState(MultisampleState state);
 			void setRasterizerState(RasterizerState state);
 			void setScissor(Rect2D<u32> scissor);
 			void setViewport(Rect3D<f32> viewport);

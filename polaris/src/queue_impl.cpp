@@ -34,10 +34,6 @@ namespace pl {
 		}
 		if(m_type == QueueType::Universal) {
 
-			// viewport state
-			vkCmdSetViewportWithCount(cmd, 1, &VkViewport{ .width = 1.0f });
-			vkCmdSetScissorWithCount(cmd, 1, &VkRect2D{});
-
 			// rasterization state
 			vkCmdSetRasterizerDiscardEnable(cmd, false);
 			vkCmdSetPolygonModeEXT(cmd, VK_POLYGON_MODE_FILL);

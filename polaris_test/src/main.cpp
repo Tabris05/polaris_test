@@ -212,10 +212,6 @@ int main() {
 	pl::RenderTarget depthTarget = depthBuffer.makeRenderTarget();
 	pl::TextureHandle presentHandle = colorBuffer.makeTextureHandle(pl::TextureView{ .format = pl::Format::RGBA8_UNORM });
 
-	pl::TextureHandle handle;
-	pl::ImageHandle imageHandle = colorBuffer.makeImageHandle();
-
-
 	Mesh mesh = makeMesh(device);
 	pl::TextureHandle albedoHandle = mesh.texture.makeTextureHandle();
 
@@ -277,20 +273,20 @@ int main() {
 			.texture = pl::TextureHandle(albedoHandle, sampler)
 		});
 		
-		cmd.barrier(pl::PipelineStage::Depth | pl::PipelineStage::Present, pl::PipelineStage::DepthWrite | pl::PipelineStage::ColorWrite);
+		cmd.barrier(pl::PipelineStage::Present, pl::PipelineStage::RenderTargetWrite);
 		cmd.beginRenderPass(pl::RenderPassBeginInfo{
 			.renderArea = { .width = 1920, .height = 1080 },
 			.colorTargets = pl::RenderTargetInfo{
-					.target = colorTarget,
-					.loadOp = pl::LoadOp::Clear,
-					.storeOp = pl::StoreOp::Store,
-					.clearValue = pl::ClearValue{ .fColor = { 0.0f, 0.0f, 0.0f, 1.0f } }
+				.target = colorTarget,
+				.loadOp = pl::LoadOp::Clear,
+				.storeOp = pl::StoreOp::Store,
+				.clearValue = pl::ClearValue{ .fColor = { 0.0f, 0.0f, 0.0f, 1.0f } }
 			},
 			.depthTarget = pl::RenderTargetInfo{
-					.target = depthTarget,
-					.loadOp = pl::LoadOp::Clear,
-					.storeOp = pl::StoreOp::Discard,
-					.clearValue = pl::ClearValue{ .depthStencil = { 1.0f, 0u } }
+				.target = depthTarget,
+				.loadOp = pl::LoadOp::Clear,
+				.storeOp = pl::StoreOp::Discard,
+				.clearValue = pl::ClearValue{ .depthStencil = { 1.0f, 0u } }
 			}
 		});
 		cmd.draw(mesh.drawCount);

@@ -97,7 +97,7 @@ namespace pl {
 	};
 
 	enum class TextureType : u8 {
-		Type1D,
+		Type1D = 1,
 		Type2D,
 		Type3D
 	};
@@ -105,12 +105,12 @@ namespace pl {
 	enum class TextureViewType : u8 {
 		Default,
 		Type1D,
-		Type1DArray,
 		Type2D,
+		Type3D,
+		TypeCubemap,
+		Type1DArray,
 		Type2DArray,
-		Cubemap,
-		CubemapArray,
-		Type3D
+		TypeCubemapArray,
 	};
 
 	enum class Swizzle : u8 {
@@ -157,6 +157,113 @@ namespace pl {
 		GreaterEqual,
 		Greater,
 		Always
+	};
+
+	enum class LogicOp : u8 {
+		Clear,
+		Set,
+		NoOp,
+		Invert,
+		Copy,
+		CopyInverted,
+		Or,
+		OrReverse,
+		OrInverted,
+		Nor,
+		And,
+		AndReverse,
+		AndInverted,
+		Nand,
+		Xor,
+		Equivalent
+	};
+
+	enum class BlendFactor : u8 {
+		Zero,
+		One,
+		SrcColor,
+		OneMinusSrcColor,
+		Src1Color,
+		OneMinusSrc1Color,
+		DstColor,
+		OneMinusDstColor,
+		SrcAlpha,
+		OneMinusSrcAlpha,
+		Src1Alpha,
+		OneMinusSrc1Alpha,
+		DstAlpha,
+		OneMinusDstAlpha,
+		ConstantColor,
+		OneMinusConstantColor,
+		ConstantAlpha,
+		OneMinusConstantAlpha,
+		SrcAlphaSaturate
+	};
+
+	enum class BlendOp : u8 {
+		Add,
+		Subtract,
+		ReverseSubtract,
+		Min,
+		Max
+	};
+
+	enum class WriteMask : u8 {
+		None,
+		R,
+		G,
+		RG,
+		B,
+		RB,
+		GB,
+		RGB,
+		A,
+		RA,
+		GA,
+		RGA,
+		BA,
+		RBA,
+		GBA,
+		RGBA
+	};
+
+	inline WriteMask operator~(WriteMask val) {
+		return static_cast<WriteMask>(~static_cast<u16>(val));
+	}
+
+	inline WriteMask operator&(WriteMask lhs, WriteMask rhs) {
+		return static_cast<WriteMask>(static_cast<u16>(lhs) & static_cast<u16>(rhs));
+	}
+
+	inline WriteMask operator|(WriteMask lhs, WriteMask rhs) {
+		return static_cast<WriteMask>(static_cast<u16>(lhs) | static_cast<u16>(rhs));
+	}
+
+	inline WriteMask& operator&=(WriteMask& lhs, WriteMask rhs) {
+		lhs = lhs & rhs;
+		return lhs;
+	}
+
+	inline WriteMask& operator|=(WriteMask& lhs, WriteMask rhs) {
+		lhs = lhs | rhs;
+		return lhs;
+	}
+
+	enum class StencilOp : u8 {
+		Keep,
+		Zero,
+		Replace,
+		Invert,
+		IncrementClamp,
+		IncrementWrap,
+		DecrementClamp,
+		DecrementWrap
+	};
+
+	enum class PolygonMode : u8 {
+		Fill,
+		Line,
+		Point
 	};
 
 	enum class NativeWindowType : u8 {
@@ -288,7 +395,7 @@ namespace pl {
 
 	struct SyncCreateInfo {
 		const class Device& device;
-		u64 initialValue = 0;
+		u64 initialValue;
 	};
 
 	struct BufferCreateInfo {
@@ -311,8 +418,8 @@ namespace pl {
 	struct TextureRegion {
 		static constexpr u32 RemainingLevels = 0xFFFFFFFF;
 		static constexpr u32 RemainingLayers = 0xFFFFFFFF;
-		u32 baseLevel = 0;
-		u32 baseLayer = 0;
+		u32 baseLevel;
+		u32 baseLayer;
 		u32 numLevels = RemainingLevels;
 		u32 numLayers = RemainingLayers;
 		DepthStencilAspect aspect;
@@ -338,9 +445,9 @@ namespace pl {
 		WrapMode wrapW;
 		ReductionMode reductionMode;
 		CompareOp compareOp;
-		f32 minLod = 0.0f;
+		f32 minLod;
 		f32 maxLod = 1000.0f;
-		f32 lodBias = 0.0f;
+		f32 lodBias;
 		f32 anisotropy = 1.0f;
 	};
 
@@ -421,18 +528,71 @@ namespace pl {
 
 	struct BufferOffset {
 		const class Buffer& buffer;
-		u64 offset = 0;
+		u64 offset;
+	};
+
+	struct ColorState {
+		b8 logicOpEnable;
+		LogicOp logicOp;
+		f32 blendConstants[4];
+	};
+
+	struct BlendState {
+		BlendFactor srcFactor;
+		BlendFactor dstFactor;
+		BlendOp blendOp;
+	};
+
+	struct AttachmentColorState {
+		u8 attachmentIndex;
+		b8 blendEnable;
+		BlendState colorBlend;
+		BlendState alphaBlend;
+		WriteMask writeMask;
+	};
+
+	struct StencilState {
+		StencilOp failOp;
+		StencilOp depthFailOp;
+		StencilOp passOp;
+		CompareOp compareOp;
+		u32 compareMask;
+		u32 writeMask;
+		u32 reference;
 	};
 
 	struct DepthStencilState {
 		b8 depthTestEnable;
 		b8 depthWriteEnable;
 		CompareOp depthCompareOp;
+		b8 stencilTestEnable;
+		StencilState front;
+		StencilState back;
+		b8 depthBoundsTestEnable;
+		f32 minDepthBounds;
+		f32 maxDepthBounds;
+	};
+
+	struct MultisampleState {
+		u8 sampleCount = 1;
+		u8 sampleMask = 0xFF;
+		b8 alphaToCoverageEnable;
+		b8 alphaToOneEnable;
+		b8 sampleShadingEnable;
+		f32 minSampleShading;
 	};
 
 	struct RasterizerState {
+		b8 depthClampEnable;
+		b8 rasterizerDiscardEnable;
+		PolygonMode polygonMode;
 		Face cullMode;
 		WindingOrder windingOrder;
+		b8 depthBiasEnable;
+		f32 depthBiasConstantFactor;
+		f32 depthBiasClamp;
+		f32 depthBiasSlopeFactor;
+		f32 lineWidth = 1.0f;
 	};
 
 	struct IndirectCommand {
@@ -480,3 +640,4 @@ namespace pl {
 		T w;
 	};
 }
+

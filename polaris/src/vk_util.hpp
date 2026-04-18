@@ -8,6 +8,122 @@ T* operator&(T&& val) {
     return &val;
 }
 
+inline VkAccessFlags2 vkAccessMask(pl::PipelineStage stage) {
+    VkAccessFlags2 flags = 0;
+    if((stage & pl::PipelineStage::ShaderRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_SHADER_READ_BIT;
+    }
+    if((stage & pl::PipelineStage::ShaderWrite) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_SHADER_WRITE_BIT;
+    }
+    if((stage & pl::PipelineStage::CopyRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_TRANSFER_READ_BIT;
+    }
+    if((stage & pl::PipelineStage::CopyWrite) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_TRANSFER_WRITE_BIT;
+    }
+    if((stage & pl::PipelineStage::DepthRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+    }
+    if((stage & pl::PipelineStage::DepthWrite) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    }
+    if((stage & pl::PipelineStage::ColorRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT;
+    }
+    if((stage & pl::PipelineStage::ColorWrite) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
+    }
+    if((stage & pl::PipelineStage::IndirectRead) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT;
+	}
+
+	return flags;
+}
+
+inline VkImageAspectFlags vkAspectMask(VkFormat format) {
+    switch(format) {
+        case VK_FORMAT_D16_UNORM:
+        case VK_FORMAT_X8_D24_UNORM_PACK32:
+        case VK_FORMAT_D32_SFLOAT:
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+        case VK_FORMAT_S8_UINT:
+            return VK_IMAGE_ASPECT_STENCIL_BIT;
+        case VK_FORMAT_D24_UNORM_S8_UINT:
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+            return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+        default:
+            return VK_IMAGE_ASPECT_COLOR_BIT;
+    }
+}
+
+inline VkImageAspectFlags vkAspectMask(pl::DepthStencilAspect aspect) {
+    switch(aspect) {
+        case pl::DepthStencilAspect::Depth:
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+        case pl::DepthStencilAspect::Stencil:
+            return VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+}
+
+inline VkBlendFactor vkBlendFactor(pl::BlendFactor factor) {
+    switch(factor) {
+        case pl::BlendFactor::Zero: return VK_BLEND_FACTOR_ZERO;
+        case pl::BlendFactor::One: return VK_BLEND_FACTOR_ONE;
+        case pl::BlendFactor::SrcColor: return VK_BLEND_FACTOR_SRC_COLOR;
+        case pl::BlendFactor::OneMinusSrcColor: return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+        case pl::BlendFactor::DstColor: return VK_BLEND_FACTOR_DST_COLOR;
+        case pl::BlendFactor::OneMinusDstColor: return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+        case pl::BlendFactor::SrcAlpha: return VK_BLEND_FACTOR_SRC_ALPHA;
+        case pl::BlendFactor::OneMinusSrcAlpha: return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        case pl::BlendFactor::DstAlpha: return VK_BLEND_FACTOR_DST_ALPHA;
+        case pl::BlendFactor::OneMinusDstAlpha: return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+        case pl::BlendFactor::ConstantColor: return VK_BLEND_FACTOR_CONSTANT_COLOR;
+        case pl::BlendFactor::OneMinusConstantColor: return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
+        case pl::BlendFactor::SrcAlphaSaturate: return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+    }
+}
+
+inline VkBlendOp vkBlendOp(pl::BlendOp op) {
+    switch(op) {
+        case pl::BlendOp::Add: return VK_BLEND_OP_ADD;
+        case pl::BlendOp::Subtract: return VK_BLEND_OP_SUBTRACT;
+        case pl::BlendOp::ReverseSubtract: return VK_BLEND_OP_REVERSE_SUBTRACT;
+        case pl::BlendOp::Min: return VK_BLEND_OP_MIN;
+        case pl::BlendOp::Max: return VK_BLEND_OP_MAX;
+    }
+}
+
+inline VkCompareOp vkCompareOp(pl::CompareOp op) {
+    switch(op) {
+        case pl::CompareOp::None: return VK_COMPARE_OP_ALWAYS;
+        case pl::CompareOp::Never: return VK_COMPARE_OP_NEVER;
+        case pl::CompareOp::NotEqual: return VK_COMPARE_OP_NOT_EQUAL;
+        case pl::CompareOp::Less: return VK_COMPARE_OP_LESS;
+        case pl::CompareOp::LessEqual: return VK_COMPARE_OP_LESS_OR_EQUAL;
+        case pl::CompareOp::Equal: return VK_COMPARE_OP_EQUAL;
+        case pl::CompareOp::GreaterEqual: return VK_COMPARE_OP_GREATER_OR_EQUAL;
+        case pl::CompareOp::Greater: return VK_COMPARE_OP_GREATER;
+        case pl::CompareOp::Always: return VK_COMPARE_OP_ALWAYS;
+    }
+}
+
+inline VkCullModeFlagBits vkCullMode(pl::Face face) {
+    switch(face) {
+        case pl::Face::None: return VK_CULL_MODE_NONE;
+        case pl::Face::Front: return VK_CULL_MODE_FRONT_BIT;
+        case pl::Face::Back: return VK_CULL_MODE_BACK_BIT;
+        case pl::Face::Both: return VK_CULL_MODE_FRONT_AND_BACK;
+    }
+}
+
+inline VkFilter vkFilter(pl::Filter filter) {
+    switch(filter) {
+        case pl::Filter::Nearest: return VK_FILTER_NEAREST;
+        case pl::Filter::Linear: return VK_FILTER_LINEAR;
+    }
+}
+
 inline VkFormat vkFormat(pl::Format format) {
     switch(format) {
         case pl::Format::None: return VK_FORMAT_UNDEFINED;
@@ -84,6 +200,13 @@ inline VkFormat vkFormat(pl::Format format) {
     }
 }
 
+inline VkFrontFace vkFrontFace(pl::WindingOrder order) {
+    switch(order) {
+        case pl::WindingOrder::CCW: return VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        case pl::WindingOrder::CW: return VK_FRONT_FACE_CLOCKWISE;
+    }
+}
+
 inline VkImageType vkImageType(pl::TextureType type) {
     switch(type) {
         case pl::TextureType::Type1D: return VK_IMAGE_TYPE_1D;
@@ -95,12 +218,137 @@ inline VkImageType vkImageType(pl::TextureType type) {
 inline VkImageViewType vkImageViewType(pl::TextureViewType type) {
     switch(type) {
         case pl::TextureViewType::Type1D: return VK_IMAGE_VIEW_TYPE_1D;
-        case pl::TextureViewType::Type1DArray: return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
         case pl::TextureViewType::Type2D: return VK_IMAGE_VIEW_TYPE_2D;
-        case pl::TextureViewType::Type2DArray: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-        case pl::TextureViewType::Cubemap: return VK_IMAGE_VIEW_TYPE_CUBE;
-        case pl::TextureViewType::CubemapArray: return VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
 		case pl::TextureViewType::Type3D: return VK_IMAGE_VIEW_TYPE_3D;
+        case pl::TextureViewType::TypeCubemap: return VK_IMAGE_VIEW_TYPE_CUBE;
+        case pl::TextureViewType::Type1DArray: return VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+        case pl::TextureViewType::Type2DArray: return VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+        case pl::TextureViewType::TypeCubemapArray: return VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+    }
+}
+
+inline VkIndexType vkIndexType(pl::IndexType type) {
+    switch(type) {
+        case pl::IndexType::u8: return VK_INDEX_TYPE_UINT8;
+        case pl::IndexType::u16: return VK_INDEX_TYPE_UINT16;
+        case pl::IndexType::u32: return VK_INDEX_TYPE_UINT32;
+    }
+}
+
+inline VkAttachmentLoadOp vkLoadOp(pl::LoadOp op) {
+    switch(op) {
+        case pl::LoadOp::Load: return VK_ATTACHMENT_LOAD_OP_LOAD;
+        case pl::LoadOp::Clear: return VK_ATTACHMENT_LOAD_OP_CLEAR;
+        case pl::LoadOp::None: return VK_ATTACHMENT_LOAD_OP_NONE;
+    }
+}
+
+inline VkLogicOp vkLogicOp(pl::LogicOp op) {
+    switch(op) {
+        case pl::LogicOp::Clear: return VK_LOGIC_OP_CLEAR;
+        case pl::LogicOp::Set: return VK_LOGIC_OP_SET;
+        case pl::LogicOp::NoOp: return VK_LOGIC_OP_NO_OP;
+        case pl::LogicOp::Invert: return VK_LOGIC_OP_INVERT;
+        case pl::LogicOp::Copy: return VK_LOGIC_OP_COPY;
+        case pl::LogicOp::CopyInverted: return VK_LOGIC_OP_COPY_INVERTED;
+        case pl::LogicOp::Or: return VK_LOGIC_OP_OR;
+        case pl::LogicOp::OrReverse: return VK_LOGIC_OP_OR_REVERSE;
+        case pl::LogicOp::OrInverted: return VK_LOGIC_OP_OR_INVERTED;
+        case pl::LogicOp::Nor: return VK_LOGIC_OP_NOR;
+        case pl::LogicOp::And: return VK_LOGIC_OP_AND;
+        case pl::LogicOp::AndReverse: return VK_LOGIC_OP_AND_REVERSE;
+        case pl::LogicOp::AndInverted: return VK_LOGIC_OP_AND_INVERTED;
+        case pl::LogicOp::Nand: return VK_LOGIC_OP_NAND;
+        case pl::LogicOp::Xor: return VK_LOGIC_OP_XOR;
+        case pl::LogicOp::Equivalent: return VK_LOGIC_OP_EQUIVALENT;
+    }
+}
+
+inline VkSamplerMipmapMode vkMipFilter(pl::Filter filter) {
+    switch(filter) {
+        case pl::Filter::Nearest: return VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        case pl::Filter::Linear: return VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    }
+}
+
+inline VkPolygonMode vkPolygonMode(pl::PolygonMode mode) {
+    switch(mode) {
+        case pl::PolygonMode::Fill: return VK_POLYGON_MODE_FILL;
+        case pl::PolygonMode::Line: return VK_POLYGON_MODE_LINE;
+        case pl::PolygonMode::Point: return VK_POLYGON_MODE_POINT;
+    }
+}
+
+inline VkSamplerReductionMode vkReductionMode(pl::ReductionMode mode) {
+    switch(mode) {
+        case pl::ReductionMode::Average: return VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE;
+        case pl::ReductionMode::Min: return VK_SAMPLER_REDUCTION_MODE_MIN;
+        case pl::ReductionMode::Max: return VK_SAMPLER_REDUCTION_MODE_MAX;
+    }
+}
+
+inline VkSampleCountFlagBits vkSampleCount(u8 count) {
+    switch(count) {
+        case 1: return VK_SAMPLE_COUNT_1_BIT;
+        case 2: return VK_SAMPLE_COUNT_2_BIT;
+        case 4: return VK_SAMPLE_COUNT_4_BIT;
+        case 8: return VK_SAMPLE_COUNT_8_BIT;
+    }
+}
+
+inline VkShaderStageFlagBits vkShaderStage(pl::ShaderStage stage) {
+    switch(stage) {
+        case pl::ShaderStage::Compute: return VK_SHADER_STAGE_COMPUTE_BIT;
+        case pl::ShaderStage::Mesh: return VK_SHADER_STAGE_MESH_BIT_EXT;
+        case pl::ShaderStage::Fragment: return VK_SHADER_STAGE_FRAGMENT_BIT;
+    }
+}
+
+inline VkPipelineStageFlags2 vkStageMask(pl::PipelineStage stage) {
+    VkPipelineStageFlags2 flags = 0;
+    if((stage & pl::PipelineStage::Mesh) != pl::PipelineStage::None) {
+		flags |= VK_PIPELINE_STAGE_2_MESH_SHADER_BIT_EXT;
+    }
+    if((stage & pl::PipelineStage::Fragment) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+    }
+    if((stage & pl::PipelineStage::Compute) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+    }
+    if((stage & pl::PipelineStage::Copy) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+    }
+    if((stage & pl::PipelineStage::Depth) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
+	}
+    if((stage & pl::PipelineStage::Color) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+	}
+    if((stage & pl::PipelineStage::IndirectRead) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT;
+    }
+
+	return flags;
+}
+
+inline VkStencilOp vkStencilOp(pl::StencilOp op) {
+    switch(op) {
+        case pl::StencilOp::Keep: return VK_STENCIL_OP_KEEP;
+        case pl::StencilOp::Zero: return VK_STENCIL_OP_ZERO;
+        case pl::StencilOp::Replace: return VK_STENCIL_OP_REPLACE;
+        case pl::StencilOp::Invert: return VK_STENCIL_OP_INVERT;
+        case pl::StencilOp::IncrementClamp: return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+        case pl::StencilOp::IncrementWrap: return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+        case pl::StencilOp::DecrementClamp: return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+        case pl::StencilOp::DecrementWrap: return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+    }
+}
+
+inline VkAttachmentStoreOp vkStoreOp(pl::StoreOp op) {
+    switch(op) {
+        case pl::StoreOp::Store: return VK_ATTACHMENT_STORE_OP_STORE;
+        case pl::StoreOp::Discard: return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        case pl::StoreOp::None: return VK_ATTACHMENT_STORE_OP_NONE;
     }
 }
 
@@ -116,20 +364,6 @@ inline VkComponentSwizzle vkSwizzle(pl::Swizzle swizzle) {
     }
 }
 
-inline VkFilter vkFilter(pl::Filter filter) {
-    switch(filter) {
-        case pl::Filter::Nearest: return VK_FILTER_NEAREST;
-        case pl::Filter::Linear: return VK_FILTER_LINEAR;
-    }
-}
-
-inline VkSamplerMipmapMode vkMipFilter(pl::Filter filter) {
-    switch(filter) {
-        case pl::Filter::Nearest: return VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        case pl::Filter::Linear: return VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    }
-}
-
 inline VkSamplerAddressMode vkWrapMode(pl::WrapMode wrap) {
     switch(wrap) {
         case pl::WrapMode::Repeat: return VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -139,67 +373,21 @@ inline VkSamplerAddressMode vkWrapMode(pl::WrapMode wrap) {
     }
 }
 
-inline VkSamplerReductionMode vkReductionMode(pl::ReductionMode mode) {
-    switch(mode) {
-        case pl::ReductionMode::Average: return VK_SAMPLER_REDUCTION_MODE_WEIGHTED_AVERAGE;
-        case pl::ReductionMode::Min: return VK_SAMPLER_REDUCTION_MODE_MIN;
-        case pl::ReductionMode::Max: return VK_SAMPLER_REDUCTION_MODE_MAX;
+inline VkColorComponentFlags vkWriteMask(pl::WriteMask mask) {
+    VkColorComponentFlags flags = 0;
+    if((mask & pl::WriteMask::R) != pl::WriteMask::None) {
+        flags |= VK_COLOR_COMPONENT_R_BIT;
     }
-}
-
-inline VkCullModeFlagBits vkCullMode(pl::Face face) {
-    switch(face) {
-        case pl::Face::None: return VK_CULL_MODE_NONE;
-        case pl::Face::Front: return VK_CULL_MODE_FRONT_BIT;
-        case pl::Face::Back: return VK_CULL_MODE_BACK_BIT;
-        case pl::Face::Both: return VK_CULL_MODE_FRONT_AND_BACK;
+    if((mask & pl::WriteMask::G) != pl::WriteMask::None) {
+        flags |= VK_COLOR_COMPONENT_G_BIT;
     }
-}
-
-inline VkFrontFace vkFrontFace(pl::WindingOrder order) {
-    switch(order) {
-        case pl::WindingOrder::CCW: return VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        case pl::WindingOrder::CW: return VK_FRONT_FACE_CLOCKWISE;
+    if((mask & pl::WriteMask::B) != pl::WriteMask::None) {
+        flags |= VK_COLOR_COMPONENT_B_BIT;
     }
-}
-
-inline VkCompareOp vkCompareOp(pl::CompareOp op) {
-    switch(op) {
-        case pl::CompareOp::None: return VK_COMPARE_OP_ALWAYS;
-        case pl::CompareOp::Never: return VK_COMPARE_OP_NEVER;
-        case pl::CompareOp::NotEqual: return VK_COMPARE_OP_NOT_EQUAL;
-        case pl::CompareOp::Less: return VK_COMPARE_OP_LESS;
-        case pl::CompareOp::LessEqual: return VK_COMPARE_OP_LESS_OR_EQUAL;
-        case pl::CompareOp::Equal: return VK_COMPARE_OP_EQUAL;
-        case pl::CompareOp::GreaterEqual: return VK_COMPARE_OP_GREATER_OR_EQUAL;
-        case pl::CompareOp::Greater: return VK_COMPARE_OP_GREATER;
-        case pl::CompareOp::Always: return VK_COMPARE_OP_ALWAYS;
+    if((mask & pl::WriteMask::A) != pl::WriteMask::None) {
+        flags |= VK_COLOR_COMPONENT_A_BIT;
     }
-}
-
-inline VkImageAspectFlags vkAspectMask(VkFormat format) {
-    switch(format) {
-        case VK_FORMAT_D16_UNORM:
-        case VK_FORMAT_X8_D24_UNORM_PACK32:
-        case VK_FORMAT_D32_SFLOAT:
-            return VK_IMAGE_ASPECT_DEPTH_BIT;
-        case VK_FORMAT_S8_UINT:
-            return VK_IMAGE_ASPECT_STENCIL_BIT;
-        case VK_FORMAT_D24_UNORM_S8_UINT:
-        case VK_FORMAT_D32_SFLOAT_S8_UINT:
-            return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-        default:
-            return VK_IMAGE_ASPECT_COLOR_BIT;
-    }
-}
-
-inline VkImageAspectFlags vkAspectMask(pl::DepthStencilAspect aspect) {
-    switch(aspect) {
-        case pl::DepthStencilAspect::Depth:
-            return VK_IMAGE_ASPECT_DEPTH_BIT;
-        case pl::DepthStencilAspect::Stencil:
-            return VK_IMAGE_ASPECT_STENCIL_BIT;
-    }
+	return flags;
 }
 
 inline bool vkFormatIsDepthOrStencil(VkFormat format) {
@@ -308,98 +496,6 @@ inline VkFormatFeatureFlagBits vkImageUsageToFormatFeatures(VkImageUsageFlagBits
         case VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT: return VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
         default: return VkFormatFeatureFlagBits(0);
 	}
-}
-
-inline VkShaderStageFlagBits vkShaderStage(pl::ShaderStage stage) {
-    switch(stage) {
-        case pl::ShaderStage::Compute: return VK_SHADER_STAGE_COMPUTE_BIT;
-        case pl::ShaderStage::Mesh: return VK_SHADER_STAGE_MESH_BIT_EXT;
-        case pl::ShaderStage::Fragment: return VK_SHADER_STAGE_FRAGMENT_BIT;
-    }
-}
-
-inline VkAttachmentLoadOp vkLoadOp(pl::LoadOp op) {
-    switch(op) {
-        case pl::LoadOp::Load: return VK_ATTACHMENT_LOAD_OP_LOAD;
-        case pl::LoadOp::Clear: return VK_ATTACHMENT_LOAD_OP_CLEAR;
-        case pl::LoadOp::None: return VK_ATTACHMENT_LOAD_OP_NONE;
-    }
-}
-
-inline VkAttachmentStoreOp vkStoreOp(pl::StoreOp op) {
-    switch(op) {
-        case pl::StoreOp::Store: return VK_ATTACHMENT_STORE_OP_STORE;
-        case pl::StoreOp::Discard: return VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        case pl::StoreOp::None: return VK_ATTACHMENT_STORE_OP_NONE;
-    }
-}
-
-inline VkIndexType vkIndexType(pl::IndexType type) {
-    switch(type) {
-        case pl::IndexType::u8: return VK_INDEX_TYPE_UINT8;
-        case pl::IndexType::u16: return VK_INDEX_TYPE_UINT16;
-        case pl::IndexType::u32: return VK_INDEX_TYPE_UINT32;
-    }
-}
-
-inline VkPipelineStageFlags2 vkStageMask(pl::PipelineStage stage) {
-    VkPipelineStageFlags2 flags = 0;
-    if((stage & pl::PipelineStage::Mesh) != pl::PipelineStage::None) {
-		flags |= VK_PIPELINE_STAGE_2_MESH_SHADER_BIT_EXT;
-    }
-    if((stage & pl::PipelineStage::Fragment) != pl::PipelineStage::None) {
-        flags |= VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
-    }
-    if((stage & pl::PipelineStage::Compute) != pl::PipelineStage::None) {
-        flags |= VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-    }
-    if((stage & pl::PipelineStage::Copy) != pl::PipelineStage::None) {
-        flags |= VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-    }
-    if((stage & pl::PipelineStage::Depth) != pl::PipelineStage::None) {
-        flags |= VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
-	}
-    if((stage & pl::PipelineStage::Color) != pl::PipelineStage::None) {
-        flags |= VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-	}
-    if((stage & pl::PipelineStage::IndirectRead) != pl::PipelineStage::None) {
-        flags |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT;
-    }
-
-	return flags;
-}
-
-inline VkAccessFlags2 vkAccessMask(pl::PipelineStage stage) {
-    VkAccessFlags2 flags = 0;
-    if((stage & pl::PipelineStage::ShaderRead) != pl::PipelineStage::None) {
-        flags |= VK_ACCESS_2_SHADER_READ_BIT;
-    }
-    if((stage & pl::PipelineStage::ShaderWrite) != pl::PipelineStage::None) {
-        flags |= VK_ACCESS_2_SHADER_WRITE_BIT;
-    }
-    if((stage & pl::PipelineStage::CopyRead) != pl::PipelineStage::None) {
-        flags |= VK_ACCESS_2_TRANSFER_READ_BIT;
-    }
-    if((stage & pl::PipelineStage::CopyWrite) != pl::PipelineStage::None) {
-        flags |= VK_ACCESS_2_TRANSFER_WRITE_BIT;
-    }
-    if((stage & pl::PipelineStage::DepthRead) != pl::PipelineStage::None) {
-        flags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-    }
-    if((stage & pl::PipelineStage::DepthWrite) != pl::PipelineStage::None) {
-        flags |= VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-    }
-    if((stage & pl::PipelineStage::ColorRead) != pl::PipelineStage::None) {
-        flags |= VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT;
-    }
-    if((stage & pl::PipelineStage::ColorWrite) != pl::PipelineStage::None) {
-        flags |= VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT;
-    }
-    if((stage & pl::PipelineStage::IndirectRead) != pl::PipelineStage::None) {
-        flags |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT;
-	}
-
-	return flags;
 }
 
 inline u8 getMemoryTypeIndex(VkPhysicalDeviceMemoryProperties memProps, u32 mask, VkMemoryPropertyFlags flags) {

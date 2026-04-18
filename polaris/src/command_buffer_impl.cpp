@@ -137,13 +137,79 @@ namespace pl {
 
 	void CommandBuffer::setDepthStencilState(DepthStencilState state) {
 		vkCmdSetDepthTestEnable(m_cmd, state.depthTestEnable);
-		vkCmdSetDepthWriteEnable(m_cmd, state.depthWriteEnable);
-		vkCmdSetDepthCompareOp(m_cmd, vkCompareOp(state.depthCompareOp));
+		if(state.depthTestEnable){
+			vkCmdSetDepthWriteEnable(m_cmd, state.depthWriteEnable);
+			vkCmdSetDepthCompareOp(m_cmd, vkCompareOp(state.depthCompareOp));
+		}
+
+		vkCmdSetStencilTestEnable(m_cmd, state.stencilTestEnable);
+		if(state.stencilTestEnable) {
+			vkCmdSetStencilOp(m_cmd, VK_STENCIL_FACE_FRONT_BIT, vkStencilOp(state.front.failOp), vkStencilOp(state.front.depthFailOp), vkStencilOp(state.front.passOp), vkCompareOp(state.front.compareOp));
+			vkCmdSetStencilCompareMask(m_cmd, VK_STENCIL_FACE_FRONT_BIT, state.front.compareMask);
+			vkCmdSetStencilWriteMask(m_cmd, VK_STENCIL_FACE_FRONT_BIT, state.front.writeMask);
+			vkCmdSetStencilReference(m_cmd, VK_STENCIL_FACE_FRONT_BIT, state.front.reference);
+
+			vkCmdSetStencilOp(m_cmd, VK_STENCIL_FACE_BACK_BIT, vkStencilOp(state.back.failOp), vkStencilOp(state.back.depthFailOp), vkStencilOp(state.back.passOp), vkCompareOp(state.back.compareOp));
+			vkCmdSetStencilCompareMask(m_cmd, VK_STENCIL_FACE_BACK_BIT, state.back.compareMask);
+			vkCmdSetStencilWriteMask(m_cmd, VK_STENCIL_FACE_BACK_BIT, state.back.writeMask);
+			vkCmdSetStencilReference(m_cmd, VK_STENCIL_FACE_BACK_BIT, state.back.reference);
+		}
+
+		vkCmdSetDepthBoundsTestEnable(m_cmd, state.depthBoundsTestEnable);
+		if(state.depthBoundsTestEnable) {
+			vkCmdSetDepthBounds(m_cmd, state.minDepthBounds, state.maxDepthBounds);
+		}
 	}
 	
+	void CommandBuffer::setAttachmentColorState(AttachmentColorState state) {
+		u32 blendEnable = state.blendEnable;
+		vkCmdSetColorBlendEnableEXT(m_cmd, state.attachmentIndex, 1, &blendEnable);
+		if(state.blendEnable) {
+			vkCmdSetColorBlendEquationEXT(m_cmd, state.attachmentIndex, 1, &VkColorBlendEquationEXT{
+				.srcColorBlendFactor = vkBlendFactor(state.colorBlend.srcFactor),
+				.dstColorBlendFactor = vkBlendFactor(state.colorBlend.dstFactor),
+				.colorBlendOp = vkBlendOp(state.colorBlend.blendOp),
+				.srcAlphaBlendFactor = vkBlendFactor(state.alphaBlend.srcFactor),
+				.dstAlphaBlendFactor = vkBlendFactor(state.alphaBlend.dstFactor),
+				.alphaBlendOp = vkBlendOp(state.alphaBlend.blendOp)
+			});
+		}
+
+		VkColorComponentFlags writeMask = vkWriteMask(state.writeMask);
+		vkCmdSetColorWriteMaskEXT(m_cmd, state.attachmentIndex, 1, &writeMask);
+	}
+
+	void CommandBuffer::setColorState(ColorState state) {
+		vkCmdSetLogicOpEnableEXT(m_cmd, state.logicOpEnable);
+		if(state.logicOpEnable) {
+			vkCmdSetLogicOpEXT(m_cmd, vkLogicOp(state.logicOp));
+		}
+		else {
+			vkCmdSetBlendConstants(m_cmd, state.blendConstants);
+		}
+	}
+
+	void CommandBuffer::setMultisampleState(MultisampleState state) {
+		u32 sampleMask = state.sampleMask;
+		vkCmdSetRasterizationSamplesEXT(m_cmd, vkSampleCount(state.sampleCount));
+		vkCmdSetSampleMaskEXT(m_cmd, vkSampleCount(state.sampleCount), &sampleMask);
+		vkCmdSetAlphaToCoverageEnableEXT(m_cmd, state.alphaToCoverageEnable);
+		vkCmdSetAlphaToOneEnableEXT(m_cmd, state.alphaToOneEnable);
+	}
+
 	void CommandBuffer::setRasterizerState(RasterizerState state) {
+		vkCmdSetDepthClampEnableEXT(m_cmd, state.depthClampEnable);
+		vkCmdSetRasterizerDiscardEnable(m_cmd, state.rasterizerDiscardEnable);
+		vkCmdSetPolygonModeEXT(m_cmd, vkPolygonMode(state.polygonMode));
 		vkCmdSetCullMode(m_cmd, vkCullMode(state.cullMode));
 		vkCmdSetFrontFace(m_cmd, vkFrontFace(state.windingOrder));
+
+		vkCmdSetDepthBiasEnable(m_cmd, state.depthBiasEnable);
+		if(state.depthBiasEnable) {
+			vkCmdSetDepthBias(m_cmd, state.depthBiasConstantFactor, state.depthBiasClamp, state.depthBiasSlopeFactor);
+		}
+
+		vkCmdSetLineWidth(m_cmd, state.lineWidth);
 	}
 
 	void CommandBuffer::setScissor(Rect2D<u32> scissor) {
