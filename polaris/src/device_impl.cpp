@@ -41,7 +41,7 @@ namespace pl {
 				instanceExtensions.push(prop.extensionName);
 			}
 		}
-	
+
 		vkCreateInstance(&VkInstanceCreateInfo{
 				.pApplicationInfo = &VkApplicationInfo{
 				.apiVersion = VK_API_VERSION_1_4
@@ -62,8 +62,10 @@ namespace pl {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 			VK_KHR_MAINTENANCE_9_EXTENSION_NAME,
 			VK_KHR_MAINTENANCE_10_EXTENSION_NAME,
+			VK_KHR_DEVICE_ADDRESS_COMMANDS_EXTENSION_NAME,
 			VK_KHR_SHADER_UNTYPED_POINTERS_EXTENSION_NAME,
 			VK_KHR_SHADER_MAXIMAL_RECONVERGENCE_EXTENSION_NAME,
+			VK_KHR_INTERNALLY_SYNCHRONIZED_QUEUES_EXTENSION_NAME,
 			VK_EXT_MESH_SHADER_EXTENSION_NAME,
 			VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
 			VK_EXT_DESCRIPTOR_HEAP_EXTENSION_NAME,
@@ -99,23 +101,29 @@ namespace pl {
 							.pNext = &VkPhysicalDeviceVulkan14Features{
 								.pNext = &VkPhysicalDeviceMaintenance9FeaturesKHR{
 									.pNext = &VkPhysicalDeviceMaintenance10FeaturesKHR{
-										.pNext = &VkPhysicalDeviceShaderUntypedPointersFeaturesKHR{
-											.pNext = &VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
-												.pNext = &VkPhysicalDeviceMeshShaderFeaturesEXT{
-													.pNext = &VkPhysicalDeviceShaderObjectFeaturesEXT{
-														.pNext = &VkPhysicalDeviceDescriptorHeapFeaturesEXT{
-															.pNext = &VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
-																.fragmentShaderPixelInterlock = true,
+										.pNext = &VkPhysicalDeviceDeviceAddressCommandsFeaturesKHR{
+											.pNext = &VkPhysicalDeviceShaderUntypedPointersFeaturesKHR{
+												.pNext = &VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
+													.pNext = &VkPhysicalDeviceInternallySynchronizedQueuesFeaturesKHR{
+														.pNext = &VkPhysicalDeviceMeshShaderFeaturesEXT{
+															.pNext = &VkPhysicalDeviceShaderObjectFeaturesEXT{
+																.pNext = &VkPhysicalDeviceDescriptorHeapFeaturesEXT{
+																	.pNext = &VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
+																		.fragmentShaderPixelInterlock = true,
+																	},
+																	.descriptorHeap = true,
+																},
+																.shaderObject = true,
 															},
-															.descriptorHeap = true,
+															.meshShader = true,
 														},
-														.shaderObject = true,
+														.internallySynchronizedQueues = true,
 													},
-													.meshShader = true,
+													.shaderMaximalReconvergence = true,
 												},
-												.shaderMaximalReconvergence = true,
+												.shaderUntypedPointers = true,	
 											},
-											.shaderUntypedPointers = true,
+											.deviceAddressCommands = true,
 										},
 										.maintenance10 = true,
 									},

@@ -7,8 +7,9 @@ namespace pl {
 		public:
 			template<typename T>
 			T* deviceAddress() const {
-				return reinterpret_cast<T*>(deviceAddressImpl());
+				return reinterpret_cast<T*>(deviceAddress());
 			}
+			DeviceAddress deviceAddress() const;
 
 			Buffer(const BufferCreateInfo& ci);
 			Buffer(Buffer&& src);
@@ -19,8 +20,6 @@ namespace pl {
 			Buffer& operator=(const Buffer&) = delete;
 
 		private:
-			void* deviceAddressImpl() const;
-
 			alignas(8) byte reserved[40];
 	};
 }

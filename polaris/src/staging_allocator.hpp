@@ -6,7 +6,8 @@
 
 namespace pl {
 	struct StagingBuffer {
-		void* mappedPtr = nullptr;
+		VkDeviceAddress gpuPtr = {};
+		void* cpuPtr = nullptr;
 
 		VkDeviceMemory memory = {};
 		VkBuffer buffer = {};

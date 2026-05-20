@@ -16,6 +16,8 @@ typedef void CAMetalLayer;
 struct ANativeWindow;
 
 namespace pl {
+	using DeviceAddress = u64;
+
 	enum class QueueType : u8 {
 		Universal = 0,
 		Async = 1,
@@ -526,9 +528,9 @@ namespace pl {
 		View<const u32> code;
 	};
 
-	struct BufferOffset {
-		const class Buffer& buffer;
-		u64 offset;
+	struct BufferRange {
+		DeviceAddress address;
+		u64 size;
 	};
 
 	struct ColorState {

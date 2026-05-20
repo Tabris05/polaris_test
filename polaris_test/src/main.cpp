@@ -139,9 +139,9 @@ Mesh makeMesh(const pl::Device& device) {
 	});
 	
 	pl::CommandBuffer upload = uploadQueue.beginRecording();
-	upload.writeBuffer(pl::BufferOffset{ vertexBuffer }, pl::View<const Vertex>(vertices3));
-	upload.writeBuffer(pl::BufferOffset{ triangleBuffer }, pl::View<const u8>(meshletTriangles));
-	upload.writeBuffer(pl::BufferOffset{ meshletBuffer }, pl::View<const Meshlet>(meshlets2));
+	upload.writeBuffer(vertexBuffer.deviceAddress(), pl::View<const Vertex>(vertices3));
+	upload.writeBuffer(triangleBuffer.deviceAddress(), pl::View<const u8>(meshletTriangles));
+	upload.writeBuffer(meshletBuffer.deviceAddress(), pl::View<const Meshlet>(meshlets2));
 	upload.writeTexture(texture, pl::View<const byte>(textureData, x * y * 4));
 	uploadQueue.submit(pl::SubmitInfo{ .commandBuffer = std::move(upload) }).wait();
 	

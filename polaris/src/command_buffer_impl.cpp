@@ -71,8 +71,11 @@ namespace pl {
 		vkCmdBindShadersEXT(m_cmd, shaders.count(), stages, shaderHandles);
 	}
 
-	void CommandBuffer::clearBuffer(BufferOffset offset, u32 value, u64 size) {
-		vkCmdFillBuffer(m_cmd, offset.buffer.vkBuffer(), offset.offset, size, value);
+	void CommandBuffer::clearBuffer(BufferRange range, u32 value) {
+		vkCmdFillMemoryKHR(m_cmd, &VkDeviceAddressRangeKHR{
+			.address = range.address,
+			.size = range.size
+		}, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR, value);
 	}
 
 	void CommandBuffer::clearTexture(const Texture& texture, ClearValue value, TextureRegion region) {
@@ -119,16 +122,30 @@ namespace pl {
 		vkCmdDrawMeshTasksEXT(m_cmd, groupsX, groupsY, groupsZ);
 	}
 
-	void CommandBuffer::drawIndirect(BufferOffset indirectBuffer) {
-		vkCmdDrawMeshTasksIndirectEXT(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset, 1, sizeof(IndirectCommand));
+	void CommandBuffer::drawIndirect(DeviceAddress indirectBuffer) {
+		vkCmdDrawMeshTasksIndirect2EXT(m_cmd, &VkDrawIndirect2InfoKHR{
+			.addressRange{
+				.address = indirectBuffer,
+				.size = sizeof(IndirectCommand),
+				.stride = sizeof(IndirectCommand)
+			},
+			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
+			.drawCount = 1
+		});
 	}
 
 	void CommandBuffer::dispatch(u32 groupsX, u32 groupsY, u32 groupsZ) {
 		vkCmdDispatch(m_cmd, groupsX, groupsY, groupsZ);
 	}
 
-	void CommandBuffer::dispatchIndirect(BufferOffset indirectBuffer) {
-		vkCmdDispatchIndirect(m_cmd, indirectBuffer.buffer.vkBuffer(), indirectBuffer.offset);
+	void CommandBuffer::dispatchIndirect(DeviceAddress indirectBuffer) {
+		vkCmdDispatchIndirect2KHR(m_cmd, &VkDispatchIndirect2InfoKHR{
+			.addressRange{
+				.address = indirectBuffer,
+				.size = sizeof(IndirectCommand)
+			},
+			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
+		});
 	}
 
 	void CommandBuffer::endRenderPass() {
@@ -251,9 +268,9 @@ namespace pl {
 		});
 	}
 
-	void CommandBuffer::writeBufferImpl(BufferOffset offset, const void* data, u64 size) {
+	void CommandBuffer::writeBufferImpl(DeviceAddress address, const void* data, u64 size) {
 		if(size < 65536) {
-			vkCmdUpdateBuffer(m_cmd, offset.buffer.vkBuffer(), offset.offset, size, data);
+			vkCmdUpdateMemoryKHR(m_cmd, &VkDeviceAddressRangeKHR{ address, size }, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR, size, data);
 		}
 		else {
 			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < size) {
@@ -261,11 +278,21 @@ namespace pl {
 			}
 			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
 
-			memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, data, size);
-			vkCmdCopyBuffer(m_cmd, stagingBuffer.buffer, offset.buffer.vkBuffer(), 1, &VkBufferCopy{
-				.srcOffset = stagingBuffer.writeOffset,
-				.dstOffset = offset.offset,
-				.size = size
+			memcpy(static_cast<byte*>(stagingBuffer.cpuPtr) + stagingBuffer.writeOffset, data, size);
+			vkCmdCopyMemoryKHR(m_cmd, &VkCopyDeviceMemoryInfoKHR{
+				.regionCount = 1,
+				.pRegions = &VkDeviceMemoryCopyKHR{
+					.srcRange{
+						.address = stagingBuffer.gpuPtr + stagingBuffer.writeOffset,
+						.size = size
+					},
+					.srcFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
+					.dstRange{
+						.address = address,
+						.size = size
+					},
+					.dstFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR
+				}
 			});
 
 			stagingBuffer.writeOffset += size;
@@ -285,21 +312,30 @@ namespace pl {
 			}
 			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
 
-			memcpy(static_cast<byte*>(stagingBuffer.mappedPtr) + stagingBuffer.writeOffset, data, levelSize);
+			memcpy(static_cast<byte*>(stagingBuffer.cpuPtr) + stagingBuffer.writeOffset, data, levelSize);
 
 			// foo: batch VkBufferImageCopys while staging buffer has room
-			vkCmdCopyBufferToImage(m_cmd, stagingBuffer.buffer, texture.vkImage(), VK_IMAGE_LAYOUT_GENERAL, 1, &VkBufferImageCopy{
-				.bufferOffset = stagingBuffer.writeOffset,
-				.imageSubresource = {
-					.aspectMask = region.aspect == DepthStencilAspect::Default ? vkAspectMask(texture.vkImageViewCreateInfo().format) : vkAspectMask(region.aspect),
-					.mipLevel = level,
-					.baseArrayLayer = region.baseLayer,
-					.layerCount = region.numLayers
-				},
-				.imageExtent = {
-					width,
-					height,
-					depth
+			vkCmdCopyMemoryToImageKHR(m_cmd, &VkCopyDeviceMemoryImageInfoKHR{
+				.image = texture.vkImage(),
+				.regionCount = 1,
+				.pRegions = &VkDeviceMemoryImageCopyKHR{
+					.addressRange{
+						.address = stagingBuffer.gpuPtr + stagingBuffer.writeOffset,
+						.size = levelSize
+					},
+					.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
+					.imageSubresource = {
+						.aspectMask = region.aspect == DepthStencilAspect::Default ? vkAspectMask(texture.vkImageViewCreateInfo().format) : vkAspectMask(region.aspect),
+						.mipLevel = level,
+						.baseArrayLayer = region.baseLayer,
+						.layerCount = region.numLayers
+					},
+					.imageLayout = VK_IMAGE_LAYOUT_GENERAL,
+					.imageExtent = {
+						width,
+						height,
+						depth
+					}
 				}
 			});
 

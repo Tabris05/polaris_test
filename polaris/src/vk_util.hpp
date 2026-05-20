@@ -1,6 +1,5 @@
 #pragma once
 
-#include <initializer_list>
 #include <polaris/pod_types.hpp>
 
 template<typename T>

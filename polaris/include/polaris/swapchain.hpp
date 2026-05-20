@@ -23,6 +23,7 @@ namespace pl {
 
 			Swapchain(const Swapchain&) = delete;
 			Swapchain& operator=(const Swapchain&) = delete;
+
 		private:
 			alignas(8) byte reserved[136];
 	};

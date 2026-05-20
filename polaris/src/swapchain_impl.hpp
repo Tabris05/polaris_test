@@ -28,6 +28,7 @@ namespace pl {
 
 			Swapchain(const Swapchain&) = delete;
 			Swapchain& operator=(const Swapchain&) = delete;
+
 		private:
 			void createSwapchain();
 			void destroySwapchain();

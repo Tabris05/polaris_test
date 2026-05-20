@@ -3,6 +3,10 @@
 #include "vk_util.hpp"
 
 namespace pl {
+	DeviceAddress Buffer::deviceAddress() const {
+		return m_deviceAddress;
+	}
+
 	Buffer::Buffer(const BufferCreateInfo& ci)
 		: m_device(ci.device.vkDevice()), m_allocator(ci.device.deviceMemoryAllocator()) {
 		vkCreateBuffer(m_device, &VkBufferCreateInfo{
@@ -11,7 +15,7 @@ namespace pl {
 		}, nullptr, &m_buffer);
 		m_backingMem = m_allocator->alloc(m_buffer);
 
-		m_bufferDeviceAddress = vkGetBufferDeviceAddress(m_device, &VkBufferDeviceAddressInfo{ .buffer = m_buffer });
+		m_deviceAddress = vkGetBufferDeviceAddress(m_device, &VkBufferDeviceAddressInfo{ .buffer = m_buffer });
 	}
 
 	Buffer::Buffer(Buffer&& src) {
@@ -34,9 +38,5 @@ namespace pl {
 
 	VkBuffer Buffer::vkBuffer() const {
 		return m_buffer;
-	}
-
-	void* Buffer::deviceAddressImpl() const {
-		return reinterpret_cast<void*>(m_bufferDeviceAddress);
 	}
 }

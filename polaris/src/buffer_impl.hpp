@@ -8,6 +8,8 @@
 namespace pl {
 	class Buffer {
 		public:
+			DeviceAddress deviceAddress() const;
+
 			Buffer(const BufferCreateInfo& ci);
 			Buffer(Buffer&& src);
 			Buffer& operator=(Buffer&& src);
@@ -20,11 +22,9 @@ namespace pl {
 			VkBuffer vkBuffer() const;
 
 		private:
-			void* deviceAddressImpl() const;
-
 			VkDevice m_device = {};
 			VkBuffer m_buffer = {};
-			VkDeviceAddress m_bufferDeviceAddress = {};
+			VkDeviceAddress m_deviceAddress = {};
 
 			DeviceMemoryAllocator* m_allocator = nullptr;
 

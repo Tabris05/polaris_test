@@ -28,13 +28,13 @@ namespace pl {
 			void barrier(PipelineStage src, PipelineStage dst);
 			void beginRenderPass(const RenderPassBeginInfo& info);
 			void bindShaders(View<std::reference_wrapper<const Shader>> shaders);
-			void clearBuffer(BufferOffset offset, u32 value, u64 size = 0xFFFFFFFFFFFFFFFF);
+			void clearBuffer(BufferRange range, u32 value);
 			void clearTexture(const Texture& texture, ClearValue value, TextureRegion region = {});
 			void copyTexture(const Texture& src, const Texture& dst, TextureRegion srcRegion = {}, TextureRegion dstRegion = {});
 			void draw(u32 groupsX = 1, u32 groupsY = 1, u32 groupsZ = 1);
-			void drawIndirect(BufferOffset indirectBuffer);
+			void drawIndirect(DeviceAddress indirectBuffer);
 			void dispatch(u32 groupsX = 1, u32 groupsY = 1, u32 groupsZ = 1);
-			void dispatchIndirect(BufferOffset indirectBuffer);
+			void dispatchIndirect(DeviceAddress indirectBuffer);
 			void endRenderPass();
 			void pushConstants(const auto& constants) {
 				static_assert(sizeof(constants) <= 256, "Push constants must be 256 bytes or less.");
@@ -62,7 +62,7 @@ namespace pl {
 
 		private:
 			void pushConstantsImpl(const void* constants, u64 size);
-			void writeBufferImpl(BufferOffset offset, const void* data, u64 size);
+			void writeBufferImpl(DeviceAddress address, const void* data, u64 size);
 			void writeTextureImpl(const Texture& texture, const void* data, TextureRegion region);
 
 			VkCommandBuffer m_cmd = {};

@@ -14,6 +14,7 @@ namespace pl {
 			// "public" functions that should not be included in the public header
 			RenderTarget(VkImageView view);
 			VkImageView vkImageView() const;
+
 		private:
 			VkImageView view = {};
 	};
@@ -26,6 +27,7 @@ namespace pl {
 
 			// "public" functions that should not be included in the public header
 			TextureHandle(u32 handle);
+
 		private:
 			u32 handle = 0x000FFFFF;
 	};
@@ -37,6 +39,7 @@ namespace pl {
 
 			// "public" functions that should not be included in the public header
 			ImageHandle(u32 handle);
+
 		private:
 			u32 handle = 0x000FFFFF;
 	};
@@ -59,6 +62,7 @@ namespace pl {
 			VkImage vkImage() const;
 			VkImageViewCreateInfo vkImageViewCreateInfo() const;
 			vec3<u32> extent() const; // foo: should maybe add subresource to this
+
 		private:
 			struct VkImageViewInfo {
 				VkImageViewCreateInfo viewCI = {};

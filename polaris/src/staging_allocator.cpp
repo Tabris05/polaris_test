@@ -3,12 +3,23 @@
 
 namespace pl {
 	StagingBuffer StagingAllocator::alloc(u64 size) {
+		u64 candidateIndex = -1;
 		for(u64 i = 0; i < m_freeList.count(); i++) {
 			if(m_freeList[i].size >= size) {
-				StagingBuffer buffer = m_freeList[i];
-				m_freeList.remove(i);
-				return buffer;
+				if(candidateIndex == -1) {
+					candidateIndex = i;
+
+				}
+				else if(m_freeList[i].size < m_freeList[candidateIndex].size) {
+					candidateIndex = i;
+				}
 			}
+		}
+
+		if(candidateIndex != -1) {
+			StagingBuffer ret = m_freeList[candidateIndex];
+			m_freeList.remove(candidateIndex);
+			return ret;
 		}
 
 		StagingBuffer ret;
@@ -28,7 +39,8 @@ namespace pl {
 			.memoryTypeIndex = memTypeIndex
 		}, nullptr, &ret.memory);
 		vkBindBufferMemory(m_device, ret.buffer, ret.memory, 0);
-		vkMapMemory(m_device, ret.memory, 0, VK_WHOLE_SIZE, 0, &ret.mappedPtr);
+		vkMapMemory(m_device, ret.memory, 0, VK_WHOLE_SIZE, 0, &ret.cpuPtr);
+		ret.gpuPtr = vkGetBufferDeviceAddress(m_device, &VkBufferDeviceAddressInfo{ .buffer = ret.buffer });
 
 		return ret;
 	}
