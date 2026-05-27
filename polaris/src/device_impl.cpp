@@ -74,6 +74,7 @@ namespace pl {
 		
 		f32 one = 1.0f;
 		VkDeviceQueueCreateInfo vkqci{
+			.flags = VK_DEVICE_QUEUE_CREATE_INTERNALLY_SYNCHRONIZED_BIT_KHR,
 			.queueCount = 1,
 			.pQueuePriorities = &one
 		};
