@@ -26,7 +26,7 @@ namespace pl {
 		ret.size = std::max(size, 64ull * 1024ull * 1024ull);
 		vkCreateBuffer(m_device, &VkBufferCreateInfo{
 			.size = ret.size,
-			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
 		}, nullptr, &ret.buffer);
 
 		VkMemoryRequirements mrq;

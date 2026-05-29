@@ -141,11 +141,6 @@ namespace pl {
 						.storageBuffer8BitAccess = true,
 						.storagePushConstant8 = true,
 						.shaderInt8 = true,
-						.shaderSampledImageArrayNonUniformIndexing = true,
-						.shaderStorageImageArrayNonUniformIndexing = true,
-						.descriptorBindingSampledImageUpdateAfterBind = true,
-						.descriptorBindingStorageBufferUpdateAfterBind = true,
-						.descriptorBindingPartiallyBound = true,
 						.runtimeDescriptorArray = true,
 						.samplerFilterMinmax = true,
 						.scalarBlockLayout = true,
@@ -178,7 +173,11 @@ namespace pl {
 
 		for(u8 i = 0; i < 3; i++) {
 			if(ci.requestedQueueTypes.contains(static_cast<pl::QueueType>(i))) {
-				vkGetDeviceQueue(m_device, m_queues[i].family, 0, &m_queues[i].queue);
+				vkGetDeviceQueue2(m_device, &VkDeviceQueueInfo2{
+					.flags = VK_DEVICE_QUEUE_CREATE_INTERNALLY_SYNCHRONIZED_BIT_KHR,
+					.queueFamilyIndex = m_queues[i].family,
+					.queueIndex = 0,
+				},  &m_queues[i].queue);
 			}
 		}
 
