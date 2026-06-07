@@ -30,6 +30,6 @@ namespace pl {
 			Queue& operator=(const Queue&) = delete;
 
 		private:
-			alignas(8) byte reserved[128];
+			alignas(8) byte reserved[96];
 	};
 }

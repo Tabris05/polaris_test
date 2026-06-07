@@ -5,11 +5,21 @@
 #include <ranges>
 
 namespace pl {
-	void Device::waitIdle() {
-		vkDeviceWaitIdle(m_device);
+
+	void Device::initialize(const DeviceCreateInfo& ci) {
+		Device::get().initializeImpl(ci);
 	}
 
-	Device::Device(const DeviceCreateInfo& ci) {
+	void Device::idle() {
+		vkDeviceWaitIdle(Device::get().vkDevice());
+	}
+
+	Device& Device::get() {
+		static Device device;
+		return device;
+	}
+
+	void Device::initializeImpl(const DeviceCreateInfo& ci) {
 		volkInitialize();
 		
 		u32 count;
@@ -60,10 +70,13 @@ namespace pl {
 	
 		tbrs::Vec<const char*> deviceExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+			VK_KHR_RAY_QUERY_EXTENSION_NAME,
 			VK_KHR_MAINTENANCE_9_EXTENSION_NAME,
 			VK_KHR_MAINTENANCE_10_EXTENSION_NAME,
+			VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
 			VK_KHR_DEVICE_ADDRESS_COMMANDS_EXTENSION_NAME,
 			VK_KHR_SHADER_UNTYPED_POINTERS_EXTENSION_NAME,
+			VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
 			VK_KHR_SHADER_MAXIMAL_RECONVERGENCE_EXTENSION_NAME,
 			VK_KHR_INTERNALLY_SYNCHRONIZED_QUEUES_EXTENSION_NAME,
 			VK_EXT_MESH_SHADER_EXTENSION_NAME,
@@ -73,25 +86,26 @@ namespace pl {
 		};
 		
 		f32 one = 1.0f;
-		VkDeviceQueueCreateInfo vkqci{
-			.flags = VK_DEVICE_QUEUE_CREATE_INTERNALLY_SYNCHRONIZED_BIT_KHR,
-			.queueCount = 1,
-			.pQueuePriorities = &one
+		VkDeviceQueueCreateInfo queueCIs[3] = {
+			{
+				.flags = VK_DEVICE_QUEUE_CREATE_INTERNALLY_SYNCHRONIZED_BIT_KHR,
+				.queueFamilyIndex = getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT),
+				.queueCount = 1,
+				.pQueuePriorities = &one
+			},
+			{
+				.flags = VK_DEVICE_QUEUE_CREATE_INTERNALLY_SYNCHRONIZED_BIT_KHR,
+				.queueFamilyIndex = getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT, VK_QUEUE_GRAPHICS_BIT),
+				.queueCount = 1,
+				.pQueuePriorities = &one
+			},
+			{
+				.flags = VK_DEVICE_QUEUE_CREATE_INTERNALLY_SYNCHRONIZED_BIT_KHR,
+				.queueFamilyIndex = getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT, VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT),
+				.queueCount = 1,
+				.pQueuePriorities = &one
+			},
 		};
-		tbrs::Vec<VkDeviceQueueCreateInfo> queueCIs;
-
-		VkQueueFlags include[3] = { VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_COMPUTE_BIT, VK_QUEUE_TRANSFER_BIT };
-		VkQueueFlags exclude = 0;
-		for(u8 i = 0; i < 3; i++) {
-			if(ci.requestedQueueTypes.contains(static_cast<pl::QueueType>(i))) {
-				u32 family = getQueueFamilyIndex(include[i], exclude);
-				exclude |= include[i];
-
-				m_queues[i].family = family;
-				vkqci.queueFamilyIndex = family;
-				queueCIs.push(vkqci);
-			}
-		}
 	
 		// foo: determine which device features/extensions are definitely required (and think of a way to optionally enable more)
 		vkCreateDevice(m_physicalDevice, &VkDeviceCreateInfo{
@@ -100,106 +114,132 @@ namespace pl {
 					.pNext = &VkPhysicalDeviceVulkan12Features{
 						.pNext = &VkPhysicalDeviceVulkan13Features{
 							.pNext = &VkPhysicalDeviceVulkan14Features{
-								.pNext = &VkPhysicalDeviceMaintenance9FeaturesKHR{
-									.pNext = &VkPhysicalDeviceMaintenance10FeaturesKHR{
-										.pNext = &VkPhysicalDeviceDeviceAddressCommandsFeaturesKHR{
-											.pNext = &VkPhysicalDeviceShaderUntypedPointersFeaturesKHR{
-												.pNext = &VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
-													.pNext = &VkPhysicalDeviceInternallySynchronizedQueuesFeaturesKHR{
-														.pNext = &VkPhysicalDeviceMeshShaderFeaturesEXT{
-															.pNext = &VkPhysicalDeviceShaderObjectFeaturesEXT{
-																.pNext = &VkPhysicalDeviceDescriptorHeapFeaturesEXT{
-																	.pNext = &VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
-																		.fragmentShaderPixelInterlock = true,
+								.pNext = &VkPhysicalDeviceRayQueryFeaturesKHR{
+									.pNext = &VkPhysicalDeviceMaintenance9FeaturesKHR{
+										.pNext = &VkPhysicalDeviceMaintenance10FeaturesKHR{
+											.pNext = &VkPhysicalDeviceAccelerationStructureFeaturesKHR{
+												.pNext = &VkPhysicalDeviceDeviceAddressCommandsFeaturesKHR{
+													.pNext = &VkPhysicalDeviceShaderUntypedPointersFeaturesKHR{
+														.pNext = &VkPhysicalDeviceShaderMaximalReconvergenceFeaturesKHR{
+															.pNext = &VkPhysicalDeviceInternallySynchronizedQueuesFeaturesKHR{
+																.pNext = &VkPhysicalDeviceMeshShaderFeaturesEXT{
+																	.pNext = &VkPhysicalDeviceShaderObjectFeaturesEXT{
+																		.pNext = &VkPhysicalDeviceDescriptorHeapFeaturesEXT{
+																			.pNext = &VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT{
+																				.fragmentShaderPixelInterlock = true
+																			},
+																			.descriptorHeap = true
+																		},
+																		.shaderObject = true
 																	},
-																	.descriptorHeap = true,
+																	.meshShader = true
 																},
-																.shaderObject = true,
+																.internallySynchronizedQueues = true
 															},
-															.meshShader = true,
+															.shaderMaximalReconvergence = true
 														},
-														.internallySynchronizedQueues = true,
+														.shaderUntypedPointers = true
 													},
-													.shaderMaximalReconvergence = true,
+													.deviceAddressCommands = true
 												},
-												.shaderUntypedPointers = true,	
+												.accelerationStructure = true
 											},
-											.deviceAddressCommands = true,
+											.maintenance10 = true
 										},
-										.maintenance10 = true,
+										.maintenance9 = true
 									},
-									.maintenance9 = true,
+									.rayQuery = true
 								},
+								.shaderSubgroupRotate = true,
+								.shaderSubgroupRotateClustered = true,
 								.indexTypeUint8 = true,
 								.maintenance5 = true,
 							},
 							.shaderDemoteToHelperInvocation = true,
+							.shaderTerminateInvocation = true,
 							.synchronization2 = true,
 							.dynamicRendering = true,
+							.shaderIntegerDotProduct = true,
+							.maintenance4 = true,
 						},
+						.samplerMirrorClampToEdge = true,
 						.drawIndirectCount = true,
 						.storageBuffer8BitAccess = true,
-						.storagePushConstant8 = true,
+						.shaderBufferInt64Atomics = true,
+						.shaderSharedInt64Atomics = true,
+						.shaderFloat16 = true,
 						.shaderInt8 = true,
-						.runtimeDescriptorArray = true,
 						.samplerFilterMinmax = true,
 						.scalarBlockLayout = true,
+						.shaderSubgroupExtendedTypes = true,
+						.separateDepthStencilLayouts = true,
+						.hostQueryReset = true,
 						.timelineSemaphore = true,
 						.bufferDeviceAddress = true,
 						.vulkanMemoryModel = true,
 						.vulkanMemoryModelDeviceScope = true,
-						.vulkanMemoryModelAvailabilityVisibilityChains = true,
+						.shaderOutputLayer = true,
+						.subgroupBroadcastDynamicId = true
 					},
 					.storageBuffer16BitAccess = true,
+					.storagePushConstant16 = true,
+					.variablePointersStorageBuffer = true,
+					.variablePointers = true,
 					.shaderDrawParameters = true,
 				},
 				.features{
+				    .imageCubeArray = true,
+					.independentBlend = true,
+					.sampleRateShading = true,
+					.dualSrcBlend = true,
+					.logicOp = true,
 					.multiDrawIndirect = true,
 					.drawIndirectFirstInstance = true,
+					.depthClamp = true,
+					.depthBiasClamp = true,
+					.fillModeNonSolid = true,
+					.depthBounds = true,
+					.wideLines = true,
+					.largePoints = true,
 					.samplerAnisotropy = true,
+					.textureCompressionBC = true,
+					.occlusionQueryPrecise = true,
+					.pipelineStatisticsQuery = true,
 					.fragmentStoresAndAtomics = true,
+					.shaderImageGatherExtended = true,
+					.shaderStorageImageMultisample = true,
 					.shaderStorageImageReadWithoutFormat = true,
 					.shaderStorageImageWriteWithoutFormat = true,
+					.shaderClipDistance = true,
+					.shaderCullDistance = true,
+					.shaderFloat64 = true,
 					.shaderInt64 = true,
 				    .shaderInt16 = true,
+					.shaderResourceMinLod = true,
 				}
 			},
-			.queueCreateInfoCount = static_cast<u32>(queueCIs.count()),
-			.pQueueCreateInfos = queueCIs.data(),
+			.queueCreateInfoCount = 3,
+			.pQueueCreateInfos = queueCIs,
 			.enabledExtensionCount = static_cast<u32>(deviceExtensions.count()),
 			.ppEnabledExtensionNames = deviceExtensions.data(),
 		}, nullptr, &m_device);
 		volkLoadDevice(m_device);
 
 		for(u8 i = 0; i < 3; i++) {
-			if(ci.requestedQueueTypes.contains(static_cast<pl::QueueType>(i))) {
-				vkGetDeviceQueue2(m_device, &VkDeviceQueueInfo2{
-					.flags = VK_DEVICE_QUEUE_CREATE_INTERNALLY_SYNCHRONIZED_BIT_KHR,
-					.queueFamilyIndex = m_queues[i].family,
-					.queueIndex = 0,
-				},  &m_queues[i].queue);
-			}
+			vkGetDeviceQueue2(m_device, &VkDeviceQueueInfo2{
+				.flags = VK_DEVICE_QUEUE_CREATE_INTERNALLY_SYNCHRONIZED_BIT_KHR,
+				.queueFamilyIndex = m_queues[i].family,
+				.queueIndex = 0,
+			},  &m_queues[i].queue);
 		}
 
-		m_allocator = new DeviceMemoryAllocator(m_physicalDevice, m_device);
-		m_heap = new DescriptorHeap(m_physicalDevice, m_device, m_allocator);
-	}
-
-	Device::Device(Device&& src) {
-		memcpy(this, &src, sizeof(Device));
-		memset(&src, 0, sizeof(Device));
-	}
-
-	Device& Device::operator=(Device&& src) {
-		this->~Device();
-		new (this) Device(std::move(src));
-
-		return *this;
+		m_allocator.initialize();
+		m_heap.initialize();
 	}
 
 	Device::~Device() {
-		delete m_heap;
-		delete m_allocator;
+		m_heap.finalize();
+		m_allocator.finalize();
 
 		vkDestroyDevice(m_device, nullptr);
 		vkDestroyInstance(m_instance, nullptr);
@@ -227,11 +267,11 @@ namespace pl {
 		return m_queues[static_cast<u8>(type)].queue;
 	}
 
-	DescriptorHeap* Device::descriptorHeap() const {
+	DescriptorHeap& Device::descriptorHeap() {
 		return m_heap;
 	}
 
-	DeviceMemoryAllocator* Device::deviceMemoryAllocator() const {
+	DeviceMemoryAllocator& Device::deviceMemoryAllocator() {
 		return m_allocator;
 	}
 
@@ -244,7 +284,7 @@ namespace pl {
 
 		// foo: should decouple this from std::ranges maybe
 		for (auto [idx, queueFamily] : std::views::enumerate(queueProperties)) {
-			if ((queueFamily.queueFlags & include) && !(queueFamily.queueFlags & exclude)) {
+			if ((queueFamily.queueFlags & include) == include && (queueFamily.queueFlags & exclude) == 0) {
 				return static_cast<u32>(idx);
 			}
 		}

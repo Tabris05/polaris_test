@@ -43,7 +43,7 @@ namespace pl {
 		info.viewCI.pNext = &info.viewUsageCI;
 
 		VkImageView viewHandle;
-		vkCreateImageView(m_device, &info.viewCI, nullptr, &viewHandle);
+		vkCreateImageView(Device::get().vkDevice(), &info.viewCI, nullptr, &viewHandle);
 		m_renderTargetViews.push(viewHandle);
 
 		return RenderTarget{ viewHandle };
@@ -53,7 +53,7 @@ namespace pl {
 		VkImageViewInfo info = vkImageViewInfo(view);
 		info.viewCI.pNext = &info.viewUsageCI;
 
-		u32 handle = m_heap->allocImageHandle(&info.viewCI, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+		u32 handle = Device::get().descriptorHeap().allocImageHandle(&info.viewCI, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
 		m_shaderResourceViews.push(handle);
 
 		return TextureHandle{ handle };
@@ -63,16 +63,13 @@ namespace pl {
 		VkImageViewInfo info = vkImageViewInfo(view);
 		info.viewCI.pNext = &info.viewUsageCI;
 
-		u32 handle = m_heap->allocImageHandle(&info.viewCI, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+		u32 handle = Device::get().descriptorHeap().allocImageHandle(&info.viewCI, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 		m_shaderResourceViews.push(handle);
 
 		return ImageHandle{ handle };
 	}
 	
-	Texture::Texture(const TextureCreateInfo& ci)
-		: m_device(ci.device.vkDevice()), m_physicalDevice(ci.device.vkPhysicalDevice()), m_extent({ ci.width, ci.height, ci.depth }),
-		m_heap(ci.device.descriptorHeap()), m_allocator(ci.device.deviceMemoryAllocator()) {
-
+	Texture::Texture(const TextureCreateInfo& ci) : m_extent({ ci.width, ci.height, ci.depth }) {
 		VkImageCreateInfo vkci{
 			.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT,
 			.imageType = vkImageType(ci.type),
@@ -99,12 +96,12 @@ namespace pl {
 			vkci.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		}
 
-		vkCreateImage(m_device, &vkci, nullptr, &m_image);
-		m_backingMem = m_allocator->alloc(m_image);
+		vkCreateImage(Device::get().vkDevice(), &vkci, nullptr, &m_image);
+		m_backingMem = Device::get().deviceMemoryAllocator().alloc(m_image);
 
 		// foo: this is illegal without VK_IMAGE_USAGE_HOST_TRANSFER_BIT, but that disables DCC on NVIDIA
 		// in mesa this function is a NO-OP for all 3 desktop vendors, so this is mainly for tooling (RenderDoc won't track undefined images)
-		vkTransitionImageLayout(m_device, 1, &VkHostImageLayoutTransitionInfo{
+		vkTransitionImageLayout(Device::get().vkDevice(), 1, &VkHostImageLayoutTransitionInfo{
 			.image = m_image,
 			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 			.newLayout = VK_IMAGE_LAYOUT_GENERAL,
@@ -139,18 +136,16 @@ namespace pl {
 	}
 
 	Texture::~Texture() {
-		if(m_device) {
-			for(u32 srv : m_shaderResourceViews) {
-				m_heap->freeImageHandle(srv);
-			}
-
-			for(VkImageView rtv : m_renderTargetViews) {
-				vkDestroyImageView(m_device, rtv, nullptr);
-			}
-
-			vkDestroyImage(m_device, m_image, nullptr);
-			m_allocator->free(m_backingMem);
+		for(u32 srv : m_shaderResourceViews) {
+			Device::get().descriptorHeap().freeImageHandle(srv);
 		}
+
+		for(VkImageView rtv : m_renderTargetViews) {
+			vkDestroyImageView(Device::get().vkDevice(), rtv, nullptr);
+		}
+
+		vkDestroyImage(Device::get().vkDevice(), m_image, nullptr);
+		Device::get().deviceMemoryAllocator().free(m_backingMem);
 	}
 
 	VkImage Texture::vkImage() const {
@@ -194,7 +189,7 @@ namespace pl {
 
 		VkImageViewUsageCreateInfo vuci = {};
 		VkFormatProperties props = {};
-		vkGetPhysicalDeviceFormatProperties(m_physicalDevice, vci.format, &props);
+		vkGetPhysicalDeviceFormatProperties(Device::get().vkPhysicalDevice(), vci.format, &props);
 		for(u32 bit = VK_IMAGE_USAGE_TRANSFER_SRC_BIT; bit <= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT; bit <<= 1) {
 			if(vkImageUsageToFormatFeatures(static_cast<VkImageUsageFlagBits>(bit)) & props.optimalTilingFeatures) {
 				vuci.usage |= bit;

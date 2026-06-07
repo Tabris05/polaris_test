@@ -9,6 +9,7 @@ namespace pl {
 	class Buffer {
 		public:
 			DeviceAddress deviceAddress() const;
+			byte* hostAddress() const;
 
 			Buffer(const BufferCreateInfo& ci);
 			Buffer(Buffer&& src);
@@ -18,16 +19,10 @@ namespace pl {
 			Buffer(const Buffer&) = delete;
 			Buffer& operator=(const Buffer&) = delete;
 
-			// "public" functions that should not be included in the public header
-			VkBuffer vkBuffer() const;
-
 		private:
-			VkDevice m_device = {};
 			VkBuffer m_buffer = {};
 			VkDeviceAddress m_deviceAddress = {};
-
-			DeviceMemoryAllocator* m_allocator = nullptr;
-
+			byte* m_hostAddress = nullptr;
 			DeviceMemory m_backingMem = {};
 	};
 }

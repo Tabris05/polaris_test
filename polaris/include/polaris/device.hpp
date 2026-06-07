@@ -6,18 +6,19 @@
 namespace pl {
 	class Device {
 		public:
-			void waitIdle();
+			static void idle();
+			static void initialize(const DeviceCreateInfo& ci);
 
-			Device(const DeviceCreateInfo& ci);
-			Device(Device&&);
-			Device& operator=(Device&&);
 			~Device();
 
+			Device(Device&&) = delete;
+			Device& operator=(Device&&) = delete;
 			Device(const Device&) = delete;
 			Device& operator=(const Device&) = delete;
 
 		private:
-			alignas(8) byte reserved[112];
+			Device();
+			alignas(8) byte reserved[840];
 	};
 }
 

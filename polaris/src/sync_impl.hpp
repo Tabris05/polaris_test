@@ -17,10 +17,9 @@ namespace pl {
 
 			// "public" functions that should not be included in the public header
 			VkSemaphore vkSemaphore() const;
-			Event(VkDevice device, VkSemaphore semaphore, u64 value);
+			Event(VkSemaphore semaphore, u64 value);
 
 		private:
-			VkDevice m_device = {};
 			VkSemaphore m_semaphore = {};
 			u64 m_value = 0;
 	};
@@ -44,7 +43,6 @@ namespace pl {
 		Sync() = default;
 
 	private:
-		VkDevice m_device = {};
 		VkSemaphore m_semaphore = {};
 		std::atomic<u64> m_value = 0;
 	};

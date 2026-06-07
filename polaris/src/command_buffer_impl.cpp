@@ -75,7 +75,7 @@ namespace pl {
 		vkCmdFillMemoryKHR(m_cmd, &VkDeviceAddressRangeKHR{
 			.address = range.address,
 			.size = range.size
-		}, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR, value);
+		}, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR, value);
 	}
 
 	void CommandBuffer::clearTexture(const Texture& texture, ClearValue value, TextureRegion region) {
@@ -129,7 +129,7 @@ namespace pl {
 				.size = sizeof(IndirectCommand),
 				.stride = sizeof(IndirectCommand)
 			},
-			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
+			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR,
 			.drawCount = 1
 		});
 	}
@@ -144,7 +144,7 @@ namespace pl {
 				.address = indirectBuffer,
 				.size = sizeof(IndirectCommand)
 			},
-			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
+			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR,
 		});
 	}
 
@@ -211,7 +211,6 @@ namespace pl {
 		vkCmdSetRasterizationSamplesEXT(m_cmd, vkSampleCount(state.sampleCount));
 		vkCmdSetSampleMaskEXT(m_cmd, vkSampleCount(state.sampleCount), &sampleMask);
 		vkCmdSetAlphaToCoverageEnableEXT(m_cmd, state.alphaToCoverageEnable);
-		vkCmdSetAlphaToOneEnableEXT(m_cmd, state.alphaToOneEnable);
 	}
 
 	void CommandBuffer::setRasterizerState(RasterizerState state) {
@@ -258,9 +257,9 @@ namespace pl {
 		: m_cmd(cmd), m_allocator(stagingAllocator) {
 	}
 
-	void CommandBuffer::pushConstantsImpl(const void* constants, u64 size) {
+	void CommandBuffer::pushConstantsImpl(const void* constants, u16 size, u16 offset) {
 		vkCmdPushDataEXT(m_cmd, &VkPushDataInfoEXT{
-			.offset = 0,
+			.offset = offset,
 			.data{
 				.address = constants,
 				.size = size
@@ -270,7 +269,7 @@ namespace pl {
 
 	void CommandBuffer::writeBufferImpl(DeviceAddress address, const void* data, u64 size) {
 		if(size < 65536) {
-			vkCmdUpdateMemoryKHR(m_cmd, &VkDeviceAddressRangeKHR{ address, size }, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR, size, data);
+			vkCmdUpdateMemoryKHR(m_cmd, &VkDeviceAddressRangeKHR{ address, size }, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR, size, data);
 		}
 		else {
 			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < size) {
@@ -291,7 +290,7 @@ namespace pl {
 						.address = address,
 						.size = size
 					},
-					.dstFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR
+					.dstFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR
 				}
 			});
 

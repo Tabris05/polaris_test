@@ -1,4 +1,5 @@
 #include "staging_allocator.hpp"
+#include "device_impl.hpp"
 #include "vk_util.hpp"
 
 namespace pl {
@@ -24,23 +25,23 @@ namespace pl {
 
 		StagingBuffer ret;
 		ret.size = std::max(size, 64ull * 1024ull * 1024ull);
-		vkCreateBuffer(m_device, &VkBufferCreateInfo{
+		vkCreateBuffer(Device::get().vkDevice(), &VkBufferCreateInfo{
 			.size = ret.size,
 			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
 		}, nullptr, &ret.buffer);
 
 		VkMemoryRequirements mrq;
-		vkGetBufferMemoryRequirements(m_device, ret.buffer, &mrq);
+		vkGetBufferMemoryRequirements(Device::get().vkDevice(), ret.buffer, &mrq);
 		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
 
-		vkAllocateMemory(m_device, &VkMemoryAllocateInfo{
+		vkAllocateMemory(Device::get().vkDevice(), &VkMemoryAllocateInfo{
 			.pNext = &VkMemoryAllocateFlagsInfo{.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT },
 			.allocationSize = mrq.size,
 			.memoryTypeIndex = memTypeIndex
 		}, nullptr, &ret.memory);
-		vkBindBufferMemory(m_device, ret.buffer, ret.memory, 0);
-		vkMapMemory(m_device, ret.memory, 0, VK_WHOLE_SIZE, 0, &ret.cpuPtr);
-		ret.gpuPtr = vkGetBufferDeviceAddress(m_device, &VkBufferDeviceAddressInfo{ .buffer = ret.buffer });
+		vkBindBufferMemory(Device::get().vkDevice(), ret.buffer, ret.memory, 0);
+		vkMapMemory(Device::get().vkDevice(), ret.memory, 0, VK_WHOLE_SIZE, 0, &ret.cpuPtr);
+		ret.gpuPtr = vkGetBufferDeviceAddress(Device::get().vkDevice(), &VkBufferDeviceAddressInfo{ .buffer = ret.buffer });
 
 		return ret;
 	}
@@ -56,9 +57,8 @@ namespace pl {
 		m_freeList.push(buffer);
 	}
 
-	StagingAllocator::StagingAllocator(VkPhysicalDevice physicalDevice, VkDevice device) :
-		m_device(device) {
-		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &m_memProps);
+	StagingAllocator::StagingAllocator() {
+		vkGetPhysicalDeviceMemoryProperties(Device::get().vkPhysicalDevice(), &m_memProps);
 	}
 
 	StagingAllocator::StagingAllocator(StagingAllocator&& src) {
@@ -68,8 +68,8 @@ namespace pl {
 
 	StagingAllocator::~StagingAllocator() {
 		for(const StagingBuffer& buffer : m_freeList) {
-			vkDestroyBuffer(m_device, buffer.buffer, nullptr);
-			vkFreeMemory(m_device, buffer.memory, nullptr);
+			vkDestroyBuffer(Device::get().vkDevice(), buffer.buffer, nullptr);
+			vkFreeMemory(Device::get().vkDevice(), buffer.memory, nullptr);
 		}
 	}
 

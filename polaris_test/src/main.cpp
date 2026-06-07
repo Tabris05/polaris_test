@@ -10,12 +10,17 @@
 
 #include <vector>
 #include <fstream>
+#include <print>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobjloader/tiny_obj_loader.h>
+
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_polaris.h>
 
 // foo: make custom linear algebra lib with correct names
 #define GLM_ENABLE_EXPERIMENTAL
@@ -34,11 +39,8 @@ struct Mesh {
 	pl::Texture texture;
 };
 
-Mesh makeMesh(const pl::Device& device) {
-	pl::Queue uploadQueue(pl::QueueCreateInfo{
-		.device = device,
-		.type = pl::QueueType::DMA
-	});
+Mesh makeMesh() {
+	pl::Queue uploadQueue(pl::QueueCreateInfo{ .type = pl::QueueType::DMA });
 
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
@@ -103,20 +105,11 @@ Mesh makeMesh(const pl::Device& device) {
 		vertices3[i] = vertices2[meshletVertices[i]];
 	}
 
-	pl::Buffer vertexBuffer(pl::BufferCreateInfo{
-		.device = device,
-		.size = vertices3.size() * sizeof(Vertex)
-	});
+	pl::Buffer vertexBuffer(pl::BufferCreateInfo{ .size = vertices3.size() * sizeof(Vertex) });
 
-	pl::Buffer triangleBuffer(pl::BufferCreateInfo{
-		.device = device,
-		.size = meshletTriangles.size() * sizeof(u8)
-	});
+	pl::Buffer triangleBuffer(pl::BufferCreateInfo{ .size = meshletTriangles.size() * sizeof(u8) });
 
-	pl::Buffer meshletBuffer(pl::BufferCreateInfo{
-		.device = device,
-		.size = meshlets.size() * sizeof(Meshlet)
-	});
+	pl::Buffer meshletBuffer(pl::BufferCreateInfo{ .size = meshlets.size() * sizeof(Meshlet) });
 
 	std::vector<Meshlet> meshlets2(meshlets.size());
 	for(u64 i = 0; i < meshlets.size(); i++) {
@@ -132,7 +125,6 @@ Mesh makeMesh(const pl::Device& device) {
 	byte* textureData = stbi_load("viking_room.png", &x, &y, nullptr, 4);
 	
 	pl::Texture texture(pl::TextureCreateInfo{
-		.device = device,
 		.format = pl::Format::RGBA8_SRGB,
 		.width = static_cast<u32>(x),
 		.height = static_cast<u32>(y),
@@ -166,14 +158,10 @@ std::vector<u32> getShaderSource(const char* path) {
 
 int main() {
 	// init
-	pl::Device device(pl::DeviceCreateInfo{
-		.requestedQueueTypes = { pl::QueueType::Universal, pl::QueueType::DMA }
-	});
+	pl::Device::initialize(pl::DeviceCreateInfo{});
 
-	pl::Queue queue(pl::QueueCreateInfo{
-		.device = device,
-		.type = pl::QueueType::Universal
-	});
+	// queues
+	pl::Queue queue(pl::QueueCreateInfo{ .type = pl::QueueType::Universal });
 
 	// wsi
 	glfwInit();
@@ -181,7 +169,6 @@ int main() {
 	GLFWwindow* window = glfwCreateWindow(1920, 1080, "Polaris Test", nullptr, nullptr);
 	HWND hwnd = glfwGetWin32Window(window);
 	pl::Swapchain swapchain(pl::SwapchainCreateInfo{
-		.device = device,
 		.nativeWindow = pl::NativeWindow{
 			.type = pl::NativeWindowType::Win32,
 			.win32 = {
@@ -191,18 +178,17 @@ int main() {
 		},
 		.width = 1920,
 		.height = 1080,
-		.vsync = true
+		.vsync = false
 	});
 
+	// render targets
 	pl::Texture colorBuffer(pl::TextureCreateInfo{
-		.device = device,
 		.format = pl::Format::RGBA8_SRGB,
 		.width = 1920,
 		.height = 1080,
 	});
 
 	pl::Texture depthBuffer(pl::TextureCreateInfo{
-		.device = device,
 		.format = pl::Format::D32_SFLOAT,
 		.width = 1920,
 		.height = 1080,
@@ -212,11 +198,11 @@ int main() {
 	pl::RenderTarget depthTarget = depthBuffer.makeRenderTarget();
 	pl::TextureHandle presentHandle = colorBuffer.makeTextureHandle(pl::TextureView{ .format = pl::Format::RGBA8_UNORM });
 
-	Mesh mesh = makeMesh(device);
+	// mesh
+	Mesh mesh = makeMesh();
 	pl::TextureHandle albedoHandle = mesh.texture.makeTextureHandle();
 
 	pl::Sampler sampler(pl::SamplerCreateInfo{
-		.device = device,
 		.minFilter = pl::Filter::Linear,
 		.magFilter = pl::Filter::Linear,
 		.anisotropy = 16.0f,
@@ -226,25 +212,38 @@ int main() {
 	std::vector<u32> shaderCode = getShaderSource("shaders/tri.spv");
 
 	pl::Shader meshShader(pl::ShaderCreateInfo{
-		.device = device,
 		.stage = pl::ShaderStage::Mesh,
 		.entryPoint = "msmain",
 		.code = shaderCode
 	});
 
 	pl::Shader fragmentShader(pl::ShaderCreateInfo{
-		.device = device,
 		.stage = pl::ShaderStage::Fragment,
 		.entryPoint = "fsmain",
 		.code = shaderCode
 	});
 
+	// syncs
 	pl::Event fif[2] = {};
 	u64 frame = 0;
 
+	// imgui
+	ImGui::CreateContext();
+	ImGui_ImplGlfw_InitForOther(window, true);
+	ImGui_ImplPolaris_InitInfo info{};
+	ImGui_ImplPolaris_Init(&info);
+
 	// render loop
+	f64 t1 = glfwGetTime();
+	u64 framesThisSecond = 0;
 	while(!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
+
+		ImGui_ImplPolaris_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGui::ShowDemoWindow();
+		ImGui::Render();
 
 		fif[frame % 2].wait();
 
@@ -290,6 +289,7 @@ int main() {
 			}
 		});
 		cmd.draw(mesh.drawCount);
+		ImGui_ImplPolaris_RenderDrawData(ImGui::GetDrawData(), cmd);
 		cmd.endRenderPass();
 
 		pl::Event event = queue.submit(pl::SubmitInfo{ .commandBuffer = std::move(cmd) });
@@ -302,7 +302,22 @@ int main() {
 		});
 
 		frame++;
+		//framesThisSecond++;
+		//
+		//f64 t2 = glfwGetTime();
+		//if(t2 - t1 >= 1) {
+		//	std::println("frames per second: {}, ms per frame: {}", framesThisSecond / (t2 - t1), (t2 - t1) * 1000.0 / framesThisSecond);
+		//	t1 = t2;
+		//	framesThisSecond = 0;
+		//}
 	}
 
-	device.waitIdle();
+	pl::Device::idle();
+
+	ImGui_ImplPolaris_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	glfwDestroyWindow(window);
+	glfwTerminate();
 }

@@ -15,7 +15,7 @@ namespace pl {
 			Event();
 
 		private:
-			alignas(8) byte reserved[24];
+			alignas(8) byte reserved[16];
 	};
 
 	class Sync {
@@ -34,6 +34,6 @@ namespace pl {
 			Sync& operator=(const Sync&) = delete;
 
 		private:
-			alignas(8) byte reserved[24];
+			alignas(8) byte reserved[16];
 	};
 }

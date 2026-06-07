@@ -387,26 +387,22 @@ namespace pl {
 
 
 	struct DeviceCreateInfo {
-		View<const QueueType> requestedQueueTypes;
+		// this will contain stuff some day
 	};
 
 	struct QueueCreateInfo {
-		const class Device& device;
 		QueueType type;
 	};
 
 	struct SyncCreateInfo {
-		const class Device& device;
 		u64 initialValue;
 	};
 
 	struct BufferCreateInfo {
-		const class Device& device;
 		u64 size;
 	};
 
 	struct TextureCreateInfo {
-		const class Device& device;
 		Format format;
 		TextureType type = TextureType::Type2D;
 		u32 width = 1;
@@ -438,7 +434,6 @@ namespace pl {
 	};
 
 	struct SamplerCreateInfo {
-		const class Device& device;
 		Filter minFilter;
 		Filter magFilter;
 		Filter mipFilter;
@@ -486,7 +481,6 @@ namespace pl {
 	};
 
 	struct SwapchainCreateInfo {
-		const class Device& device;
 		NativeWindow nativeWindow;
 		u32 width;
 		u32 height;
@@ -517,12 +511,11 @@ namespace pl {
 
 		struct {
 			f32 depth;
-			u32 stencil;
+			u8 stencil;
 		} depthStencil;
 	};
 
 	struct ShaderCreateInfo {
-		const class Device& device;
 		ShaderStage stage;
 		const char* entryPoint = "main";
 		View<const u32> code;
@@ -534,63 +527,60 @@ namespace pl {
 	};
 
 	struct ColorState {
-		b8 logicOpEnable;
-		LogicOp logicOp;
+		b8 logicOpEnable : 1;
+		LogicOp logicOp : 4;
 		f32 blendConstants[4];
 	};
 
 	struct BlendState {
-		BlendFactor srcFactor;
-		BlendFactor dstFactor;
-		BlendOp blendOp;
+		BlendFactor srcFactor : 5;
+		BlendFactor dstFactor : 5;
+		BlendOp blendOp : 3;
 	};
 
 	struct AttachmentColorState {
-		u8 attachmentIndex;
-		b8 blendEnable;
+		u8 attachmentIndex : 4;
+		b8 blendEnable : 1;
 		BlendState colorBlend;
 		BlendState alphaBlend;
-		WriteMask writeMask;
+		WriteMask writeMask : 4 = pl::WriteMask::RGBA;
 	};
 
 	struct StencilState {
-		StencilOp failOp;
-		StencilOp depthFailOp;
-		StencilOp passOp;
-		CompareOp compareOp;
+		StencilOp failOp : 3;
+		StencilOp depthFailOp : 3;
+		StencilOp passOp : 3;
+		CompareOp compareOp : 4;
 		u32 compareMask;
 		u32 writeMask;
 		u32 reference;
 	};
 
 	struct DepthStencilState {
-		b8 depthTestEnable;
-		b8 depthWriteEnable;
-		CompareOp depthCompareOp;
-		b8 stencilTestEnable;
+		b8 depthTestEnable : 1;
+		b8 stencilTestEnable : 1;
+		b8 depthBoundsTestEnable : 1;
+		b8 depthWriteEnable : 1;
+		CompareOp depthCompareOp : 4;
 		StencilState front;
 		StencilState back;
-		b8 depthBoundsTestEnable;
 		f32 minDepthBounds;
 		f32 maxDepthBounds;
 	};
 
 	struct MultisampleState {
-		u8 sampleCount = 1;
 		u8 sampleMask = 0xFF;
-		b8 alphaToCoverageEnable;
-		b8 alphaToOneEnable;
-		b8 sampleShadingEnable;
-		f32 minSampleShading;
+		u8 sampleCount : 4 = 1;
+		b8 alphaToCoverageEnable : 1;
 	};
 
 	struct RasterizerState {
-		b8 depthClampEnable;
-		b8 rasterizerDiscardEnable;
-		PolygonMode polygonMode;
-		Face cullMode;
-		WindingOrder windingOrder;
-		b8 depthBiasEnable;
+		b8 depthClampEnable : 1;
+		b8 rasterizerDiscardEnable : 1;
+		PolygonMode polygonMode : 2;
+		Face cullMode : 2;
+		WindingOrder windingOrder : 1;
+		b8 depthBiasEnable : 1;
 		f32 depthBiasConstantFactor;
 		f32 depthBiasClamp;
 		f32 depthBiasSlopeFactor;

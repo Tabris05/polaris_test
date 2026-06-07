@@ -71,8 +71,6 @@ namespace pl {
 
 			VkImageViewInfo vkImageViewInfo(const TextureView& view);
 
-			VkDevice m_device = {};
-			VkPhysicalDevice m_physicalDevice = {};
 			VkImage m_image = {};
 
 			VkImageViewCreateInfo m_imageViewCI = {};
@@ -80,9 +78,6 @@ namespace pl {
 
 			tbrs::Vec<VkImageView> m_renderTargetViews;
 			tbrs::Vec<u32> m_shaderResourceViews;
-
-			DescriptorHeap* m_heap = nullptr;
-			DeviceMemoryAllocator* m_allocator = nullptr;
 
 			DeviceMemory m_backingMem = {};
 	};

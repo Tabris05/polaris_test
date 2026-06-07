@@ -13,6 +13,6 @@ namespace pl {
 			Sampler& operator=(const Sampler& src) = delete;
 
 		private:
-			alignas(8) byte reserved[16];
+			alignas(2) byte reserved[2];
 	};
 };

@@ -25,7 +25,6 @@ namespace pl {
 			void barrier(PipelineStage src, PipelineStage dst);
 			void beginRenderPass(const RenderPassBeginInfo& info);
 			void bindShaders(View<std::reference_wrapper<const Shader>> shaders);
-			void bindShaders(const Shader& shader) { bindShaders({ shader }); }
 			void clearBuffer(BufferRange range, u32 value);
 			void clearTexture(const Texture& texture, ClearValue value, TextureRegion region = {});
 			void copyTexture(const Texture& src, const Texture& dst, TextureRegion srcRegion = {}, TextureRegion dstRegion = {});
@@ -34,9 +33,9 @@ namespace pl {
 			void dispatch(u32 groupsX = 1, u32 groupsY = 1, u32 groupsZ = 1);
 			void dispatchIndirect(DeviceAddress indirectBuffer);
 			void endRenderPass();
-			template<typename T> void pushConstants(const T& constants) {
+			template<typename T> void pushConstants(const T& constants, u16 offset = 0) {
 				static_assert(sizeof(T) <= 256, "Push constants must be 256 bytes or less.");
-				pushConstantsImpl(&constants, sizeof(T));
+				pushConstantsImpl(&constants, sizeof(T), offset);
 			}
 			void setAttachmentColorState(AttachmentColorState state);
 			void setColorState(ColorState state);
@@ -61,7 +60,7 @@ namespace pl {
 			CommandBuffer& operator=(const CommandBuffer&) = delete;
 
 		private:
-			void pushConstantsImpl(const void* constants, u64 size);
+			void pushConstantsImpl(const void* constants, u16 size, u16 offset);
 			void writeBufferImpl(DeviceAddress address, const void* data, u64 size);
 			void writeTextureImpl(const Texture& texture, const void* data, TextureRegion region);
 

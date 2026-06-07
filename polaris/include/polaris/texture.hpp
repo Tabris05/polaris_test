@@ -42,6 +42,6 @@ namespace pl {
 			Texture& operator=(const Texture&) = delete;
 
 		private:
-			alignas(8) byte reserved[192];
+			alignas(8) byte reserved[160];
 	};
 }

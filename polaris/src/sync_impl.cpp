@@ -8,8 +8,8 @@ namespace pl {
 	}
 
 	void Event::wait() const {
-		if(m_device) {
-			vkWaitSemaphores(m_device, &VkSemaphoreWaitInfo{
+		if(m_semaphore) {
+			vkWaitSemaphores(Device::get().vkDevice(), &VkSemaphoreWaitInfo{
 				.semaphoreCount = 1,
 				.pSemaphores = &m_semaphore,
 				.pValues = &m_value,
@@ -18,17 +18,17 @@ namespace pl {
 	}
 
 	bool Event::completed() const {
-		if(m_device) {
+		if(m_semaphore) {
 			u64 currentValue;
-			vkGetSemaphoreCounterValue(m_device, m_semaphore, &currentValue);
+			vkGetSemaphoreCounterValue(Device::get().vkDevice(), m_semaphore, &currentValue);
 			return currentValue >= m_value;
 		}
 		return true;
 	}
 
 	void Event::signal() {
-		if(m_device) {
-			vkSignalSemaphore(m_device, &VkSemaphoreSignalInfo{
+		if(m_semaphore) {
+			vkSignalSemaphore(Device::get().vkDevice(), &VkSemaphoreSignalInfo{
 				.semaphore = m_semaphore,
 				.value = m_value
 			});
@@ -41,26 +41,26 @@ namespace pl {
 
 	Event::Event() = default;
 
-	Event::Event(VkDevice device, VkSemaphore semaphore, u64 value) : m_device(device), m_semaphore(semaphore), m_value(value) {}
+	Event::Event(VkSemaphore semaphore, u64 value) : m_semaphore(semaphore), m_value(value) {}
 
 	u64 Sync::value() const {
 		u64 ret;
-		vkGetSemaphoreCounterValue(m_device, m_semaphore, &ret);
+		vkGetSemaphoreCounterValue(Device::get().vkDevice(), m_semaphore, &ret);
 
 		return ret;
 	}
 
 	Event Sync::advance(u64 amount) {
 		// + amount since fetch_add returns the old value
-		return Event(m_device, m_semaphore, m_value.fetch_add(amount, std::memory_order_relaxed) + amount);
+		return Event(m_semaphore, m_value.fetch_add(amount, std::memory_order_relaxed) + amount);
 	}
 
 	Event Sync::event() const {
-		return Event(m_device, m_semaphore, m_value.load(std::memory_order_relaxed));
+		return Event(m_semaphore, m_value.load(std::memory_order_relaxed));
 	}
 
-	Sync::Sync(const SyncCreateInfo& ci) : m_device(ci.device.vkDevice()) {
-		vkCreateSemaphore(m_device, &VkSemaphoreCreateInfo{
+	Sync::Sync(const SyncCreateInfo& ci) {
+		vkCreateSemaphore(Device::get().vkDevice(), &VkSemaphoreCreateInfo{
 			.pNext = &VkSemaphoreTypeCreateInfo {
 				.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
 				.initialValue = ci.initialValue
@@ -79,8 +79,6 @@ namespace pl {
 	};
 
 	Sync::~Sync() {
-		if(m_device) {
-			vkDestroySemaphore(m_device, m_semaphore, nullptr);
-		}
+		vkDestroySemaphore(Device::get().vkDevice(), m_semaphore, nullptr);
 	}
 }

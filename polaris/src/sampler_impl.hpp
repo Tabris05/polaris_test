@@ -15,10 +15,9 @@ namespace pl {
 			Sampler& operator=(const Sampler& src) = delete;
 
 			// "public" functions that should not be included in the public header
-			u32 handle() const;
+			u16 handle() const;
 
 		private:
-			DescriptorHeap* m_heap;
-			u32 m_handle;
+			u16 m_handle = 0xFFFF;
 	};
 }

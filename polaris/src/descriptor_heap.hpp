@@ -13,25 +13,26 @@ namespace pl {
 			void bind(VkCommandBuffer cmd) const;
 
 			u32 allocImageHandle(const VkImageViewCreateInfo* ci, VkDescriptorType type);
-			u32 allocSamplerHandle(const VkSamplerCreateInfo* ci);
+			u16 allocSamplerHandle(const VkSamplerCreateInfo* ci);
 
 			void freeImageHandle(u32 handle);
-			void freeSamplerHandle(u32 handle);
+			void freeSamplerHandle(u16 handle);
 
-			DescriptorHeap(VkPhysicalDevice physicalDevice, VkDevice device, DeviceMemoryAllocator* allocator);
-			~DescriptorHeap();
+			void initialize();
+			void finalize();
 
+			DescriptorHeap() = default;
+			~DescriptorHeap() = default;
+			DescriptorHeap(DescriptorHeap&& src) = delete;
+			DescriptorHeap& operator=(DescriptorHeap&& src) = delete;
 			DescriptorHeap(const DescriptorHeap&) = delete;
 			DescriptorHeap& operator=(const DescriptorHeap&) = delete;
-			DescriptorHeap(DescriptorHeap&& src);
-			DescriptorHeap& operator=(DescriptorHeap&& src);
 
 		private:
 			using FreeRanges = tbrs::Vec<std::pair<u32, u32>>;
 			u32 acquireHandle(FreeRanges& ranges);
 			void releaseHandle(FreeRanges& ranges, u32 handle);
 
-			VkDevice m_device = {};
 			VkDeviceMemory m_backingMem = {};
 			VkBuffer m_buffer = {};
 			VkDeviceAddress m_deviceAddr = {};

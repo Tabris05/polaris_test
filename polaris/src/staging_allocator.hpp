@@ -17,22 +17,21 @@ namespace pl {
 	};
 
 	class StagingAllocator {
-	public:
-		StagingBuffer alloc(u64 size);
-		void free(StagingBuffer buffer);
+		public:
+			StagingBuffer alloc(u64 size);
+			void free(StagingBuffer buffer);
 
-		StagingAllocator(VkPhysicalDevice physicalDevice, VkDevice device);
-		StagingAllocator(StagingAllocator&& src);
-		StagingAllocator& operator=(StagingAllocator&& src);
-		~StagingAllocator();
+			StagingAllocator();
+			StagingAllocator(StagingAllocator&& src);
+			StagingAllocator& operator=(StagingAllocator&& src);
+			~StagingAllocator();
 
-		StagingAllocator(const StagingAllocator&) = delete;
-		StagingAllocator& operator=(const StagingAllocator&) = delete;
+			StagingAllocator(const StagingAllocator&) = delete;
+			StagingAllocator& operator=(const StagingAllocator&) = delete;
 
-	private:
-		VkDevice m_device = {};
-		VkPhysicalDeviceMemoryProperties m_memProps = {};
+		private:
+			VkPhysicalDeviceMemoryProperties m_memProps = {};
 
-		tbrs::Vec<StagingBuffer> m_freeList;
+			tbrs::Vec<StagingBuffer> m_freeList;
 	};
 }

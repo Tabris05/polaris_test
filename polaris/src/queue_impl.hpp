@@ -48,7 +48,6 @@ namespace pl {
 				tbrs::Vec<StagingBuffer> stagingBuffers;
 			};
 
-			VkDevice m_device = {};
 			VkQueue m_queue = {};
 			VkCommandPool m_pool = {};
 
@@ -58,7 +57,6 @@ namespace pl {
 			tbrs::Vec<VkCommandBuffer> m_freeCmds;
 			tbrs::Vec<Submission> m_submittedCmds;
 
-			DescriptorHeap* m_heap = nullptr;
 			StagingAllocator* m_allocator = nullptr;
 	};
 }

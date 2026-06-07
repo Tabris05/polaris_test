@@ -14,7 +14,7 @@ namespace pl {
 			Shader& operator=(const Shader& src) = delete;
 
 		private:
-			alignas(8) byte reserved[24];
+			alignas(8) byte reserved[16];
 
 	};
 }

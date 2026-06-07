@@ -1,4 +1,5 @@
 #include "descriptor_heap.hpp"
+#include "device_impl.hpp"
 #include "vk_util.hpp"
 
 namespace pl {
@@ -26,7 +27,7 @@ namespace pl {
 		std::scoped_lock lock{ m_imageLock };
 		u32 handle = acquireHandle(m_imageFreeRanges);
 
-		vkWriteResourceDescriptorsEXT(m_device, 1,
+		vkWriteResourceDescriptorsEXT(Device::get().vkDevice(), 1,
 			&VkResourceDescriptorInfoEXT{
 				.type = type,
 				.data{
@@ -50,11 +51,11 @@ namespace pl {
 		releaseHandle(m_imageFreeRanges, handle);
 	}
 
-	u32 DescriptorHeap::allocSamplerHandle(const VkSamplerCreateInfo* ci) {
+	u16 DescriptorHeap::allocSamplerHandle(const VkSamplerCreateInfo* ci) {
 		std::scoped_lock lock{ m_samplerLock };
-		u32 handle = acquireHandle(m_samplerFreeRanges);
+		u16 handle = static_cast<u16>(acquireHandle(m_samplerFreeRanges));
 
-		vkWriteSamplerDescriptorsEXT(m_device, 1, ci, &VkHostAddressRangeEXT{
+		vkWriteSamplerDescriptorsEXT(Device::get().vkDevice(), 1, ci, &VkHostAddressRangeEXT{
 			.address = reinterpret_cast<void*>(m_hostAddr + m_imageHandleCount * m_imageDescriptorSize + handle * m_samplerDescriptorSize),
 			.size = m_samplerDescriptorSize,
 		});
@@ -62,48 +63,35 @@ namespace pl {
 		return handle;
 	}
 
-	void DescriptorHeap::freeSamplerHandle(u32 handle) {
+	void DescriptorHeap::freeSamplerHandle(u16 handle) {
 		std::scoped_lock lock{ m_samplerLock };
 		releaseHandle(m_samplerFreeRanges, handle);
 	}
 
-	DescriptorHeap::DescriptorHeap(VkPhysicalDevice physicalDevice, VkDevice device, DeviceMemoryAllocator* allocator) : m_device(device) {
+	void DescriptorHeap::initialize() {
 		m_imageFreeRanges.push(0, m_imageHandleCount - 1);
 		m_samplerFreeRanges.push(0, m_samplerHandleCount - 1);
 
 		VkPhysicalDeviceDescriptorHeapPropertiesEXT props{};
-		vkGetPhysicalDeviceProperties2(physicalDevice, &VkPhysicalDeviceProperties2{ .pNext = &props });
+		vkGetPhysicalDeviceProperties2(Device::get().vkPhysicalDevice(), &VkPhysicalDeviceProperties2{.pNext = &props});
 		m_imageHeapReservedSize = props.minResourceHeapReservedRange;
 		m_samplerHeapReservedSize = props.minSamplerHeapReservedRange;
 		m_imageDescriptorSize = props.imageDescriptorSize;
 		m_samplerDescriptorSize = props.samplerDescriptorSize;
 
-		vkCreateBuffer(m_device, &VkBufferCreateInfo{
+		vkCreateBuffer(Device::get().vkDevice(), &VkBufferCreateInfo{
 			.size = m_imageHandleCount * m_imageDescriptorSize + m_samplerHandleCount * m_samplerDescriptorSize,
 			.usage = VK_BUFFER_USAGE_DESCRIPTOR_HEAP_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 		}, nullptr, &m_buffer);
-		m_backingMem = allocator->alloc(m_buffer);
-		m_deviceAddr = vkGetBufferDeviceAddress(m_device, &VkBufferDeviceAddressInfo{ .buffer = m_buffer });
-		vkMapMemory(m_device, m_backingMem, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**>(&m_hostAddr));
+		m_backingMem = Device::get().deviceMemoryAllocator().alloc(m_buffer);
+		m_deviceAddr = vkGetBufferDeviceAddress(Device::get().vkDevice(), &VkBufferDeviceAddressInfo{ .buffer = m_buffer });
+		vkMapMemory(Device::get().vkDevice(), m_backingMem, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**>(&m_hostAddr));
 	}
 
-	DescriptorHeap::~DescriptorHeap() {
-		if(m_device) {
-			vkDestroyBuffer(m_device, m_buffer, nullptr);
-			vkFreeMemory(m_device, m_backingMem, nullptr);
-		}
+	void DescriptorHeap::finalize() {
+		vkDestroyBuffer(Device::get().vkDevice(), m_buffer, nullptr);
+		vkFreeMemory(Device::get().vkDevice(), m_backingMem, nullptr);
 	}
-
-
-	DescriptorHeap::DescriptorHeap(DescriptorHeap&& src) {
-		memcpy(this, &src, sizeof(DescriptorHeap));
-		memset(&src, 0, sizeof(DescriptorHeap));
-	}
-
-	DescriptorHeap& DescriptorHeap::operator=(DescriptorHeap&& src) {
-		this->~DescriptorHeap();
-		new (this) DescriptorHeap(std::move(src)); return *this;
-	};
 
 	u32 DescriptorHeap::acquireHandle(FreeRanges& ranges) {
 		u32 result = ranges.front().first;

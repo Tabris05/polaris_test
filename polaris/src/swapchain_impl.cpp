@@ -15,7 +15,7 @@ namespace pl {
 
 		VkSemaphore sem;
 		if(m_freeSems.empty()) {
-			vkCreateSemaphore(m_device, &VkSemaphoreCreateInfo{}, nullptr, &sem);
+			vkCreateSemaphore(Device::get().vkDevice(), &VkSemaphoreCreateInfo{}, nullptr, &sem);
 		}
 		else {
 			sem = m_freeSems.back();
@@ -23,10 +23,10 @@ namespace pl {
 		}
 
 		u32 acquired;
-		VkResult res = vkAcquireNextImageKHR(m_device, m_swapchain, std::numeric_limits<u64>::max(), sem, {}, &acquired);
+		VkResult res = vkAcquireNextImageKHR(Device::get().vkDevice(), m_swapchain, std::numeric_limits<u64>::max(), sem, {}, &acquired);
 		while(res == VK_ERROR_OUT_OF_DATE_KHR) {
 			update(m_width, m_height, m_vsync);
-			res = vkAcquireNextImageKHR(m_device, m_swapchain, std::numeric_limits<u64>::max(), sem, {}, &acquired);
+			res = vkAcquireNextImageKHR(Device::get().vkDevice(), m_swapchain, std::numeric_limits<u64>::max(), sem, {}, &acquired);
 		}
 
 		CommandBuffer cmd = info.queue.beginRecording();
@@ -101,61 +101,59 @@ namespace pl {
 		m_vsync = vsync;
 
 		// foo: eventually should try to reuse old swapchain
-		vkDeviceWaitIdle(m_device);
+		Device::idle();
 		destroySwapchain();
 		createSwapchain();
 	}
 
-	Swapchain::Swapchain(const SwapchainCreateInfo& ci)
-		: m_instance(ci.device.vkInstance()), m_device(ci.device.vkDevice()), m_width(ci.width), m_height(ci.height), m_vsync(ci.vsync), m_heap(ci.device.descriptorHeap()) {
-
+	Swapchain::Swapchain(const SwapchainCreateInfo& ci) : m_width(ci.width), m_height(ci.height), m_vsync(ci.vsync) {
 		switch(ci.nativeWindow.type) {
 			case NativeWindowType::Headless: {
-				vkCreateHeadlessSurfaceEXT(m_instance, &VkHeadlessSurfaceCreateInfoEXT{}, nullptr, &m_surface);
+				vkCreateHeadlessSurfaceEXT(Device::get().vkInstance(), &VkHeadlessSurfaceCreateInfoEXT{}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Win32: {
-				vkCreateWin32SurfaceKHR(m_instance, &VkWin32SurfaceCreateInfoKHR{
+				vkCreateWin32SurfaceKHR(Device::get().vkInstance(), &VkWin32SurfaceCreateInfoKHR{
 					.hinstance = ci.nativeWindow.win32.hinstance,
 					.hwnd = ci.nativeWindow.win32.hwnd
 				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::XCB: {
-				vkCreateXcbSurfaceKHR(m_instance, &VkXcbSurfaceCreateInfoKHR{
+				vkCreateXcbSurfaceKHR(Device::get().vkInstance(), &VkXcbSurfaceCreateInfoKHR{
 					.connection = ci.nativeWindow.xcb.connection,
 					.window = ci.nativeWindow.xcb.window
 				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Wayland: {
-				vkCreateWaylandSurfaceKHR(m_instance, &VkWaylandSurfaceCreateInfoKHR{
+				vkCreateWaylandSurfaceKHR(Device::get().vkInstance(), &VkWaylandSurfaceCreateInfoKHR{
 					.display = ci.nativeWindow.wayland.display,
 					.surface = ci.nativeWindow.wayland.surface
 				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Metal: {
-				vkCreateMetalSurfaceEXT(m_instance, &VkMetalSurfaceCreateInfoEXT{
+				vkCreateMetalSurfaceEXT(Device::get().vkInstance(), &VkMetalSurfaceCreateInfoEXT{
 					.pLayer = ci.nativeWindow.metal.pLayer
 				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Android: {
-				vkCreateAndroidSurfaceKHR(m_instance, &VkAndroidSurfaceCreateInfoKHR{
+				vkCreateAndroidSurfaceKHR(Device::get().vkInstance(), &VkAndroidSurfaceCreateInfoKHR{
 					.window = ci.nativeWindow.android.window
 				}, nullptr, &m_surface);
 				break;
 			}
 			case NativeWindowType::Vi: {
-				vkCreateViSurfaceNN(m_instance, &VkViSurfaceCreateInfoNN{
+				vkCreateViSurfaceNN(Device::get().vkInstance(), &VkViSurfaceCreateInfoNN{
 					.window = ci.nativeWindow.vi.window
 				}, nullptr, &m_surface);
 				break;
 			}
 		}
 
-		vkCreateShadersEXT(m_device, 1, &VkShaderCreateInfoEXT{
+		vkCreateShadersEXT(Device::get().vkDevice(), 1, &VkShaderCreateInfoEXT{
 			.flags = VK_SHADER_CREATE_DESCRIPTOR_HEAP_BIT_EXT,
 			.stage = VK_SHADER_STAGE_COMPUTE_BIT,
 			.codeType = VK_SHADER_CODE_TYPE_SPIRV_EXT,
@@ -179,24 +177,22 @@ namespace pl {
 	}
 
 	Swapchain::~Swapchain() {
-		if(m_device) {
-			destroySwapchain();
+		destroySwapchain();
 
-			for(VkSemaphore sem : m_freeSems) {
-				vkDestroySemaphore(m_device, sem, nullptr);
-			}
-
-			for(auto [sem, _] : m_submittedSems) {
-				vkDestroySemaphore(m_device, sem, nullptr);
-			}
-
-			vkDestroyShaderEXT(m_device, m_blitShader, nullptr);
-			vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+		for(VkSemaphore sem : m_freeSems) {
+			vkDestroySemaphore(Device::get().vkDevice(), sem, nullptr);
 		}
+
+		for(auto [sem, _] : m_submittedSems) {
+			vkDestroySemaphore(Device::get().vkDevice(), sem, nullptr);
+		}
+
+		vkDestroyShaderEXT(Device::get().vkDevice(), m_blitShader, nullptr);
+		vkDestroySurfaceKHR(Device::get().vkInstance(), m_surface, nullptr);
 	}
 
 	void Swapchain::createSwapchain() {
-		vkCreateSwapchainKHR(m_device, &VkSwapchainCreateInfoKHR{
+		vkCreateSwapchainKHR(Device::get().vkDevice(), &VkSwapchainCreateInfoKHR{
 			.surface = m_surface,
 			.minImageCount = 3,
 			.imageFormat = VK_FORMAT_R8G8B8A8_UNORM,
@@ -211,15 +207,15 @@ namespace pl {
 		}, nullptr, &m_swapchain);
 
 		u32 count;
-		vkGetSwapchainImagesKHR(m_device, m_swapchain, &count, nullptr);
+		vkGetSwapchainImagesKHR(Device::get().vkDevice(), m_swapchain, &count, nullptr);
 
 		tbrs::Vec<VkImage> images(count);
-		vkGetSwapchainImagesKHR(m_device, m_swapchain, &count, images.data());
+		vkGetSwapchainImagesKHR(Device::get().vkDevice(), m_swapchain, &count, images.data());
 
 		VkSemaphore sem;
 		for(VkImage& img : images) {
-			vkCreateSemaphore(m_device, &VkSemaphoreCreateInfo{}, nullptr, &sem);
-			m_swapchainImages.push(img, sem, m_heap->allocImageHandle(&VkImageViewCreateInfo{
+			vkCreateSemaphore(Device::get().vkDevice(), &VkSemaphoreCreateInfo{}, nullptr, &sem);
+			m_swapchainImages.push(img, sem, Device::get().descriptorHeap().allocImageHandle(&VkImageViewCreateInfo{
 				.image = img,
 				.viewType = VK_IMAGE_VIEW_TYPE_2D,
 				.format = VK_FORMAT_R8G8B8A8_UNORM,
@@ -236,10 +232,10 @@ namespace pl {
 
 	void Swapchain::destroySwapchain() {
 		for(auto [_, signalSem, descriptorHandle] : m_swapchainImages) {
-			m_heap->freeImageHandle(descriptorHandle);
-			vkDestroySemaphore(m_device, signalSem, nullptr);
+			Device::get().descriptorHeap().freeImageHandle(descriptorHandle);
+			vkDestroySemaphore(Device::get().vkDevice(), signalSem, nullptr);
 		}
 		m_swapchainImages.clear();
-		vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+		vkDestroySwapchainKHR(Device::get().vkDevice(), m_swapchain, nullptr);
 	}
 }

@@ -16,7 +16,7 @@ namespace pl {
 
 		VkCommandBuffer cmd;
 		if(m_freeCmds.empty()) {
-			vkAllocateCommandBuffers(m_device, &VkCommandBufferAllocateInfo{
+			vkAllocateCommandBuffers(Device::get().vkDevice(), &VkCommandBufferAllocateInfo{
 				.commandPool = m_pool,
 				.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 				.commandBufferCount = 1
@@ -30,7 +30,7 @@ namespace pl {
 		vkBeginCommandBuffer(cmd, &VkCommandBufferBeginInfo{ .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT });
 
 		if(m_type != QueueType::DMA) {
-			m_heap->bind(cmd);
+			Device::get().descriptorHeap().bind(cmd);
 		}
 		if(m_type == QueueType::Universal) {
 
@@ -50,6 +50,8 @@ namespace pl {
 			vkCmdSetStencilTestEnable(cmd, false);
 			
 			// blend state
+			vkCmdSetLogicOpEnableEXT(cmd, false);
+
 			VkBool32 bools[8] = {};
 			vkCmdSetColorBlendEnableEXT(cmd, 0, 8, bools);
 
@@ -152,11 +154,11 @@ namespace pl {
 	}
 
 	Queue::Queue(const QueueCreateInfo& ci)
-		: m_device(ci.device.vkDevice()), m_queue(ci.device.vkQueue(ci.type)), m_type(ci.type), m_sync({ .device = ci.device }), m_heap(ci.device.descriptorHeap()),
-		m_allocator(new StagingAllocator(ci.device.vkPhysicalDevice(), ci.device.vkDevice())) {
-		vkCreateCommandPool(m_device, &VkCommandPoolCreateInfo{
+		: m_queue(Device::get().vkQueue(ci.type)), m_type(ci.type), m_sync(SyncCreateInfo{}),
+		m_allocator(new StagingAllocator) {
+		vkCreateCommandPool(Device::get().vkDevice(), &VkCommandPoolCreateInfo{
 				.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-				.queueFamilyIndex = ci.device.vkQueueFamily(ci.type)
+				.queueFamilyIndex = Device::get().vkQueueFamily(ci.type)
 		}, nullptr, &m_pool);
 	}
 
@@ -173,15 +175,13 @@ namespace pl {
 	}
 
 	Queue::~Queue() {
-		if(m_device) {
-			m_sync.event().wait();
-			for(const Submission& submission : m_submittedCmds) {
-				for(const StagingBuffer& buffer : submission.stagingBuffers) {
-					m_allocator->free(buffer);
-				}
+		m_sync.event().wait();
+		for(const Submission& submission : m_submittedCmds) {
+			for(const StagingBuffer& buffer : submission.stagingBuffers) {
+				m_allocator->free(buffer);
 			}
-			vkDestroyCommandPool(m_device, m_pool, nullptr);
-			delete m_allocator;
 		}
+		vkDestroyCommandPool(Device::get().vkDevice(), m_pool, nullptr);
+		delete m_allocator;
 	}
 }

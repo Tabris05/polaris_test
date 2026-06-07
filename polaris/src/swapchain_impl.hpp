@@ -33,8 +33,6 @@ namespace pl {
 			void createSwapchain();
 			void destroySwapchain();
 
-			VkInstance m_instance = {};
-			VkDevice m_device = {};
 			VkSurfaceKHR m_surface = {};
 			VkSwapchainKHR m_swapchain = {};
 
@@ -53,7 +51,5 @@ namespace pl {
 			tbrs::Vec<VkSemaphore> m_freeSems;
 
 			VkShaderEXT m_blitShader = {};
-
-			DescriptorHeap* m_heap = nullptr;
 	};
 }

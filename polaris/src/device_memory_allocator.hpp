@@ -13,15 +13,17 @@ namespace pl {
 			DeviceMemory alloc(VkImage image);
 			void free(DeviceMemory alloc);
 
-			DeviceMemoryAllocator(VkPhysicalDevice physicalDevice, VkDevice device);
-			DeviceMemoryAllocator(DeviceMemoryAllocator&& src);
-			DeviceMemoryAllocator& operator=(DeviceMemoryAllocator&& src);
+			void initialize();
+			void finalize();
 
+			DeviceMemoryAllocator() = default;
+			~DeviceMemoryAllocator() = default;
+			DeviceMemoryAllocator(DeviceMemoryAllocator&& src) = delete;
+			DeviceMemoryAllocator& operator=(DeviceMemoryAllocator&& src) = delete;
 			DeviceMemoryAllocator(const DeviceMemoryAllocator&) = delete;
 			DeviceMemoryAllocator& operator=(const DeviceMemoryAllocator&) = delete;
 
 		private:
-			VkDevice m_device = {};
 			VkPhysicalDeviceMemoryProperties m_memProps = {};
 	};
 }

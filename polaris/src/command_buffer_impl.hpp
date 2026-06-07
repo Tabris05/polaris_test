@@ -36,9 +36,9 @@ namespace pl {
 			void dispatch(u32 groupsX = 1, u32 groupsY = 1, u32 groupsZ = 1);
 			void dispatchIndirect(DeviceAddress indirectBuffer);
 			void endRenderPass();
-			void pushConstants(const auto& constants) {
+			void pushConstants(const auto& constants, u16 offset = 0) {
 				static_assert(sizeof(constants) <= 256, "Push constants must be 256 bytes or less.");
-				pushConstantsImpl(&constants, sizeof(constants));
+				pushConstantsImpl(&constants, sizeof(constants), offset);
 			}
 			void setAttachmentColorState(AttachmentColorState state);
 			void setColorState(ColorState state);
@@ -61,7 +61,7 @@ namespace pl {
 			CommandBuffer(VkCommandBuffer cmd, StagingAllocator* stagingAllocator);
 
 		private:
-			void pushConstantsImpl(const void* constants, u64 size);
+			void pushConstantsImpl(const void* constants, u16 size, u16 offset);
 			void writeBufferImpl(DeviceAddress address, const void* data, u64 size);
 			void writeTextureImpl(const Texture& texture, const void* data, TextureRegion region);
 

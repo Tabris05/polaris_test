@@ -19,7 +19,6 @@ namespace pl {
 			VkShaderStageFlagBits vkShaderStageBits() const;
 
 		private:
-			VkDevice m_device = {};
 			VkShaderEXT m_shader = {};
 			VkShaderStageFlagBits m_stage = {};
 	};

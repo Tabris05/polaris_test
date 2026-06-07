@@ -3,10 +3,8 @@
 #include "vk_util.hpp"
 
 namespace pl {
-	Shader::Shader(const ShaderCreateInfo& ci)
-		: m_device(ci.device.vkDevice()), m_stage(vkShaderStage(ci.stage)) {
-
-		vkCreateShadersEXT(m_device, 1, &VkShaderCreateInfoEXT{
+	Shader::Shader(const ShaderCreateInfo& ci) : m_stage(vkShaderStage(ci.stage)) {
+		vkCreateShadersEXT(Device::get().vkDevice(), 1, &VkShaderCreateInfoEXT{
 			.flags = VK_SHADER_CREATE_DESCRIPTOR_HEAP_BIT_EXT | (ci.stage == ShaderStage::Mesh ? VK_SHADER_CREATE_NO_TASK_SHADER_BIT_EXT : 0u),
 			.stage = m_stage,
 			.nextStage = ci.stage == ShaderStage::Mesh ? VK_SHADER_STAGE_FRAGMENT_BIT : 0u,
@@ -29,9 +27,7 @@ namespace pl {
 	}
 
 	Shader::~Shader() {
-		if(m_device) {
-			vkDestroyShaderEXT(m_device, m_shader, nullptr);
-		}
+		vkDestroyShaderEXT(Device::get().vkDevice(), m_shader, nullptr);
 	}
 
 	VkShaderEXT Shader::vkShader() const {

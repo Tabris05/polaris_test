@@ -10,6 +10,11 @@ namespace pl {
 				return reinterpret_cast<T*>(deviceAddress());
 			}
 			DeviceAddress deviceAddress() const;
+			template<typename T>
+			T* hostAddress() const {
+				return reinterpret_cast<T*>(hostAddress());
+			}
+			byte* hostAddress() const;
 
 			Buffer(const BufferCreateInfo& ci);
 			Buffer(Buffer&& src);
@@ -20,6 +25,6 @@ namespace pl {
 			Buffer& operator=(const Buffer&) = delete;
 
 		private:
-			alignas(8) byte reserved[40];
+			alignas(8) byte reserved[32];
 	};
 }

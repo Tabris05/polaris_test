@@ -2,8 +2,6 @@
 
 #include <polaris/util_types.hpp>
 #include <polaris/pod_types.hpp>
-#include <volk/volk.h>
-#include <tabris/vec.hpp>
 
 #include "descriptor_heap.hpp"
 #include "device_memory_allocator.hpp"
@@ -11,27 +9,30 @@
 namespace pl {
 	class Device {
 		public:
-			void waitIdle();
+			static void idle();
+			static void initialize(const DeviceCreateInfo& ci);
 
-			Device(const DeviceCreateInfo& ci);
-			Device(Device&&);
-			Device& operator=(Device&&);
 			~Device();
 
+			Device(Device&&) = delete;
+			Device& operator=(Device&&) = delete;
 			Device(const Device&) = delete;
 			Device& operator=(const Device&) = delete;
 
 			// "public" functions that should not be included in the public header
+			static Device& get();
+			void initializeImpl(const DeviceCreateInfo& ci);
 			VkInstance vkInstance() const;
 			VkPhysicalDevice vkPhysicalDevice() const;
 			VkDevice vkDevice() const;
 			u32 vkQueueFamily(QueueType type) const;
 			VkQueue vkQueue(QueueType type) const;
-			DescriptorHeap* descriptorHeap() const;
-			DeviceMemoryAllocator* deviceMemoryAllocator() const;
+			DescriptorHeap& descriptorHeap();
+			DeviceMemoryAllocator& deviceMemoryAllocator();
 
 		private:
-			u32 getQueueFamilyIndex(VkQueueFlags include, VkQueueFlags exclude);
+			Device() = default;
+			u32 getQueueFamilyIndex(VkQueueFlags include, VkQueueFlags exclude = 0);
 
 			VkInstance m_instance = {};
 			VkPhysicalDevice m_physicalDevice = {};
@@ -44,7 +45,7 @@ namespace pl {
 
 			QueueData m_queues[3];
 
-			DescriptorHeap* m_heap = nullptr;
-			DeviceMemoryAllocator* m_allocator = nullptr;
+			DescriptorHeap m_heap;
+			DeviceMemoryAllocator m_allocator;
 	};
 }

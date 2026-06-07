@@ -1,0 +1,520 @@
+#include "imgui.h"
+#ifndef IMGUI_DISABLE
+#include "imgui_impl_polaris.h"
+
+struct ImGui_ImplPolaris_PerFrameData
+{
+    u64         VertexBufferSize;
+    u64         IndexBufferSize;
+    pl::Buffer* VertexBuffer;
+    pl::Buffer* IndexBuffer;
+};
+
+struct ImGui_ImplPolaris_Data
+{
+    ImGui_ImplPolaris_InitInfo               PolarisInitInfo;
+    pl::Shader*                              ShaderMesh;
+    pl::Shader*                              ShaderFrag;
+                                             
+    bool                                     UseNearestSampler;
+    pl::Sampler*                             SamplerLinear;
+    pl::Sampler*                             SamplerNearest;
+                                             
+    u32                                      FrameIndex;
+    ImVector<ImGui_ImplPolaris_PerFrameData> PerFrameData;
+
+    ImGui_ImplPolaris_Data() { memset((void*)this, 0, sizeof(*this)); }
+};
+
+constexpr u32 shader[] = {
+    0x07230203, 0x00010600, 0x00280000, 0x00000192, 0x00000000, 0x00020011, 0x000014e3, 0x00020011, 0x00000016,
+    0x00020011, 0x00000027, 0x00020011, 0x00001162, 0x00020011, 0x00001153, 0x00020011, 0x000014a3, 0x00020011,
+    0x00001179, 0x00020011, 0x00001408, 0x00020011, 0x00000001, 0x00020011, 0x000014e1, 0x00020011, 0x000014e2,
+    0x0009000a, 0x5f565053, 0x5f52484b, 0x73796870, 0x6c616369, 0x6f74735f, 0x65676172, 0x6675625f, 0x00726566,
+    0x0006000a, 0x5f565053, 0x5f545845, 0x6873656d, 0x6168735f, 0x00726564, 0x0008000a, 0x5f565053, 0x5f52484b,
+    0x79746e75, 0x5f646570, 0x6e696f70, 0x73726574, 0x00000000, 0x0007000a, 0x5f565053, 0x5f545845, 0x63736564,
+    0x74706972, 0x685f726f, 0x00706165, 0x0008000a, 0x5f565053, 0x5f52484b, 0x6b6c7576, 0x6d5f6e61, 0x726f6d65,
+    0x6f6d5f79, 0x006c6564, 0x0006000b, 0x00000049, 0x4c534c47, 0x6474732e, 0x3035342e, 0x00000000, 0x0003000e,
+    0x000014e4, 0x00000003, 0x000c000f, 0x000014f5, 0x00000002, 0x616d736d, 0x00006e69, 0x00000037, 0x00000043,
+    0x0000002d, 0x0000007f, 0x00000096, 0x000000a2, 0x000000ad, 0x000b000f, 0x00000004, 0x000000be, 0x616d7366,
+    0x00006e69, 0x0000011a, 0x00000124, 0x000000c8, 0x0000012c, 0x000000c5, 0x000000d3, 0x00040010, 0x00000002,
+    0x00001496, 0x00000040, 0x00040010, 0x00000002, 0x0000001a, 0x000000c0, 0x00060010, 0x00000002, 0x00000011,
+    0x00000040, 0x00000001, 0x00000001, 0x00030010, 0x00000002, 0x000014b2, 0x00030010, 0x000000be, 0x00000007,
+    0x00030003, 0x0000000b, 0x00000001, 0x00080005, 0x0000000d, 0x74786554, 0x48657275, 0x6c646e61, 0x5f635f65,
+    0x69676f6c, 0x006c6163, 0x00050006, 0x0000000d, 0x00000000, 0x646e6168, 0x0000656c, 0x00080005, 0x00000005,
+    0x68737550, 0x736e6f43, 0x746e6174, 0x5f635f73, 0x69676f6c, 0x006c6163, 0x00050006, 0x00000005, 0x00000000,
+    0x6c616373, 0x00000065, 0x00060006, 0x00000005, 0x00000001, 0x6e617274, 0x74616c73, 0x00000065, 0x00070006,
+    0x00000005, 0x00000002, 0x74726576, 0x75427865, 0x72656666, 0x00000000, 0x00060006, 0x00000005, 0x00000003,
+    0x65646e69, 0x66754278, 0x00726566, 0x00070006, 0x00000005, 0x00000004, 0x6d656c65, 0x43746e65, 0x746e756f,
+    0x00000000, 0x00050006, 0x00000005, 0x00000005, 0x74786574, 0x00657275, 0x00030005, 0x00000012, 0x00000069,
+    0x00030005, 0x00000012, 0x00000069, 0x00070005, 0x00000015, 0x74726556, 0x635f7865, 0x676f6c5f, 0x6c616369,
+    0x00000000, 0x00060006, 0x00000015, 0x00000000, 0x69736f70, 0x6e6f6974, 0x00000000, 0x00040006, 0x00000015,
+    0x00000001, 0x00007675, 0x00050006, 0x00000015, 0x00000002, 0x6f6c6f63, 0x00000072, 0x00060005, 0x00000035,
+    0x74786554, 0x48657275, 0x6c646e61, 0x00635f65, 0x00050006, 0x00000035, 0x00000000, 0x646e6168, 0x0000656c,
+    0x00060005, 0x00000034, 0x68737550, 0x736e6f43, 0x746e6174, 0x00635f73, 0x00050006, 0x00000034, 0x00000000,
+    0x6c616373, 0x00000065, 0x00060006, 0x00000034, 0x00000001, 0x6e617274, 0x74616c73, 0x00000065, 0x00070006,
+    0x00000034, 0x00000002, 0x74726576, 0x75427865, 0x72656666, 0x00000000, 0x00060006, 0x00000034, 0x00000003,
+    0x65646e69, 0x66754278, 0x00726566, 0x00070006, 0x00000034, 0x00000004, 0x6d656c65, 0x43746e65, 0x746e756f,
+    0x00000000, 0x00050006, 0x00000034, 0x00000005, 0x74786574, 0x00657275, 0x00070005, 0x00000033, 0x72746e45,
+    0x696f5079, 0x6150746e, 0x736d6172, 0x0000635f, 0x00040006, 0x00000033, 0x00000000, 0x00736370, 0x00070005,
+    0x00000037, 0x72746e65, 0x696f5079, 0x6150746e, 0x736d6172, 0x00000000, 0x00060005, 0x00000047, 0x616d6572,
+    0x6e696e69, 0x72655667, 0x00007374, 0x00050005, 0x00000061, 0x61636f6c, 0x646e496c, 0x00007865, 0x00050005,
+    0x00000066, 0x626f6c67, 0x6e496c61, 0x00786564, 0x00050005, 0x00000008, 0x74726556, 0x635f7865, 0x00000000,
+    0x00060006, 0x00000008, 0x00000000, 0x69736f70, 0x6e6f6974, 0x00000000, 0x00040006, 0x00000008, 0x00000001,
+    0x00007675, 0x00050006, 0x00000008, 0x00000002, 0x6f6c6f63, 0x00000072, 0x00050005, 0x00000096, 0x74726576,
+    0x6f632e73, 0x00726f6c, 0x00050005, 0x000000a2, 0x74726576, 0x76752e73, 0x00000000, 0x00040005, 0x00000002,
+    0x616d736d, 0x00006e69, 0x00050005, 0x000000c5, 0x75706e69, 0x6f632e74, 0x00726f6c, 0x00070005, 0x000000c6,
+    0x72746e45, 0x696f5079, 0x6150746e, 0x736d6172, 0x0000635f, 0x00040006, 0x000000c6, 0x00000000, 0x00736370,
+    0x00070005, 0x000000c8, 0x72746e65, 0x696f5079, 0x6150746e, 0x736d6172, 0x00000000, 0x00050005, 0x000000d3,
+    0x75706e69, 0x76752e74, 0x00000000, 0x00070005, 0x0000011a, 0x6e616c73, 0x65725f67, 0x72756f73, 0x65486563,
+    0x00007061, 0x00070005, 0x00000124, 0x6e616c73, 0x61735f67, 0x656c706d, 0x61654872, 0x00000070, 0x00080005,
+    0x0000012c, 0x72746e65, 0x696f5079, 0x6150746e, 0x5f6d6172, 0x616d7366, 0x00006e69, 0x00040005, 0x000000be,
+    0x616d7366, 0x00006e69, 0x00040047, 0x00000009, 0x00000006, 0x00000014, 0x00040047, 0x0000000b, 0x00000006,
+    0x00000002, 0x00040047, 0x0000002d, 0x0000000b, 0x0000001b, 0x00050048, 0x00000035, 0x00000000, 0x00000023,
+    0x00000000, 0x00050048, 0x00000034, 0x00000000, 0x00000023, 0x00000000, 0x00050048, 0x00000034, 0x00000001,
+    0x00000023, 0x00000008, 0x00050048, 0x00000034, 0x00000002, 0x00000023, 0x00000010, 0x00050048, 0x00000034,
+    0x00000003, 0x00000023, 0x00000018, 0x00050048, 0x00000034, 0x00000004, 0x00000023, 0x00000020, 0x00050048,
+    0x00000034, 0x00000005, 0x00000023, 0x00000024, 0x00030047, 0x00000033, 0x00000002, 0x00050048, 0x00000033,
+    0x00000000, 0x00000023, 0x00000000, 0x00040047, 0x00000043, 0x0000000b, 0x0000001c, 0x00050048, 0x00000008,
+    0x00000000, 0x00000023, 0x00000000, 0x00050048, 0x00000008, 0x00000001, 0x00000023, 0x00000008, 0x00050048,
+    0x00000008, 0x00000002, 0x00000023, 0x00000010, 0x00040047, 0x0000007f, 0x0000000b, 0x00000000, 0x00040047,
+    0x00000096, 0x0000001e, 0x00000000, 0x00040047, 0x000000a2, 0x0000001e, 0x00000001, 0x00040047, 0x000000ad,
+    0x0000000b, 0x000014b0, 0x00040047, 0x000000c5, 0x0000001e, 0x00000000, 0x00030047, 0x000000c6, 0x00000002,
+    0x00050048, 0x000000c6, 0x00000000, 0x00000023, 0x00000000, 0x00040047, 0x000000d3, 0x0000001e, 0x00000001,
+    0x0004014c, 0x00000117, 0x00001404, 0x00000116, 0x00040047, 0x0000011a, 0x0000000b, 0x00001403, 0x0004014c,
+    0x00000122, 0x00001404, 0x00000121, 0x00040047, 0x00000124, 0x0000000b, 0x00001402, 0x00040047, 0x0000012c,
+    0x0000001e, 0x00000000, 0x00020013, 0x00000001, 0x00030021, 0x00000003, 0x00000001, 0x00030016, 0x00000006,
+    0x00000020, 0x00040017, 0x00000007, 0x00000006, 0x00000002, 0x00030027, 0x00000009, 0x000014e5, 0x00040015,
+    0x0000000a, 0x00000010, 0x00000000, 0x00040020, 0x0000000b, 0x000014e5, 0x0000000a, 0x00040015, 0x0000000c,
+    0x00000020, 0x00000000, 0x0003001e, 0x0000000d, 0x0000000c, 0x0008001e, 0x00000005, 0x00000007, 0x00000007,
+    0x00000009, 0x0000000b, 0x0000000c, 0x0000000d, 0x00040020, 0x0000000e, 0x00000007, 0x00000005, 0x00040020,
+    0x00000011, 0x00000007, 0x0000000c, 0x00040015, 0x00000016, 0x00000008, 0x00000000, 0x00040017, 0x00000017,
+    0x00000016, 0x00000004, 0x0005001e, 0x00000015, 0x00000007, 0x00000007, 0x00000017, 0x00040020, 0x00000018,
+    0x00000007, 0x00000015, 0x00040017, 0x0000002a, 0x0000000c, 0x00000003, 0x00040020, 0x0000002c, 0x00000001,
+    0x0000002a, 0x00020014, 0x0000002f, 0x0004002b, 0x0000000c, 0x00000031, 0x00000000, 0x0003001e, 0x00000035,
+    0x0000000c, 0x0008001e, 0x00000034, 0x00000007, 0x00000007, 0x00000009, 0x0000000b, 0x0000000c, 0x00000035,
+    0x0003001e, 0x00000033, 0x00000034, 0x00040020, 0x00000036, 0x00000009, 0x00000033, 0x00040015, 0x00000038,
+    0x00000020, 0x00000001, 0x0004002b, 0x00000038, 0x00000039, 0x00000000, 0x00040020, 0x0000003a, 0x00000009,
+    0x00000034, 0x0004002b, 0x00000038, 0x0000003f, 0x00000004, 0x0004002b, 0x0000000c, 0x00000046, 0x00000003,
+    0x0004002b, 0x0000000c, 0x0000004a, 0x000000c0, 0x0004002b, 0x00000038, 0x0000006a, 0x00000003, 0x00040020,
+    0x0000006b, 0x00000007, 0x0000000b, 0x0004002b, 0x00000038, 0x00000073, 0x00000002, 0x00040020, 0x00000074,
+    0x00000007, 0x00000009, 0x0005001e, 0x00000008, 0x00000007, 0x00000007, 0x00000017, 0x00040017, 0x0000007c,
+    0x00000006, 0x00000004, 0x0004002b, 0x00000038, 0x0000007d, 0x000000c0, 0x0004001c, 0x0000007b, 0x0000007c,
+    0x0000007d, 0x00040020, 0x0000007e, 0x00000003, 0x0000007b, 0x00040020, 0x00000080, 0x00000003, 0x0000007c,
+    0x00040020, 0x00000082, 0x00000007, 0x00000007, 0x0004002b, 0x00000038, 0x0000008e, 0x00000001, 0x0004002b,
+    0x00000006, 0x00000093, 0x00000000, 0x0004002b, 0x00000006, 0x00000094, 0x3f800000, 0x00040020, 0x00000098,
+    0x00000007, 0x00000017, 0x0004002b, 0x00000006, 0x0000009e, 0x437f0000, 0x0007002c, 0x0000007c, 0x0000009d,
+    0x0000009e, 0x0000009e, 0x0000009e, 0x0000009e, 0x0004001c, 0x000000a0, 0x00000007, 0x0000007d, 0x00040020,
+    0x000000a1, 0x00000003, 0x000000a0, 0x00040020, 0x000000a3, 0x00000003, 0x00000007, 0x0004002b, 0x00000038,
+    0x000000ab, 0x00000040, 0x0004001c, 0x000000aa, 0x0000002a, 0x000000ab, 0x00040020, 0x000000ac, 0x00000003,
+    0x000000aa, 0x00040020, 0x000000ae, 0x00000003, 0x0000002a, 0x00040020, 0x000000b1, 0x00000003, 0x0000000c,
+    0x0004002b, 0x0000000c, 0x000000b8, 0x00000001, 0x00040020, 0x000000c1, 0x00000007, 0x0000000d, 0x00040020,
+    0x000000c4, 0x00000001, 0x0000007c, 0x0003001e, 0x000000c6, 0x00000034, 0x00040020, 0x000000c7, 0x00000009,
+    0x000000c6, 0x0004002b, 0x00000038, 0x000000cd, 0x00000005, 0x00040020, 0x000000d2, 0x00000001, 0x00000007,
+    0x00050021, 0x000000d7, 0x0000007c, 0x000000c1, 0x00000007, 0x0004002b, 0x0000000c, 0x000000e0, 0x000fffff,
+    0x00040021, 0x000000e5, 0x0000007c, 0x000000c1, 0x00040020, 0x000000e8, 0x00000007, 0x0000007c, 0x00040020,
+    0x000000ea, 0x00000007, 0x00000006, 0x0004002b, 0x00000038, 0x000000ef, 0x00000014, 0x0004002b, 0x0000000c,
+    0x000000f1, 0x00000007, 0x0004002b, 0x00000006, 0x000000f5, 0x40800000, 0x0004002b, 0x00000038, 0x000000f9,
+    0x00000017, 0x0004002b, 0x00000038, 0x00000101, 0x0000001a, 0x0004002b, 0x00000038, 0x00000109, 0x0000001d,
+    0x00040017, 0x00000112, 0x0000000c, 0x00000002, 0x00090019, 0x00000115, 0x00000006, 0x00000001, 0x00000002,
+    0x00000000, 0x00000000, 0x00000001, 0x00000000, 0x00041409, 0x0000000c, 0x00000116, 0x00000115, 0x0003001d,
+    0x00000117, 0x00000115, 0x00031141, 0x00000118, 0x00000000, 0x0004002b, 0x0000000c, 0x0000011d, 0x00000014,
+    0x0002001a, 0x00000120, 0x00041409, 0x0000000c, 0x00000121, 0x00000120, 0x0003001d, 0x00000122, 0x00000120,
+    0x0003001b, 0x00000126, 0x00000115, 0x00040020, 0x00000009, 0x000014e5, 0x00000008, 0x0004003b, 0x0000002c,
+    0x0000002d, 0x00000001, 0x0004003b, 0x00000036, 0x00000037, 0x00000009, 0x0004003b, 0x0000002c, 0x00000043,
+    0x00000001, 0x0004003b, 0x0000007e, 0x0000007f, 0x00000003, 0x0004003b, 0x0000007e, 0x00000096, 0x00000003,
+    0x0004003b, 0x000000a1, 0x000000a2, 0x00000003, 0x0004003b, 0x000000ac, 0x000000ad, 0x00000003, 0x0004003b,
+    0x000000c4, 0x000000c5, 0x00000001, 0x0004003b, 0x000000c7, 0x000000c8, 0x00000009, 0x0004003b, 0x000000d2,
+    0x000000d3, 0x00000001, 0x00041142, 0x00000118, 0x0000011a, 0x00000000, 0x00041142, 0x00000118, 0x00000124,
+    0x00000000, 0x0004003b, 0x00000080, 0x0000012c, 0x00000003, 0x0003002a, 0x0000002f, 0x00000133, 0x00040020,
+    0x00000134, 0x00000007, 0x0000002f, 0x00030029, 0x0000002f, 0x00000136, 0x00030001, 0x00000007, 0x0000016f,
+    0x00030001, 0x00000009, 0x00000170, 0x00030001, 0x0000000b, 0x00000171, 0x00030001, 0x0000000d, 0x00000173,
+    0x00030001, 0x0000000c, 0x00000178, 0x0004002b, 0x00000006, 0x0000018f, 0x3b808081, 0x0007002c, 0x0000007c,
+    0x00000190, 0x0000018f, 0x0000018f, 0x0000018f, 0x0000018f, 0x0004002b, 0x00000006, 0x00000191, 0x3e800000,
+    0x00050036, 0x00000001, 0x00000002, 0x00000000, 0x00000003, 0x000200f8, 0x00000004, 0x0004003b, 0x00000082,
+    0x00000184, 0x00000007, 0x0004003b, 0x00000082, 0x00000182, 0x00000007, 0x0004003b, 0x00000098, 0x0000017e,
+    0x00000007, 0x0004003b, 0x00000082, 0x0000017d, 0x00000007, 0x0004003b, 0x00000082, 0x0000017c, 0x00000007,
+    0x0004003b, 0x00000074, 0x0000017a, 0x00000007, 0x0004003b, 0x0000006b, 0x00000177, 0x00000007, 0x0004003b,
+    0x00000011, 0x00000175, 0x00000007, 0x0004003b, 0x00000011, 0x00000172, 0x00000007, 0x0004003b, 0x00000011,
+    0x00000012, 0x00000007, 0x0004003d, 0x0000002a, 0x0000002b, 0x0000002d, 0x00050051, 0x0000000c, 0x0000002e,
+    0x0000002b, 0x00000000, 0x000500aa, 0x0000002f, 0x00000030, 0x0000002e, 0x00000031, 0x000300f7, 0x0000001d,
+    0x00000000, 0x000400fa, 0x00000030, 0x0000001c, 0x0000001d, 0x000200f8, 0x0000001c, 0x00050041, 0x0000003a,
+    0x0000003b, 0x00000037, 0x00000039, 0x0004003d, 0x00000034, 0x0000003c, 0x0000003b, 0x00040190, 0x00000005,
+    0x0000003d, 0x0000003c, 0x00050051, 0x0000000c, 0x00000174, 0x0000003d, 0x00000004, 0x0003003e, 0x00000172,
+    0x00000174, 0x0004003d, 0x0000000c, 0x00000041, 0x00000172, 0x0004003d, 0x0000002a, 0x00000042, 0x00000043,
+    0x00050051, 0x0000000c, 0x00000044, 0x00000042, 0x00000000, 0x00050084, 0x0000000c, 0x00000045, 0x00000044,
+    0x00000046, 0x00050082, 0x0000000c, 0x00000047, 0x00000041, 0x00000045, 0x0007000c, 0x0000000c, 0x00000048,
+    0x00000049, 0x00000026, 0x0000004a, 0x00000047, 0x00050086, 0x0000000c, 0x0000004b, 0x00000048, 0x00000046,
+    0x000314af, 0x00000048, 0x0000004b, 0x000200f9, 0x0000001d, 0x000200f8, 0x0000001d, 0x0004003d, 0x0000002a,
+    0x0000004e, 0x00000043, 0x00050051, 0x0000000c, 0x0000004f, 0x0000004e, 0x00000000, 0x00050084, 0x0000000c,
+    0x00000050, 0x0000004f, 0x00000046, 0x00050041, 0x0000003a, 0x00000051, 0x00000037, 0x00000039, 0x0004003d,
+    0x00000034, 0x00000052, 0x00000051, 0x00040190, 0x00000005, 0x00000053, 0x00000052, 0x00050051, 0x0000000c,
+    0x00000176, 0x00000053, 0x00000004, 0x0003003e, 0x00000175, 0x00000176, 0x0004003d, 0x0000000c, 0x00000056,
+    0x00000175, 0x000500b0, 0x0000002f, 0x00000057, 0x00000050, 0x00000056, 0x000300f7, 0x00000029, 0x00000000,
+    0x000400fa, 0x00000057, 0x0000001e, 0x00000029, 0x000200f8, 0x0000001e, 0x0003003e, 0x00000012, 0x00000031,
+    0x000200f9, 0x0000001f, 0x000200f8, 0x0000001f, 0x000400f6, 0x00000028, 0x00000026, 0x00000000, 0x000200f9,
+    0x00000020, 0x000200f8, 0x00000020, 0x000200f9, 0x00000021, 0x000200f8, 0x00000021, 0x000200f9, 0x00000022,
+    0x000200f8, 0x00000022, 0x0004003d, 0x0000000c, 0x0000005a, 0x00000012, 0x000500b0, 0x0000002f, 0x0000005b,
+    0x0000005a, 0x00000046, 0x000300f7, 0x00000023, 0x00000000, 0x000400fa, 0x0000005b, 0x00000023, 0x00000027,
+    0x000200f8, 0x00000027, 0x000200f9, 0x00000028, 0x000200f8, 0x00000023, 0x0004003d, 0x0000002a, 0x0000005d,
+    0x0000002d, 0x00050051, 0x0000000c, 0x0000005e, 0x0000005d, 0x00000000, 0x00050084, 0x0000000c, 0x0000005f,
+    0x0000005e, 0x00000046, 0x0004003d, 0x0000000c, 0x00000060, 0x00000012, 0x00050080, 0x0000000c, 0x00000061,
+    0x0000005f, 0x00000060, 0x0004003d, 0x0000002a, 0x00000062, 0x00000043, 0x00050051, 0x0000000c, 0x00000063,
+    0x00000062, 0x00000000, 0x00050084, 0x0000000c, 0x00000064, 0x00000063, 0x00000046, 0x0004003d, 0x0000000c,
+    0x00000065, 0x00000012, 0x00050080, 0x0000000c, 0x00000066, 0x00000064, 0x00000065, 0x0004003d, 0x00000034,
+    0x00000067, 0x00000051, 0x00040190, 0x00000005, 0x00000068, 0x00000067, 0x00050051, 0x0000000b, 0x00000179,
+    0x00000068, 0x00000003, 0x0003003e, 0x00000177, 0x00000179, 0x0004003d, 0x0000000b, 0x0000006d, 0x00000177,
+    0x00050043, 0x0000000b, 0x0000006e, 0x0000006d, 0x00000066, 0x0006003d, 0x0000000a, 0x0000006f, 0x0000006e,
+    0x00000002, 0x00000002, 0x0004003d, 0x00000034, 0x00000070, 0x00000051, 0x00040190, 0x00000005, 0x00000071,
+    0x00000070, 0x00050051, 0x00000009, 0x0000017b, 0x00000071, 0x00000002, 0x0003003e, 0x0000017a, 0x0000017b,
+    0x0004003d, 0x00000009, 0x00000076, 0x0000017a, 0x00050043, 0x00000009, 0x00000077, 0x00000076, 0x0000006f,
+    0x0006003d, 0x00000008, 0x00000078, 0x00000077, 0x00000002, 0x00000004, 0x00040190, 0x00000015, 0x00000079,
+    0x00000078, 0x00050051, 0x00000007, 0x0000017f, 0x00000079, 0x00000000, 0x0003003e, 0x0000017c, 0x0000017f,
+    0x00050051, 0x00000007, 0x00000180, 0x00000079, 0x00000001, 0x0003003e, 0x0000017d, 0x00000180, 0x00050051,
+    0x00000017, 0x00000181, 0x00000079, 0x00000002, 0x0003003e, 0x0000017e, 0x00000181, 0x00050041, 0x00000080,
+    0x00000081, 0x0000007f, 0x00000061, 0x0004003d, 0x00000007, 0x00000084, 0x0000017c, 0x0004003d, 0x00000034,
+    0x00000085, 0x00000051, 0x00040190, 0x00000005, 0x00000086, 0x00000085, 0x00050051, 0x00000007, 0x00000183,
+    0x00000086, 0x00000000, 0x0003003e, 0x00000182, 0x00000183, 0x0004003d, 0x00000007, 0x00000089, 0x00000182,
+    0x00050085, 0x00000007, 0x0000008a, 0x00000084, 0x00000089, 0x0004003d, 0x00000034, 0x0000008b, 0x00000051,
+    0x00040190, 0x00000005, 0x0000008c, 0x0000008b, 0x00050051, 0x00000007, 0x00000185, 0x0000008c, 0x00000001,
+    0x0003003e, 0x00000184, 0x00000185, 0x0004003d, 0x00000007, 0x00000090, 0x00000184, 0x00050081, 0x00000007,
+    0x00000091, 0x0000008a, 0x00000090, 0x00060050, 0x0000007c, 0x00000092, 0x00000091, 0x00000093, 0x00000094,
+    0x0003003e, 0x00000081, 0x00000092, 0x00050041, 0x00000080, 0x00000097, 0x00000096, 0x00000061, 0x0004003d,
+    0x00000017, 0x0000009a, 0x0000017e, 0x00040070, 0x0000007c, 0x0000009b, 0x0000009a, 0x00050085, 0x0000007c,
+    0x0000009c, 0x0000009b, 0x00000190, 0x0003003e, 0x00000097, 0x0000009c, 0x00050041, 0x000000a3, 0x000000a4,
+    0x000000a2, 0x00000061, 0x0004003d, 0x00000007, 0x000000a6, 0x0000017d, 0x0003003e, 0x000000a4, 0x000000a6,
+    0x0004003d, 0x0000002a, 0x000000a8, 0x0000002d, 0x00050051, 0x0000000c, 0x000000a9, 0x000000a8, 0x00000000,
+    0x00050041, 0x000000ae, 0x000000af, 0x000000ad, 0x000000a9, 0x0004003d, 0x0000000c, 0x000000b0, 0x00000012,
+    0x00050041, 0x000000b1, 0x000000b2, 0x000000af, 0x000000b0, 0x0003003e, 0x000000b2, 0x00000061, 0x000200f9,
+    0x00000024, 0x000200f8, 0x00000024, 0x000200f9, 0x00000025, 0x000200f8, 0x00000025, 0x0004003d, 0x0000000c,
+    0x000000b6, 0x00000012, 0x00050080, 0x0000000c, 0x000000b7, 0x000000b6, 0x000000b8, 0x0003003e, 0x00000012,
+    0x000000b7, 0x000200f9, 0x00000026, 0x000200f8, 0x00000026, 0x000200f9, 0x0000001f, 0x000200f8, 0x00000028,
+    0x000200f9, 0x00000029, 0x000200f8, 0x00000029, 0x000100fd, 0x00010038, 0x00050036, 0x00000001, 0x000000be,
+    0x00000000, 0x00000003, 0x000200f8, 0x000000bf, 0x0004003b, 0x00000011, 0x0000018b, 0x00000007, 0x0004003b,
+    0x00000011, 0x00000188, 0x00000007, 0x0004003b, 0x000000e8, 0x00000151, 0x00000007, 0x0004003b, 0x000000e8,
+    0x00000152, 0x00000007, 0x0005003b, 0x00000134, 0x00000137, 0x00000007, 0x00000133, 0x0004003b, 0x000000e8,
+    0x00000138, 0x00000007, 0x0004003b, 0x000000e8, 0x00000139, 0x00000007, 0x0004003d, 0x0000007c, 0x000000c3,
+    0x000000c5, 0x00050041, 0x0000003a, 0x000000c9, 0x000000c8, 0x00000039, 0x0004003d, 0x00000034, 0x000000ca,
+    0x000000c9, 0x00040190, 0x00000005, 0x000000cb, 0x000000ca, 0x00050051, 0x0000000d, 0x00000187, 0x000000cb,
+    0x00000005, 0x00050051, 0x0000000c, 0x0000018e, 0x00000187, 0x00000000, 0x0003003e, 0x0000018b, 0x0000018e,
+    0x0004003d, 0x0000000c, 0x0000018c, 0x0000018b, 0x00040050, 0x0000000d, 0x0000018d, 0x0000018c, 0x0003003e,
+    0x00000188, 0x0000018c, 0x0004003d, 0x00000007, 0x000000d1, 0x000000d3, 0x0003003e, 0x00000188, 0x0000018c,
+    0x0003003e, 0x00000137, 0x00000133, 0x000300f7, 0x0000014f, 0x00000000, 0x000300fb, 0x00000031, 0x0000013b,
+    0x000200f8, 0x0000013b, 0x0004003d, 0x0000000c, 0x0000013d, 0x00000188, 0x000500c7, 0x0000000c, 0x0000013e,
+    0x0000013d, 0x000000e0, 0x000500aa, 0x0000002f, 0x0000013f, 0x0000013e, 0x000000e0, 0x000300f7, 0x00000142,
+    0x00000000, 0x000400fa, 0x0000013f, 0x00000140, 0x00000142, 0x000200f8, 0x00000140, 0x00050041, 0x000000ea,
+    0x00000154, 0x00000151, 0x00000039, 0x0004003d, 0x0000000c, 0x00000156, 0x00000188, 0x000500c2, 0x0000000c,
+    0x00000157, 0x00000156, 0x000000ef, 0x000500c7, 0x0000000c, 0x00000158, 0x00000157, 0x000000f1, 0x0004007c,
+    0x00000038, 0x00000159, 0x00000158, 0x0004006f, 0x00000006, 0x0000015a, 0x00000159, 0x00050085, 0x00000006,
+    0x0000015b, 0x0000015a, 0x00000191, 0x0003003e, 0x00000154, 0x0000015b, 0x00050041, 0x000000ea, 0x0000015c,
+    0x00000151, 0x0000008e, 0x000500c2, 0x0000000c, 0x0000015d, 0x00000156, 0x000000f9, 0x000500c7, 0x0000000c,
+    0x0000015e, 0x0000015d, 0x000000f1, 0x0004007c, 0x00000038, 0x0000015f, 0x0000015e, 0x0004006f, 0x00000006,
+    0x00000160, 0x0000015f, 0x00050085, 0x00000006, 0x00000161, 0x00000160, 0x00000191, 0x0003003e, 0x0000015c,
+    0x00000161, 0x00050041, 0x000000ea, 0x00000162, 0x00000151, 0x00000073, 0x000500c2, 0x0000000c, 0x00000163,
+    0x00000156, 0x00000101, 0x000500c7, 0x0000000c, 0x00000164, 0x00000163, 0x000000f1, 0x0004007c, 0x00000038,
+    0x00000165, 0x00000164, 0x0004006f, 0x00000006, 0x00000166, 0x00000165, 0x00050085, 0x00000006, 0x00000167,
+    0x00000166, 0x00000191, 0x0003003e, 0x00000162, 0x00000167, 0x00050041, 0x000000ea, 0x00000168, 0x00000151,
+    0x0000006a, 0x000500c2, 0x0000000c, 0x00000169, 0x00000156, 0x00000109, 0x000500c7, 0x0000000c, 0x0000016a,
+    0x00000169, 0x000000f1, 0x0004007c, 0x00000038, 0x0000016b, 0x0000016a, 0x0004006f, 0x00000006, 0x0000016c,
+    0x0000016b, 0x00050085, 0x00000006, 0x0000016d, 0x0000016c, 0x00000191, 0x0003003e, 0x00000168, 0x0000016d,
+    0x0004003d, 0x0000007c, 0x0000016e, 0x00000151, 0x0003003e, 0x00000152, 0x0000016e, 0x0004003d, 0x0000007c,
+    0x00000141, 0x00000152, 0x0003003e, 0x00000137, 0x00000136, 0x0003003e, 0x00000138, 0x00000141, 0x000200f9,
+    0x0000014f, 0x000200f8, 0x00000142, 0x00050050, 0x00000112, 0x00000143, 0x0000013e, 0x0000013e, 0x00061143,
+    0x00000118, 0x00000145, 0x00000117, 0x0000011a, 0x0000013e, 0x0004003d, 0x00000115, 0x00000146, 0x00000145,
+    0x000500c2, 0x0000000c, 0x00000147, 0x0000013d, 0x0000011d, 0x00050050, 0x00000112, 0x00000148, 0x00000147,
+    0x00000147, 0x00061143, 0x00000118, 0x0000014a, 0x00000122, 0x00000124, 0x00000147, 0x0004003d, 0x00000120,
+    0x0000014b, 0x0000014a, 0x00050056, 0x00000126, 0x0000014c, 0x00000146, 0x0000014b, 0x00060057, 0x0000007c,
+    0x0000014d, 0x0000014c, 0x000000d1, 0x00000000, 0x0003003e, 0x00000137, 0x00000136, 0x0003003e, 0x00000138,
+    0x0000014d, 0x000200f9, 0x0000014f, 0x000200f8, 0x0000014f, 0x0004003d, 0x0000007c, 0x00000150, 0x00000138,
+    0x0003003e, 0x00000139, 0x00000150, 0x0004003d, 0x0000007c, 0x000000d5, 0x00000139, 0x00050085, 0x0000007c,
+    0x0000012b, 0x000000c3, 0x000000d5, 0x0003003e, 0x0000012c, 0x0000012b, 0x000100fd, 0x00010038,
+};
+
+static ImGui_ImplPolaris_Data* ImGui_ImplPolaris_GetBackendData()
+{
+    return ImGui::GetCurrentContext() ? (ImGui_ImplPolaris_Data*)ImGui::GetIO().BackendRendererUserData : nullptr;
+}
+
+static void CreateOrResizeBuffer(pl::Buffer*& buffer, u64& buffer_size, u64 new_size)
+{
+    if(buffer != nullptr)
+        delete buffer;
+
+    buffer = new pl::Buffer(pl::BufferCreateInfo{ .size = new_size });
+    buffer_size = new_size;
+}
+
+static void ImGui_ImplPolaris_UpdateTexture(ImTextureData* tex)
+{
+    if(tex->Status == ImTextureStatus_OK)
+        return;
+
+    if(tex->Status == ImTextureStatus_WantCreate)
+    {
+        IM_ASSERT(tex->TexID == ImTextureID_Invalid && tex->BackendUserData == nullptr);
+        IM_ASSERT(tex->Format == ImTextureFormat_RGBA32);
+
+        pl::Texture* backend_tex = new pl::Texture(pl::TextureCreateInfo{
+            .format = pl::Format::RGBA8_UNORM,
+            .width = static_cast<u32>(tex->Width),
+            .height = static_cast<u32>(tex->Height)
+        });
+
+        // foo: 0 is considered invalid in imgui but is a valid handle in polaris
+        // so, add 1 when converting to TexID and subtract 1 when converting back to TextureHandle
+        tex->SetTexID(std::bit_cast<u32>(backend_tex->makeTextureHandle()) + 1);
+        tex->BackendUserData = backend_tex;
+    }
+
+    if(tex->Status == ImTextureStatus_WantCreate || tex->Status == ImTextureStatus_WantUpdates)
+    {
+        pl::Texture* backend_tex = reinterpret_cast<pl::Texture*>(tex->BackendUserData);
+        // foo: we can't update subregions yet
+        //const u32 upload_x = (tex->Status == ImTextureStatus_WantCreate) ? 0 : tex->UpdateRect.x;
+        //const u32 upload_y = (tex->Status == ImTextureStatus_WantCreate) ? 0 : tex->UpdateRect.y;
+        //const u32 upload_w = (tex->Status == ImTextureStatus_WantCreate) ? tex->Width : tex->UpdateRect.w;
+        //const u32 upload_h = (tex->Status == ImTextureStatus_WantCreate) ? tex->Height : tex->UpdateRect.h;
+
+        pl::Queue queue(pl::QueueCreateInfo{ .type = pl::QueueType::DMA });
+        pl::CommandBuffer cmd = queue.beginRecording();
+
+        tex->GetPixels();
+        tex->GetSizeInBytes();
+        cmd.writeTexture(*backend_tex, pl::View<const byte>(reinterpret_cast<byte*>(tex->GetPixels()), tex->GetSizeInBytes()));
+        queue.submit(pl::SubmitInfo{ .commandBuffer = std::move(cmd) }).wait();
+
+        tex->SetStatus(ImTextureStatus_OK);
+    }
+
+    ImGui_ImplPolaris_Data* bd = ImGui_ImplPolaris_GetBackendData();
+
+    if(tex->Status == ImTextureStatus_WantDestroy && tex->UnusedFrames >= (int)bd->PerFrameData.Size)
+        delete reinterpret_cast<pl::Texture*>(tex->BackendUserData);
+}
+
+static void ImGui_ImplPolaris_SetupRenderState(ImDrawData* draw_data, pl::CommandBuffer& command_buffer, i32 fb_width, i32 fb_height)
+{
+    ImGui_ImplPolaris_Data* bd = ImGui_ImplPolaris_GetBackendData();
+
+    command_buffer.bindShaders({ *bd->ShaderMesh, *bd->ShaderFrag });
+    command_buffer.setViewport({ 0.0f, 0.0f, 0.0f, static_cast<f32>(fb_width), static_cast<f32>(fb_height), 1.0f });
+
+    command_buffer.setAttachmentColorState(pl::AttachmentColorState{
+        .attachmentIndex = 0,
+        .blendEnable = true,
+        .colorBlend{
+            .srcFactor = pl::BlendFactor::SrcAlpha,
+            .dstFactor = pl::BlendFactor::OneMinusSrcAlpha,
+            .blendOp = pl::BlendOp::Add
+        },
+        .alphaBlend{
+            .srcFactor = pl::BlendFactor::One,
+            .dstFactor = pl::BlendFactor::OneMinusSrcAlpha,
+            .blendOp = pl::BlendOp::Add
+        }
+    });
+    command_buffer.setColorState(pl::ColorState{});
+    command_buffer.setDepthStencilState(pl::DepthStencilState{});
+    command_buffer.setMultisampleState(pl::MultisampleState{ .sampleCount = bd->PolarisInitInfo.MSAASamples });
+    command_buffer.setRasterizerState(pl::RasterizerState{});
+
+    f32 constants[4];
+    constants[0] = 2.0f / draw_data->DisplaySize.x; // Scale
+    constants[1] = 2.0f / draw_data->DisplaySize.y;
+    constants[2] = -1.0f - draw_data->DisplayPos.x * constants[0]; // Translate
+    constants[3] = -1.0f - draw_data->DisplayPos.y * constants[1];
+    command_buffer.pushConstants(constants);
+}
+
+bool ImGui_ImplPolaris_Init(ImGui_ImplPolaris_InitInfo* info)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    IMGUI_CHECKVERSION();
+    IM_ASSERT(io.BackendRendererUserData == nullptr && "Already initialized a renderer backend!");
+
+    ImGui_ImplPolaris_Data* bd = IM_NEW(ImGui_ImplPolaris_Data)();
+    io.BackendRendererUserData = (void*)bd;
+    io.BackendRendererName = "imgui_impl_polaris";
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
+
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    platform_io.DrawCallback_ResetRenderState = reinterpret_cast<ImDrawCallback>(1); // ImGUI's API is weird, this is only used as an identifier and never called
+    platform_io.DrawCallback_SetSamplerLinear = [](const ImDrawList*, const ImDrawCmd*) { ImGui_ImplPolaris_Data* bd = ImGui_ImplPolaris_GetBackendData(); bd->UseNearestSampler = false; };
+    platform_io.DrawCallback_SetSamplerNearest = [](const ImDrawList*, const ImDrawCmd*) { ImGui_ImplPolaris_Data* bd = ImGui_ImplPolaris_GetBackendData(); bd->UseNearestSampler = true; };
+
+    bd->PolarisInitInfo = *info;
+    
+    {
+        pl::SamplerCreateInfo ci = {};
+        ci.magFilter = pl::Filter::Linear;
+        ci.minFilter = pl::Filter::Linear;
+        ci.mipFilter = pl::Filter::Linear;
+        ci.wrapU = pl::WrapMode::ClampToEdge;
+        ci.wrapV = pl::WrapMode::ClampToEdge;
+        ci.wrapW = pl::WrapMode::ClampToEdge;
+        ci.minLod = -1000;
+        ci.maxLod = 1000;
+        ci.anisotropy = 1.0f;
+        bd->SamplerLinear = new pl::Sampler(ci);
+
+        ci.magFilter = pl::Filter::Nearest;
+        ci.minFilter = pl::Filter::Nearest;
+        ci.mipFilter = pl::Filter::Nearest;
+        bd->SamplerNearest = new pl::Sampler(ci);
+    }
+
+    {
+        pl::ShaderCreateInfo ci;
+        ci.code = pl::View<const u32>(shader, sizeof(shader) / 4);
+        ci.stage = pl::ShaderStage::Mesh;
+        ci.entryPoint = "msmain";
+        bd->ShaderMesh = new pl::Shader(ci);
+
+        ci.stage = pl::ShaderStage::Fragment;
+        ci.entryPoint = "fsmain";
+        bd->ShaderFrag = new pl::Shader(ci);
+    }
+
+    return true;
+}
+
+void ImGui_ImplPolaris_Shutdown()
+{
+    ImGui_ImplPolaris_Data* bd = ImGui_ImplPolaris_GetBackendData();
+    IM_ASSERT(bd != nullptr && "No renderer backend to shutdown, or already shutdown?");
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+
+    for(auto fd : bd->PerFrameData)
+    {
+        delete fd.VertexBuffer;
+        delete fd.IndexBuffer;
+    }
+
+    for(ImTextureData* tex : ImGui::GetPlatformIO().Textures)
+        if(tex->RefCount == 1)
+            delete reinterpret_cast<pl::Texture*>(tex->BackendUserData);
+
+    delete bd->SamplerNearest;
+    delete bd->SamplerLinear;
+    delete bd->ShaderFrag;
+    delete bd->ShaderMesh;
+
+    io.BackendRendererName = nullptr;
+    io.BackendRendererUserData = nullptr;
+    io.BackendFlags &= ~(ImGuiBackendFlags_RendererHasVtxOffset | ImGuiBackendFlags_RendererHasTextures);
+    platform_io.ClearRendererHandlers();
+    IM_DELETE(bd);
+}
+
+void ImGui_ImplPolaris_NewFrame()
+{
+    ImGui_ImplPolaris_Data* bd = ImGui_ImplPolaris_GetBackendData();
+    IM_ASSERT(bd != nullptr && "Context or backend not initialized! Did you call ImGui_ImplPolaris_Init()?");
+    IM_UNUSED(bd);
+}
+
+void ImGui_ImplPolaris_RenderDrawData(ImDrawData* draw_data, pl::CommandBuffer& command_buffer)
+{
+    i32 fb_width = (i32)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
+    i32 fb_height = (i32)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
+    if(fb_width <= 0 || fb_height <= 0)
+        return;
+
+    if(draw_data->Textures != nullptr)
+        for(ImTextureData* tex : *draw_data->Textures)
+            if(tex->Status != ImTextureStatus_OK)
+                ImGui_ImplPolaris_UpdateTexture(tex);
+
+    ImGui_ImplPolaris_Data* bd = ImGui_ImplPolaris_GetBackendData();
+    ImGui_ImplPolaris_InitInfo* v = &bd->PolarisInitInfo;
+
+    if(bd->PerFrameData.Size == 0)
+    {
+        bd->FrameIndex = 0;
+        bd->PerFrameData.resize(bd->PolarisInitInfo.FramesInFlight);
+        memset((void*)bd->PerFrameData.Data, 0, bd->PerFrameData.size_in_bytes());
+    }
+    bd->FrameIndex = (bd->FrameIndex + 1) % bd->PolarisInitInfo.FramesInFlight;
+    ImGui_ImplPolaris_PerFrameData* fd = &bd->PerFrameData[bd->FrameIndex];
+
+    if(draw_data->TotalVtxCount > 0)
+    {
+        u64 vertex_size = draw_data->TotalVtxCount * sizeof(ImDrawVert);
+        u64 index_size = draw_data->TotalIdxCount * sizeof(ImDrawIdx);
+        if(fd->VertexBuffer == nullptr || fd->VertexBufferSize < vertex_size)
+            CreateOrResizeBuffer(fd->VertexBuffer, fd->VertexBufferSize, vertex_size);
+        if(fd->IndexBuffer == nullptr || fd->IndexBufferSize < index_size)
+            CreateOrResizeBuffer(fd->IndexBuffer, fd->IndexBufferSize, index_size);
+
+        ImDrawVert* vtx_dst = fd->VertexBuffer->hostAddress<ImDrawVert>();
+        ImDrawIdx* idx_dst = fd->IndexBuffer->hostAddress<ImDrawIdx>();
+        for(const ImDrawList* draw_list : draw_data->CmdLists)
+        {
+            memcpy(vtx_dst, draw_list->VtxBuffer.Data, draw_list->VtxBuffer.Size * sizeof(ImDrawVert));
+            memcpy(idx_dst, draw_list->IdxBuffer.Data, draw_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+            vtx_dst += draw_list->VtxBuffer.Size;
+            idx_dst += draw_list->IdxBuffer.Size;
+        }
+    }
+
+    ImGui_ImplPolaris_SetupRenderState(draw_data, command_buffer, fb_width, fb_height);
+
+    ImVec2 clip_off = draw_data->DisplayPos;
+    ImVec2 clip_scale = draw_data->FramebufferScale;
+
+    int global_vtx_offset = 0;
+    int global_idx_offset = 0;
+    for(const ImDrawList* draw_list : draw_data->CmdLists)
+    {
+        for(int cmd_i = 0; cmd_i < draw_list->CmdBuffer.Size; cmd_i++)
+        {
+            const ImDrawCmd* pcmd = &draw_list->CmdBuffer[cmd_i];
+            if(pcmd->UserCallback != nullptr)
+            {
+                if(reinterpret_cast<u64>(pcmd->UserCallback) == 1)
+                    ImGui_ImplPolaris_SetupRenderState(draw_data, command_buffer, fb_width, fb_height);
+                else
+                    pcmd->UserCallback(draw_list, pcmd);
+            }
+            else
+            {
+                ImVec2 clip_min((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
+                ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
+
+                if(clip_min.x < 0.0f) { clip_min.x = 0.0f; }
+                if(clip_min.y < 0.0f) { clip_min.y = 0.0f; }
+                if(clip_max.x > (f32)fb_width) { clip_max.x = (f32)fb_width; }
+                if(clip_max.y > (f32)fb_height) { clip_max.y = (f32)fb_height; }
+                if(clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
+                    continue;
+
+                struct {
+                    ImDrawVert* vertexBuffer;
+                    ImDrawIdx* indexBuffer;
+                    u32 elementCount;
+                    pl::TextureHandle tex;
+                } pcs;
+                pcs.vertexBuffer = fd->VertexBuffer->deviceAddress<ImDrawVert>() + pcmd->VtxOffset + global_vtx_offset;
+                pcs.indexBuffer = fd->IndexBuffer->deviceAddress<ImDrawIdx>() + pcmd->IdxOffset + global_idx_offset;
+                pcs.elementCount = pcmd->ElemCount;
+                if(pcmd->GetTexID() != ImTextureID_Invalid)
+                {
+                    pl::TextureHandle handle = std::bit_cast<pl::TextureHandle>(static_cast<u32>(pcmd->GetTexID()) - 1);
+                    pl::Sampler& sampler = bd->UseNearestSampler ? *bd->SamplerNearest : *bd->SamplerLinear;
+                    pcs.tex = pl::TextureHandle(handle, sampler);
+                }
+                command_buffer.pushConstants(pcs, sizeof(f32[4]));
+                command_buffer.setScissor({ (u32)(clip_min.x), (u32)(clip_min.y), (u32)(clip_max.x - clip_min.x), (u32)(clip_max.y - clip_min.y) });
+                command_buffer.draw((pcmd->ElemCount / 3 + 63) / 64); // mesh dispatch with work group size 64
+            }
+        }
+        global_idx_offset += draw_list->IdxBuffer.Size;
+        global_vtx_offset += draw_list->VtxBuffer.Size;
+    }
+
+    command_buffer.setScissor({ 0, 0, (u32)fb_width, (u32)fb_height });
+}
+
+#endif
