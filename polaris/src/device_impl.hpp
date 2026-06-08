@@ -7,6 +7,12 @@
 #include "device_memory_allocator.hpp"
 
 namespace pl {
+	struct BufferBindResult {
+		VkDeviceMemory memory;
+		VkDeviceAddress deviceAddress;
+		byte* hostAddress;
+	};
+
 	class Device {
 		public:
 			static void idle();
@@ -29,6 +35,7 @@ namespace pl {
 			VkQueue vkQueue(QueueType type) const;
 			DescriptorHeap& descriptorHeap();
 			DeviceMemoryAllocator& deviceMemoryAllocator();
+			BufferBindResult bindBufferMemory(VkBuffer buffer, bool deviceLocal = true);
 
 		private:
 			Device() = default;
@@ -47,5 +54,6 @@ namespace pl {
 
 			DescriptorHeap m_heap;
 			DeviceMemoryAllocator m_allocator;
+			VkPhysicalDeviceMemoryProperties m_memoryProperties;
 	};
 }

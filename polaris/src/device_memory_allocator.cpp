@@ -3,43 +3,50 @@
 #include "vk_util.hpp"
 
 namespace pl {
-	DeviceMemory DeviceMemoryAllocator::alloc(VkBuffer buffer) {
-		VkMemoryRequirements mrq;
-		vkGetBufferMemoryRequirements(Device::get().vkDevice(), buffer, &mrq);
-		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	AllocationResult DeviceMemoryAllocator::allocate(u64 size, u64 align) {
+		Allocation alloc;
 
-		VkDeviceMemory mem;
-		vkAllocateMemory(Device::get().vkDevice(), &VkMemoryAllocateInfo{
-			.pNext = &VkMemoryAllocateFlagsInfo{ .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT },
-			.allocationSize = mrq.size,
-			.memoryTypeIndex = memTypeIndex
-		}, nullptr, &mem);
-		vkBindBufferMemory(Device::get().vkDevice(), buffer, mem, 0);
+		vkCreateBuffer(Device::get().vkDevice(), &VkBufferCreateInfo{
+			.size = size,
+			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR
+		}, nullptr, &alloc.buffer);
 
-		return mem;
+		BufferBindResult res = Device::get().bindBufferMemory(alloc.buffer);
+		alloc.memory = res.memory;
+
+		AllocationResult ret{ res.deviceAddress, res.hostAddress };
+		{
+			std::scoped_lock scope(m_lock);
+			m_allocations[ret.deviceAddress] = alloc;
+		}
+
+		return ret;
 	}
 
-	DeviceMemory DeviceMemoryAllocator::alloc(VkImage image) {
-		VkMemoryRequirements mrq;
-		vkGetImageMemoryRequirements(Device::get().vkDevice(), image, &mrq);
-		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-		VkDeviceMemory mem;
-		vkAllocateMemory(Device::get().vkDevice(), &VkMemoryAllocateInfo{
-			.allocationSize = mrq.size,
-			.memoryTypeIndex = memTypeIndex
-		}, nullptr, &mem);
-		vkBindImageMemory(Device::get().vkDevice(), image, mem, 0);
-
-		return mem;
+	void DeviceMemoryAllocator::bindImageMemory(VkImage image, VkDeviceAddress address) {
+		std::scoped_lock scope(m_lock);
+		vkBindImageMemory(Device::get().vkDevice(), image, m_allocations[address].memory, 0);
 	}
 
-	void DeviceMemoryAllocator::free(VkDeviceMemory alloc) {
-		vkFreeMemory(Device::get().vkDevice(), alloc, nullptr);
+	void DeviceMemoryAllocator::free(VkDeviceAddress address) {
+		if(address) {
+			Allocation alloc;
+
+			{
+				std::scoped_lock scope(m_lock);
+				auto it = m_allocations.find(address);
+				alloc = it->second;
+				m_allocations.erase(it);
+			}
+
+			vkDestroyBuffer(Device::get().vkDevice(), alloc.buffer, nullptr);
+			vkFreeMemory(Device::get().vkDevice(), alloc.memory, nullptr);
+		}
 	}
 
 	void DeviceMemoryAllocator::initialize() {
-		vkGetPhysicalDeviceMemoryProperties(Device::get().vkPhysicalDevice(), &m_memProps);
+		// this might do something some day
 	}
 
 	void DeviceMemoryAllocator::finalize() {

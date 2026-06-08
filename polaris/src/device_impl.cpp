@@ -66,8 +66,9 @@ namespace pl {
 		{
 			u32 one = 1;
 			vkEnumeratePhysicalDevices(m_instance, &one, &m_physicalDevice);
+			vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &m_memoryProperties);
 		}
-	
+		
 		tbrs::Vec<const char*> deviceExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 			VK_KHR_RAY_QUERY_EXTENSION_NAME,
@@ -154,6 +155,7 @@ namespace pl {
 								.shaderSubgroupRotateClustered = true,
 								.indexTypeUint8 = true,
 								.maintenance5 = true,
+								.hostImageCopy = true
 							},
 							.shaderDemoteToHelperInvocation = true,
 							.shaderTerminateInvocation = true,
@@ -290,5 +292,41 @@ namespace pl {
 		}
 
 		return ~0;
+	}
+
+	BufferBindResult Device::bindBufferMemory(VkBuffer buffer, bool deviceLocal) {
+		BufferBindResult ret;
+
+		VkMemoryRequirements mrq;
+		vkGetBufferMemoryRequirements(m_device, buffer, &mrq);
+
+		u32 memoryTypeIndex = ~0u;
+		VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+		if(deviceLocal) {
+			flags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		}
+		else {
+			flags |= VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+		}
+
+		for(u8 idx = 0; idx < m_memoryProperties.memoryTypeCount; idx++) {
+			if(((1 << idx) & mrq.memoryTypeBits) && (m_memoryProperties.memoryTypes[idx].propertyFlags & flags) == flags) {
+				memoryTypeIndex = idx;
+				break;
+			}
+		}
+
+		vkAllocateMemory(m_device, &VkMemoryAllocateInfo{
+			.pNext = &VkMemoryAllocateFlagsInfo{.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT },
+			.allocationSize = mrq.size,
+			.memoryTypeIndex = memoryTypeIndex
+		}, nullptr, &ret.memory);
+
+		vkBindBufferMemory(m_device, buffer, ret.memory, 0);
+
+		ret.deviceAddress = vkGetBufferDeviceAddress(m_device, &VkBufferDeviceAddressInfo{ .buffer = buffer });
+		vkMapMemory(m_device, ret.memory, 0, mrq.size, 0, reinterpret_cast<void**>(&ret.hostAddress));
+
+		return ret;
 	}
 }

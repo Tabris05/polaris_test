@@ -25,6 +25,6 @@ namespace pl {
 			Buffer& operator=(const Buffer&) = delete;
 
 		private:
-			alignas(8) byte reserved[32];
+			alignas(8) byte reserved[16];
 	};
 }

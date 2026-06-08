@@ -1,6 +1,7 @@
 #pragma once
 
 #include <polaris/pod_types.hpp>
+#include "device_impl.hpp"
 
 template<typename T>
 T* operator&(T&& val) {
@@ -495,13 +496,4 @@ inline VkFormatFeatureFlagBits vkImageUsageToFormatFeatures(VkImageUsageFlagBits
         case VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT: return VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
         default: return VkFormatFeatureFlagBits(0);
 	}
-}
-
-inline u8 getMemoryTypeIndex(VkPhysicalDeviceMemoryProperties memProps, u32 mask, VkMemoryPropertyFlags flags) {
-    for(u8 idx = 0; idx < memProps.memoryTypeCount; idx++) {
-        if(((1 << idx) & mask) && (memProps.memoryTypes[idx].propertyFlags & flags) == flags) {
-            return idx;
-        }
-    }
-    return ~0;
 }

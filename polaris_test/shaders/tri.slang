@@ -13,7 +13,7 @@ struct ThreadId {
 static const u8 WorkGroupSize = Meshlet::MaxVertexCount;
 
 [shader("mesh"), outputtopology("triangle"), NumThreads(WorkGroupSize)]
-void msmain(uniform PushConstants pcs, ThreadId id, out vertices MSOut vertices[Meshlet::MaxVertexCount], out indices vec3u8 triangles[Meshlet::MaxTriangleCount]) {
+void msmain(uniform PushConstants pcs, ThreadId id, out vertices MSOut vertices[Meshlet::MaxVertexCount], out indices vec3u32 triangles[Meshlet::MaxTriangleCount]) {
     Meshlet meshlet = pcs.meshlets[id.groupId];
     SetMeshOutputCounts(meshlet.vertexCount, meshlet.triangleCount);
 
@@ -29,6 +29,6 @@ void msmain(uniform PushConstants pcs, ThreadId id, out vertices MSOut vertices[
 
 [shader("fragment")]
 vec4f32 fsmain(uniform PushConstants pcs, MSOut input) : SV_Target {
-    return pcs.texture.sample(input.uv);
+    return pow(pcs.texture.sample(input.uv), 1.0f / 2.2f);
 }
 

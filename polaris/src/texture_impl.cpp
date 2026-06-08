@@ -82,7 +82,7 @@ namespace pl {
 			.mipLevels = ci.levels,
 			.arrayLayers = ci.layers,
 			.samples = static_cast<VkSampleCountFlagBits>(ci.samples),
-			.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+			.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_HOST_TRANSFER_BIT,
 		};
 
 
@@ -97,10 +97,12 @@ namespace pl {
 		}
 
 		vkCreateImage(Device::get().vkDevice(), &vkci, nullptr, &m_image);
-		m_backingMem = Device::get().deviceMemoryAllocator().alloc(m_image);
 
-		// foo: this is illegal without VK_IMAGE_USAGE_HOST_TRANSFER_BIT, but that disables DCC on NVIDIA
-		// in mesa this function is a NO-OP for all 3 desktop vendors, so this is mainly for tooling (RenderDoc won't track undefined images)
+		VkMemoryRequirements mrq;
+		vkGetImageMemoryRequirements(Device::get().vkDevice(), m_image, &mrq);
+		m_allocation = Device::get().deviceMemoryAllocator().allocate(mrq.size, 0).deviceAddress;
+		Device::get().deviceMemoryAllocator().bindImageMemory(m_image, m_allocation);
+
 		vkTransitionImageLayout(Device::get().vkDevice(), 1, &VkHostImageLayoutTransitionInfo{
 			.image = m_image,
 			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
@@ -145,7 +147,7 @@ namespace pl {
 		}
 
 		vkDestroyImage(Device::get().vkDevice(), m_image, nullptr);
-		Device::get().deviceMemoryAllocator().free(m_backingMem);
+		Device::get().deviceMemoryAllocator().free(m_allocation);
 	}
 
 	VkImage Texture::vkImage() const {

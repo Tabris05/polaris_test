@@ -30,18 +30,10 @@ namespace pl {
 			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
 		}, nullptr, &ret.buffer);
 
-		VkMemoryRequirements mrq;
-		vkGetBufferMemoryRequirements(Device::get().vkDevice(), ret.buffer, &mrq);
-		u16 memTypeIndex = getMemoryTypeIndex(m_memProps, mrq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
-
-		vkAllocateMemory(Device::get().vkDevice(), &VkMemoryAllocateInfo{
-			.pNext = &VkMemoryAllocateFlagsInfo{.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT },
-			.allocationSize = mrq.size,
-			.memoryTypeIndex = memTypeIndex
-		}, nullptr, &ret.memory);
-		vkBindBufferMemory(Device::get().vkDevice(), ret.buffer, ret.memory, 0);
-		vkMapMemory(Device::get().vkDevice(), ret.memory, 0, VK_WHOLE_SIZE, 0, &ret.cpuPtr);
-		ret.gpuPtr = vkGetBufferDeviceAddress(Device::get().vkDevice(), &VkBufferDeviceAddressInfo{ .buffer = ret.buffer });
+		BufferBindResult res = Device::get().bindBufferMemory(ret.buffer, false);
+		ret.memory = res.memory;
+		ret.deviceAddress = res.deviceAddress;
+		ret.hostAddress = res.hostAddress;
 
 		return ret;
 	}
@@ -55,10 +47,6 @@ namespace pl {
 			}
 		}
 		m_freeList.push(buffer);
-	}
-
-	StagingAllocator::StagingAllocator() {
-		vkGetPhysicalDeviceMemoryProperties(Device::get().vkPhysicalDevice(), &m_memProps);
 	}
 
 	StagingAllocator::StagingAllocator(StagingAllocator&& src) {

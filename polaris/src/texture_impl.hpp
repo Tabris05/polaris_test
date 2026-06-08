@@ -72,13 +72,12 @@ namespace pl {
 			VkImageViewInfo vkImageViewInfo(const TextureView& view);
 
 			VkImage m_image = {};
+			VkDeviceAddress m_allocation = {};
 
 			VkImageViewCreateInfo m_imageViewCI = {};
 			vec3<u32> m_extent;
 
 			tbrs::Vec<VkImageView> m_renderTargetViews;
 			tbrs::Vec<u32> m_shaderResourceViews;
-
-			DeviceMemory m_backingMem = {};
 	};
 }

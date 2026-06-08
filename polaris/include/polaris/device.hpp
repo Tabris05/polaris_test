@@ -18,7 +18,7 @@ namespace pl {
 
 		private:
 			Device();
-			alignas(8) byte reserved[840];
+			alignas(8) byte reserved[1000];
 	};
 }
 

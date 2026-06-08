@@ -196,7 +196,8 @@ int main() {
 
 	pl::RenderTarget colorTarget = colorBuffer.makeRenderTarget();
 	pl::RenderTarget depthTarget = depthBuffer.makeRenderTarget();
-	pl::TextureHandle presentHandle = colorBuffer.makeTextureHandle(pl::TextureView{ .format = pl::Format::RGBA8_UNORM });
+	//pl::TextureHandle presentHandle = colorBuffer.makeTextureHandle(pl::TextureView{ .format = pl::Format::RGBA8_UNORM });
+	pl::TextureHandle presentHandle = colorBuffer.makeTextureHandle();
 
 	// mesh
 	Mesh mesh = makeMesh();

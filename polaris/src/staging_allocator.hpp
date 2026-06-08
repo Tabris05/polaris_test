@@ -6,8 +6,8 @@
 
 namespace pl {
 	struct StagingBuffer {
-		VkDeviceAddress gpuPtr = {};
-		void* cpuPtr = nullptr;
+		VkDeviceAddress deviceAddress = {};
+		void* hostAddress = nullptr;
 
 		VkDeviceMemory memory = {};
 		VkBuffer buffer = {};
@@ -21,7 +21,7 @@ namespace pl {
 			StagingBuffer alloc(u64 size);
 			void free(StagingBuffer buffer);
 
-			StagingAllocator();
+			StagingAllocator() = default;
 			StagingAllocator(StagingAllocator&& src);
 			StagingAllocator& operator=(StagingAllocator&& src);
 			~StagingAllocator();
@@ -30,8 +30,6 @@ namespace pl {
 			StagingAllocator& operator=(const StagingAllocator&) = delete;
 
 		private:
-			VkPhysicalDeviceMemoryProperties m_memProps = {};
-
 			tbrs::Vec<StagingBuffer> m_freeList;
 	};
 }

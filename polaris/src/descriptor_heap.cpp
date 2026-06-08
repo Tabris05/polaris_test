@@ -7,7 +7,7 @@ namespace pl {
 	void DescriptorHeap::bind(VkCommandBuffer cmd) const {
 		vkCmdBindResourceHeapEXT(cmd, &VkBindHeapInfoEXT{
 			.heapRange{
-				.address = m_deviceAddr,
+				.address = m_deviceAddress,
 				.size = m_imageHandleCount * m_imageDescriptorSize
 			},
 			.reservedRangeOffset = m_imageHandleCount * m_imageDescriptorSize - m_imageHeapReservedSize,
@@ -15,7 +15,7 @@ namespace pl {
 		});
 		vkCmdBindSamplerHeapEXT(cmd, &VkBindHeapInfoEXT{
 			.heapRange{
-				.address = m_deviceAddr + m_imageHandleCount * m_imageDescriptorSize,
+				.address = m_deviceAddress + m_imageHandleCount * m_imageDescriptorSize,
 				.size = m_samplerHandleCount * m_samplerDescriptorSize
 			},
 			.reservedRangeOffset = m_samplerHandleCount * m_samplerDescriptorSize - m_samplerHeapReservedSize,
@@ -38,7 +38,7 @@ namespace pl {
 				}
 			},
 			&VkHostAddressRangeEXT{
-				.address = reinterpret_cast<void*>(m_hostAddr + handle * m_imageDescriptorSize),
+				.address = reinterpret_cast<void*>(m_hostAddress + handle * m_imageDescriptorSize),
 				.size = m_imageDescriptorSize,
 			}
 		);
@@ -56,7 +56,7 @@ namespace pl {
 		u16 handle = static_cast<u16>(acquireHandle(m_samplerFreeRanges));
 
 		vkWriteSamplerDescriptorsEXT(Device::get().vkDevice(), 1, ci, &VkHostAddressRangeEXT{
-			.address = reinterpret_cast<void*>(m_hostAddr + m_imageHandleCount * m_imageDescriptorSize + handle * m_samplerDescriptorSize),
+			.address = reinterpret_cast<void*>(m_hostAddress + m_imageHandleCount * m_imageDescriptorSize + handle * m_samplerDescriptorSize),
 			.size = m_samplerDescriptorSize,
 		});
 
@@ -83,14 +83,16 @@ namespace pl {
 			.size = m_imageHandleCount * m_imageDescriptorSize + m_samplerHandleCount * m_samplerDescriptorSize,
 			.usage = VK_BUFFER_USAGE_DESCRIPTOR_HEAP_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 		}, nullptr, &m_buffer);
-		m_backingMem = Device::get().deviceMemoryAllocator().alloc(m_buffer);
-		m_deviceAddr = vkGetBufferDeviceAddress(Device::get().vkDevice(), &VkBufferDeviceAddressInfo{ .buffer = m_buffer });
-		vkMapMemory(Device::get().vkDevice(), m_backingMem, 0, VK_WHOLE_SIZE, 0, reinterpret_cast<void**>(&m_hostAddr));
+
+		BufferBindResult res = Device::get().bindBufferMemory(m_buffer);
+		m_memory = res.memory;
+		m_deviceAddress = res.deviceAddress;
+		m_hostAddress = res.hostAddress;
 	}
 
 	void DescriptorHeap::finalize() {
 		vkDestroyBuffer(Device::get().vkDevice(), m_buffer, nullptr);
-		vkFreeMemory(Device::get().vkDevice(), m_backingMem, nullptr);
+		vkFreeMemory(Device::get().vkDevice(), m_memory, nullptr);
 	}
 
 	u32 DescriptorHeap::acquireHandle(FreeRanges& ranges) {

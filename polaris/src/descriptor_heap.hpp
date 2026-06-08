@@ -33,10 +33,10 @@ namespace pl {
 			u32 acquireHandle(FreeRanges& ranges);
 			void releaseHandle(FreeRanges& ranges, u32 handle);
 
-			VkDeviceMemory m_backingMem = {};
+			VkDeviceMemory m_memory = {};
 			VkBuffer m_buffer = {};
-			VkDeviceAddress m_deviceAddr = {};
-			byte* m_hostAddr = nullptr;
+			VkDeviceAddress m_deviceAddress = {};
+			byte* m_hostAddress = nullptr;
 
 			u32 m_imageHeapReservedSize = 0;
 			u16 m_samplerHeapReservedSize = 0;

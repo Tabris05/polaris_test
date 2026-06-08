@@ -20,9 +20,7 @@ namespace pl {
 			Buffer& operator=(const Buffer&) = delete;
 
 		private:
-			VkBuffer m_buffer = {};
 			VkDeviceAddress m_deviceAddress = {};
 			byte* m_hostAddress = nullptr;
-			DeviceMemory m_backingMem = {};
 	};
 }

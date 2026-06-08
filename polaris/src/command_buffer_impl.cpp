@@ -277,12 +277,12 @@ namespace pl {
 			}
 			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
 
-			memcpy(static_cast<byte*>(stagingBuffer.cpuPtr) + stagingBuffer.writeOffset, data, size);
+			memcpy(static_cast<byte*>(stagingBuffer.hostAddress) + stagingBuffer.writeOffset, data, size);
 			vkCmdCopyMemoryKHR(m_cmd, &VkCopyDeviceMemoryInfoKHR{
 				.regionCount = 1,
 				.pRegions = &VkDeviceMemoryCopyKHR{
 					.srcRange{
-						.address = stagingBuffer.gpuPtr + stagingBuffer.writeOffset,
+						.address = stagingBuffer.deviceAddress + stagingBuffer.writeOffset,
 						.size = size
 					},
 					.srcFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
@@ -311,7 +311,7 @@ namespace pl {
 			}
 			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
 
-			memcpy(static_cast<byte*>(stagingBuffer.cpuPtr) + stagingBuffer.writeOffset, data, levelSize);
+			memcpy(static_cast<byte*>(stagingBuffer.hostAddress) + stagingBuffer.writeOffset, data, levelSize);
 
 			// foo: batch VkBufferImageCopys while staging buffer has room
 			vkCmdCopyMemoryToImageKHR(m_cmd, &VkCopyDeviceMemoryImageInfoKHR{
@@ -319,7 +319,7 @@ namespace pl {
 				.regionCount = 1,
 				.pRegions = &VkDeviceMemoryImageCopyKHR{
 					.addressRange{
-						.address = stagingBuffer.gpuPtr + stagingBuffer.writeOffset,
+						.address = stagingBuffer.deviceAddress + stagingBuffer.writeOffset,
 						.size = levelSize
 					},
 					.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
