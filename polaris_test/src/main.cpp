@@ -196,7 +196,6 @@ int main() {
 
 	pl::RenderTarget colorTarget = colorBuffer.makeRenderTarget();
 	pl::RenderTarget depthTarget = depthBuffer.makeRenderTarget();
-	//pl::TextureHandle presentHandle = colorBuffer.makeTextureHandle(pl::TextureView{ .format = pl::Format::RGBA8_UNORM });
 	pl::TextureHandle presentHandle = colorBuffer.makeTextureHandle();
 
 	// mesh
@@ -303,14 +302,14 @@ int main() {
 		});
 
 		frame++;
-		//framesThisSecond++;
-		//
-		//f64 t2 = glfwGetTime();
-		//if(t2 - t1 >= 1) {
-		//	std::println("frames per second: {}, ms per frame: {}", framesThisSecond / (t2 - t1), (t2 - t1) * 1000.0 / framesThisSecond);
-		//	t1 = t2;
-		//	framesThisSecond = 0;
-		//}
+		framesThisSecond++;
+		
+		f64 t2 = glfwGetTime();
+		if(t2 - t1 >= 1) {
+			std::println("frames per second: {}, ms per frame: {}", framesThisSecond / (t2 - t1), (t2 - t1) * 1000.0 / framesThisSecond);
+			t1 = t2;
+			framesThisSecond = 0;
+		}
 	}
 
 	pl::Device::idle();

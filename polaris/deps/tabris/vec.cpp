@@ -153,6 +153,33 @@ namespace tbrs {
 	}
 
 	template<typename T>
+	void Vec<T>::append(const Vec& src) {
+		if(m_count + src.count() > m_capacity) {
+			m_capacity = m_count + src.count();
+			m_elems = static_cast<T*>(realloc(m_elems, m_capacity * sizeof(T)));
+		}
+
+		if constexpr(std::is_trivially_copyable_v<T>) {
+			memcpy(m_elems + m_count, src.data(), src.size());
+		}
+		else {
+			for(u64 i = 0; i < src.count(); i++) {
+				new (m_elems + m_count + i) T(src[i]);
+			}
+		}
+
+		m_count += src.count();
+	}
+
+	template<typename T>
+	void Vec<T>::reserve(u64 newCapacity) {
+		if(m_capacity < newCapacity) {
+			m_capacity = newCapacity;
+			m_elems = static_cast<T*>(realloc(m_elems, m_capacity * sizeof(T)));
+		}
+	}
+
+	template<typename T>
 	void Vec<T>::setCount(u64 newCount) {
 		if constexpr(!std::is_trivially_destructible_v<T>) {
 			for(u64 i = newCount; i < m_count; i++) {

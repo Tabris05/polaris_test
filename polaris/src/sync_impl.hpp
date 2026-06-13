@@ -8,7 +8,7 @@ namespace pl {
 	class Event {
 		public:
 			u64 value() const;
-			bool completed() const;
+			b8 completed() const;
 
 			void wait() const;
 			void signal(); // foo: const qualifying this does nothing because you can and should be able to make a non const copy of a const object

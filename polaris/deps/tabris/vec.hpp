@@ -43,6 +43,8 @@ namespace tbrs {
 			void insert(u64 index, Args&&... args);
 			void remove(u64 index, u64 count = 1);
 
+			void append(const Vec& src);
+			void reserve(u64 newCapacity);
 			void setCount(u64 newCount);
 			void clear();
 

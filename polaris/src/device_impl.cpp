@@ -294,7 +294,7 @@ namespace pl {
 		return ~0;
 	}
 
-	BufferBindResult Device::bindBufferMemory(VkBuffer buffer, bool deviceLocal) {
+	BufferBindResult Device::bindBufferMemory(VkBuffer buffer, b8 deviceLocal) {
 		BufferBindResult ret;
 
 		VkMemoryRequirements mrq;

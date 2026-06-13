@@ -3,25 +3,28 @@
 #include "vk_util.hpp"
 
 namespace pl {
-	AllocationResult DeviceMemoryAllocator::allocate(u64 size, u64 align) {
+	VkDeviceAddress DeviceMemoryAllocator::allocate(u64 size, u64 align, byte** hostAddress) {
 		Allocation alloc;
 
 		vkCreateBuffer(Device::get().vkDevice(), &VkBufferCreateInfo{
 			.size = size,
-			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR
+			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT |
+					 VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR
 		}, nullptr, &alloc.buffer);
 
 		BufferBindResult res = Device::get().bindBufferMemory(alloc.buffer);
 		alloc.memory = res.memory;
 
-		AllocationResult ret{ res.deviceAddress, res.hostAddress };
 		{
 			std::scoped_lock scope(m_lock);
-			m_allocations[ret.deviceAddress] = alloc;
+			m_allocations[res.deviceAddress] = alloc;
 		}
 
-		return ret;
+		if(hostAddress) {
+			*hostAddress = res.hostAddress;
+		}
+
+		return res.deviceAddress;
 	}
 
 	void DeviceMemoryAllocator::bindImageMemory(VkImage image, VkDeviceAddress address) {

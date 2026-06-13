@@ -230,15 +230,15 @@ namespace pl {
 	};
 
 	inline WriteMask operator~(WriteMask val) {
-		return static_cast<WriteMask>(~static_cast<u16>(val));
+		return static_cast<WriteMask>(~static_cast<u8>(val));
 	}
 
 	inline WriteMask operator&(WriteMask lhs, WriteMask rhs) {
-		return static_cast<WriteMask>(static_cast<u16>(lhs) & static_cast<u16>(rhs));
+		return static_cast<WriteMask>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
 	}
 
 	inline WriteMask operator|(WriteMask lhs, WriteMask rhs) {
-		return static_cast<WriteMask>(static_cast<u16>(lhs) | static_cast<u16>(rhs));
+		return static_cast<WriteMask>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
 	}
 
 	inline WriteMask& operator&=(WriteMask& lhs, WriteMask rhs) {
@@ -314,6 +314,106 @@ namespace pl {
 		None
 	};
 
+	enum class GeometryType : u8 {
+		Triangles,
+		AABBs,
+		Instances
+	};
+
+	enum class GeometryFlags : u8 {
+		None = 0,
+		Opaque = 1 << 0,
+		NoDuplicateAnyHitInvocation = 1 << 1,
+	};
+
+	inline GeometryFlags operator~(GeometryFlags val) {
+		return static_cast<GeometryFlags>(~static_cast<u8>(val));
+	}
+
+	inline GeometryFlags operator&(GeometryFlags lhs, GeometryFlags rhs) {
+		return static_cast<GeometryFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
+	}
+
+	inline GeometryFlags operator|(GeometryFlags lhs, GeometryFlags rhs) {
+		return static_cast<GeometryFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
+	}
+
+	inline GeometryFlags& operator&=(GeometryFlags& lhs, GeometryFlags rhs) {
+		lhs = lhs & rhs;
+		return lhs;
+	}
+
+	inline GeometryFlags& operator|=(GeometryFlags& lhs, GeometryFlags rhs) {
+		lhs = lhs | rhs;
+		return lhs;
+	}
+
+	enum class GeometryInstanceFlags : u32 {
+		None = 0,
+		DisableFaceCulling = 1 << 0,
+		FlipFrontFace = 1 << 1,
+		ForceOpaque = 1 << 2,
+		ForceNoOpaque = 1 << 3
+	};
+
+	inline GeometryInstanceFlags operator~(GeometryInstanceFlags val) {
+		return static_cast<GeometryInstanceFlags>(~static_cast<u8>(val));
+	}
+
+	inline GeometryInstanceFlags operator&(GeometryInstanceFlags lhs, GeometryInstanceFlags rhs) {
+		return static_cast<GeometryInstanceFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
+	}
+
+	inline GeometryInstanceFlags operator|(GeometryInstanceFlags lhs, GeometryInstanceFlags rhs) {
+		return static_cast<GeometryInstanceFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
+	}
+
+	inline GeometryInstanceFlags& operator&=(GeometryInstanceFlags& lhs, GeometryInstanceFlags rhs) {
+		lhs = lhs & rhs;
+		return lhs;
+	}
+
+	inline GeometryInstanceFlags& operator|=(GeometryInstanceFlags& lhs, GeometryInstanceFlags rhs) {
+		lhs = lhs | rhs;
+		return lhs;
+	}
+
+	enum class AcelerationStructureCreateFlags : u8 {
+		None = 0,
+		AllowUpdate = 1 << 0,
+		AllowCompaction = 1 << 1,
+		PreferFastTrace = 1 << 2,
+		PreferFastBuild = 1 << 3,
+		LowMemory = 1 << 4
+	};
+
+	inline AcelerationStructureCreateFlags operator~(AcelerationStructureCreateFlags val) {
+		return static_cast<AcelerationStructureCreateFlags>(~static_cast<u8>(val));
+	}
+
+	inline AcelerationStructureCreateFlags operator&(AcelerationStructureCreateFlags lhs, AcelerationStructureCreateFlags rhs) {
+		return static_cast<AcelerationStructureCreateFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
+	}
+
+	inline AcelerationStructureCreateFlags operator|(AcelerationStructureCreateFlags lhs, AcelerationStructureCreateFlags rhs) {
+		return static_cast<AcelerationStructureCreateFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
+	}
+
+	inline AcelerationStructureCreateFlags& operator&=(AcelerationStructureCreateFlags& lhs, AcelerationStructureCreateFlags rhs) {
+		lhs = lhs & rhs;
+		return lhs;
+	}
+
+	inline AcelerationStructureCreateFlags& operator|=(AcelerationStructureCreateFlags& lhs, AcelerationStructureCreateFlags rhs) {
+		lhs = lhs | rhs;
+		return lhs;
+	}
+
+	enum class BuildMode : u8 {
+		Build,
+		Update
+	};
+
 	enum class PipelineStage : u16 {
 		None = 0,
 
@@ -337,6 +437,9 @@ namespace pl {
 
 		IndirectRead = 1 << 12,
 
+		AccelerationStructureBuild = 1 << 13,
+		AccelerationStructureUpdate = 1 << 14,
+
 		Present = ComputeRead,
 
 		Mesh = MeshRead | MeshWrite,
@@ -358,9 +461,11 @@ namespace pl {
 		RenderTargetWrite = DepthWrite | ColorWrite,
 		RenderTarget = RenderTargetRead | RenderTargetWrite,
 
+		AccelerationStructure = AccelerationStructureBuild | AccelerationStructureUpdate,
+
 		Read = ShaderRead | CopyRead | RenderTargetRead | IndirectRead,
-		Write = ShaderWrite | CopyWrite | RenderTargetWrite,
-		All = Read | Write
+		Write = ShaderWrite | CopyWrite | RenderTargetWrite | AccelerationStructureBuild,
+		All = Read | Write | AccelerationStructure
 	};
 
 	inline PipelineStage operator~(PipelineStage val) {
@@ -385,7 +490,6 @@ namespace pl {
 		return lhs;
 	}
 
-
 	struct DeviceCreateInfo {
 		// this will contain stuff some day
 	};
@@ -400,6 +504,7 @@ namespace pl {
 
 	struct BufferCreateInfo {
 		u64 size;
+		u64 align = 16;
 	};
 
 	struct TextureCreateInfo {
@@ -448,6 +553,12 @@ namespace pl {
 		f32 anisotropy = 1.0f;
 	};
 
+	struct ShaderCreateInfo {
+		ShaderStage stage;
+		const char* entryPoint = "main";
+		View<const u32> code;
+	};
+
 	struct NativeWindow {
 		NativeWindowType type;
 		union {
@@ -487,6 +598,36 @@ namespace pl {
 		b8 vsync;
 	};
 
+	struct AccelerationStructureGeometryInfo {
+		GeometryType type;
+		union {
+			struct {
+				DeviceAddress vertexData;
+				u64 vertexStride;
+				u32 maxVertex;
+				u8 indexWidth;
+				DeviceAddress indexData;
+				DeviceAddress transform;
+				GeometryFlags flags;
+			} triangles;
+
+			struct {
+				DeviceAddress data;
+				GeometryFlags flags;
+			} aabbs;
+
+			struct {
+				DeviceAddress data;
+			} instances;
+		};
+		u32 primitiveCount;
+	};
+
+	struct AccelerationStructureCreateInfo {
+		View<AccelerationStructureGeometryInfo> geometries;
+		AcelerationStructureCreateFlags flags;
+	};
+
 	union ClearValue {
 		struct {
 			f32 r;
@@ -513,12 +654,6 @@ namespace pl {
 			f32 depth;
 			u8 stencil;
 		} depthStencil;
-	};
-
-	struct ShaderCreateInfo {
-		ShaderStage stage;
-		const char* entryPoint = "main";
-		View<const u32> code;
 	};
 
 	struct BufferRange {
@@ -587,6 +722,29 @@ namespace pl {
 		f32 lineWidth = 1.0f;
 	};
 
+	struct AccelerationStructureBuildInfo {
+		BuildMode mode;
+		union {
+			struct {
+				const class AccelerationStructure& target;
+			} buildInfo;
+
+			struct {
+				const class AccelerationStructure& src;
+				const class AccelerationStructure& dst;
+			} updateInfo;
+		};
+	};
+
+	struct AccelerationStructureInstance {
+		f32 transform[3][4]; // foo: eventually want mat3x4 type
+		u32	instanceCustomIndex : 24;
+		u32	mask : 8;
+		byte padding[3];
+		GeometryInstanceFlags flags;
+		DeviceAddress accelerationStructureReference;
+	};
+
 	struct IndirectCommand {
 		u32 groupsX;
 		u32 groupsY;
@@ -631,5 +789,9 @@ namespace pl {
 		T z;
 		T w;
 	};
-}
 
+	struct AABB {
+		vec3<f32> min;
+		vec3<f32> max;
+	};
+}

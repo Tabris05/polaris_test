@@ -6,7 +6,7 @@ namespace pl {
 	CommandBuffer Queue::beginRecording() {
 		u64 i;
 		for(i = 0; i < m_submittedCmds.count() && m_submittedCmds[i].event.completed(); i++) {
-			for(StagingBuffer buffer : m_submittedCmds[i].stagingBuffers) {
+			for(TransientBuffer buffer : m_submittedCmds[i].stagingBuffers) {
 				m_allocator->free(buffer);
 			};
 			m_freeCmds.push(m_submittedCmds[i].cmd);
@@ -99,7 +99,7 @@ namespace pl {
 			.pSignalSemaphoreInfos = signalSemaphores
 		}, {});
 
-		m_submittedCmds.push(cmd, m_sync.event(), si.commandBuffer.getStagingBuffers());
+		m_submittedCmds.push(cmd, m_sync.event(), si.commandBuffer.getTransientBuffers());
 		return m_sync.event();
 	}
 
@@ -155,7 +155,7 @@ namespace pl {
 
 	Queue::Queue(const QueueCreateInfo& ci)
 		: m_queue(Device::get().vkQueue(ci.type)), m_type(ci.type), m_sync(SyncCreateInfo{}),
-		m_allocator(new StagingAllocator) {
+		m_allocator(new TransientAllocator) {
 		vkCreateCommandPool(Device::get().vkDevice(), &VkCommandPoolCreateInfo{
 				.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 				.queueFamilyIndex = Device::get().vkQueueFamily(ci.type)
@@ -177,7 +177,7 @@ namespace pl {
 	Queue::~Queue() {
 		m_sync.event().wait();
 		for(const Submission& submission : m_submittedCmds) {
-			for(const StagingBuffer& buffer : submission.stagingBuffers) {
+			for(const TransientBuffer& buffer : submission.stagingBuffers) {
 				m_allocator->free(buffer);
 			}
 		}

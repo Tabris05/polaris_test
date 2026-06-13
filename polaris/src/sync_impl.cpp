@@ -17,7 +17,7 @@ namespace pl {
 		}
 	}
 
-	bool Event::completed() const {
+	b8 Event::completed() const {
 		if(m_semaphore) {
 			u64 currentValue;
 			vkGetSemaphoreCounterValue(Device::get().vkDevice(), m_semaphore, &currentValue);

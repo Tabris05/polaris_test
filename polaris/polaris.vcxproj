@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\polaris\acceleration_structure.hpp" />
     <ClInclude Include="include\polaris\buffer.hpp" />
     <ClInclude Include="include\polaris\command_buffer.hpp" />
     <ClInclude Include="include\polaris\device.hpp" />
@@ -31,6 +32,7 @@
     <ClInclude Include="include\polaris\sync.hpp" />
     <ClInclude Include="include\polaris\texture.hpp" />
     <ClInclude Include="include\polaris\util_types.hpp" />
+    <ClInclude Include="src\acceleration_structure_impl.hpp" />
     <ClInclude Include="src\buffer_impl.hpp" />
     <ClInclude Include="src\command_buffer_impl.hpp" />
     <ClInclude Include="src\descriptor_heap.hpp" />
@@ -41,7 +43,7 @@
     <ClInclude Include="src\sampler_impl.hpp" />
     <ClInclude Include="src\shaders\blit_comp.h" />
     <ClInclude Include="src\shaders\push_constants.h" />
-    <ClInclude Include="src\staging_allocator.hpp" />
+    <ClInclude Include="src\transient_allocator.hpp" />
     <ClInclude Include="src\swapchain_impl.hpp" />
     <ClInclude Include="src\sync_impl.hpp" />
     <ClInclude Include="src\texture_impl.hpp" />
@@ -49,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="deps\volk\volk.cpp" />
+    <ClCompile Include="src\acceleration_structure_impl.cpp" />
     <ClCompile Include="src\buffer_impl.cpp" />
     <ClCompile Include="src\command_buffer_impl.cpp" />
     <ClCompile Include="src\descriptor_heap.cpp" />
@@ -60,7 +63,7 @@
     <ClCompile Include="src\shader_impl.cpp" />
     <ClCompile Include="src\queue_impl.cpp" />
     <ClCompile Include="src\sampler_impl.cpp" />
-    <ClCompile Include="src\staging_allocator.cpp" />
+    <ClCompile Include="src\transient_allocator.cpp" />
     <ClCompile Include="src\swapchain_impl.cpp" />
     <ClCompile Include="src\sync_impl.cpp" />
     <ClCompile Include="src\texture_impl.cpp" />

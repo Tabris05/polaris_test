@@ -1,6 +1,5 @@
 #include "buffer_impl.hpp"
 #include "device_impl.hpp"
-#include "vk_util.hpp"
 
 namespace pl {
 	DeviceAddress Buffer::deviceAddress() const {
@@ -12,9 +11,7 @@ namespace pl {
 	}
 
 	Buffer::Buffer(const BufferCreateInfo& ci) {
-		AllocationResult alloc = Device::get().deviceMemoryAllocator().allocate(ci.size, 0);
-		m_deviceAddress = alloc.deviceAddress;
-		m_hostAddress = alloc.hostAddress;
+		m_deviceAddress = Device::get().deviceMemoryAllocator().allocate(ci.size, ci.align, &m_hostAddress);
 	}
 
 	Buffer::Buffer(Buffer&& src) {

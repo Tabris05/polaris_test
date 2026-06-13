@@ -3,8 +3,6 @@
 #include <polaris/pod_types.hpp>
 #include <volk/volk.h>
 
-#include "device_memory_allocator.hpp"
-
 namespace pl {
 	class Buffer {
 		public:
@@ -20,7 +18,7 @@ namespace pl {
 			Buffer& operator=(const Buffer&) = delete;
 
 		private:
-			VkDeviceAddress m_deviceAddress = {};
-			byte* m_hostAddress = nullptr;
+			VkDeviceAddress m_deviceAddress;
+			byte* m_hostAddress;
 	};
 }

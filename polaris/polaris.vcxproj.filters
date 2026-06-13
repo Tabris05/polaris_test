@@ -105,7 +105,13 @@
     <ClInclude Include="src\shader_impl.hpp">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
-    <ClInclude Include="src\staging_allocator.hpp">
+    <ClInclude Include="src\transient_allocator.hpp">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="include\polaris\acceleration_structure.hpp">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="src\acceleration_structure_impl.hpp">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>
@@ -146,7 +152,10 @@
     <ClCompile Include="src\shader_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\staging_allocator.cpp">
+    <ClCompile Include="src\transient_allocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\acceleration_structure_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

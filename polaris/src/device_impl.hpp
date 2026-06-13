@@ -35,7 +35,7 @@ namespace pl {
 			VkQueue vkQueue(QueueType type) const;
 			DescriptorHeap& descriptorHeap();
 			DeviceMemoryAllocator& deviceMemoryAllocator();
-			BufferBindResult bindBufferMemory(VkBuffer buffer, bool deviceLocal = true);
+			BufferBindResult bindBufferMemory(VkBuffer buffer, b8 deviceLocal = true);
 
 		private:
 			Device() = default;

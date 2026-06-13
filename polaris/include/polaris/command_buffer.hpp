@@ -25,6 +25,7 @@ namespace pl {
 			void barrier(PipelineStage src, PipelineStage dst);
 			void beginRenderPass(const RenderPassBeginInfo& info);
 			void bindShaders(View<std::reference_wrapper<const Shader>> shaders);
+			void buildAccelerationStructures(View<AccelerationStructureBuildInfo> infos);
 			void clearBuffer(BufferRange range, u32 value);
 			void clearTexture(const Texture& texture, ClearValue value, TextureRegion region = {});
 			void copyTexture(const Texture& src, const Texture& dst, TextureRegion srcRegion = {}, TextureRegion dstRegion = {});
@@ -64,6 +65,6 @@ namespace pl {
 			void writeBufferImpl(DeviceAddress address, const void* data, u64 size);
 			void writeTextureImpl(const Texture& texture, const void* data, TextureRegion region);
 
-			alignas(8) byte reserved[40];
+			alignas(8) byte reserved[64];
 	};
 }

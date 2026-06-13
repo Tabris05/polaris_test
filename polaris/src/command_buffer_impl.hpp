@@ -6,7 +6,7 @@
 #include "texture_impl.hpp"
 #include "shader_impl.hpp"
 #include "buffer_impl.hpp"
-#include "staging_allocator.hpp"
+#include "transient_allocator.hpp"
 
 namespace pl {
 	struct RenderTargetInfo {
@@ -28,6 +28,7 @@ namespace pl {
 			void barrier(PipelineStage src, PipelineStage dst);
 			void beginRenderPass(const RenderPassBeginInfo& info);
 			void bindShaders(View<std::reference_wrapper<const Shader>> shaders);
+			void buildAccelerationStructures(View<AccelerationStructureBuildInfo> infos);
 			void clearBuffer(BufferRange range, u32 value);
 			void clearTexture(const Texture& texture, ClearValue value, TextureRegion region = {});
 			void copyTexture(const Texture& src, const Texture& dst, TextureRegion srcRegion = {}, TextureRegion dstRegion = {});
@@ -57,18 +58,20 @@ namespace pl {
 
 			// "public" functions that should not be included in the public header
 			VkCommandBuffer vkCommandBuffer() const;
-			tbrs::Vec<StagingBuffer>&& getStagingBuffers() const;
-			CommandBuffer(VkCommandBuffer cmd, StagingAllocator* stagingAllocator);
+			tbrs::Vec<TransientBuffer> getTransientBuffers() const;
+			CommandBuffer(VkCommandBuffer cmd, TransientAllocator* stagingAllocator);
 
 		private:
 			void pushConstantsImpl(const void* constants, u16 size, u16 offset);
 			void writeBufferImpl(DeviceAddress address, const void* data, u64 size);
 			void writeTextureImpl(const Texture& texture, const void* data, TextureRegion region);
 
-			VkCommandBuffer m_cmd = {};
-			StagingAllocator* m_allocator = nullptr;
+			TransientBuffer& getTransientBuffer(u64 size, b8 deviceLocal = false);
 
-			// mutable is evil but you can't move from const objects and I need to steal this in Queue::Submit
-			mutable tbrs::Vec<StagingBuffer> m_stagingBuffers;
+			VkCommandBuffer m_cmd = {};
+			TransientAllocator* m_allocator = nullptr;
+
+			tbrs::Vec<TransientBuffer> m_stagingBuffers;
+			tbrs::Vec<TransientBuffer> m_scratchBuffers;
 	};
 }

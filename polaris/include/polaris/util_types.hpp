@@ -36,7 +36,7 @@ using u8 = unsigned char;
 static_assert(sizeof(u8) == 1, "u8 must alias an 8-bit unsigned integer type.");
 
 using b8 = bool;
-static_assert(sizeof(b8) == 1, "b8 must alias an 8-bit boolean type.");
+static_assert(sizeof(b8) == 1, "b8 must alias an 8-bit b8ean type.");
 
 using b32 = u32;
 
@@ -57,11 +57,11 @@ namespace pl {
 				return m_count;
 			}
 
-			bool empty() const {
+			b8 empty() const {
 				return m_count == 0;
 			}
 
-			bool contains(const ElemType& element) const {
+			b8 contains(const ElemType& element) const {
 				for(u64 i = 0; i < m_count; i++) {
 					if(m_elems[i] == element) {
 						return true;

@@ -1,18 +1,18 @@
 #pragma once
-#include <tabris/types.hpp>
 #include <volk/volk.h>
+#include <tabris/types.hpp>
 #include <mutex>
 #include <unordered_map>
 
 namespace pl {
-	struct AllocationResult {
-		VkDeviceAddress deviceAddress;
-		byte* hostAddress;
+	struct Allocation {
+		VkDeviceMemory memory = {};
+		VkBuffer buffer = {};
 	};
 
 	class DeviceMemoryAllocator {
 		public:
-			AllocationResult allocate(u64 size, u64 align);
+			VkDeviceAddress allocate(u64 size, u64 align, byte** hostAddress = nullptr);
 			void bindImageMemory(VkImage image, VkDeviceAddress address);
 			void free(VkDeviceAddress address);
 
@@ -27,11 +27,6 @@ namespace pl {
 			DeviceMemoryAllocator& operator=(const DeviceMemoryAllocator&) = delete;
 
 		private:
-			struct Allocation {
-				VkDeviceMemory memory;
-				VkBuffer buffer;
-			};
-
 			std::mutex m_lock;
 			std::unordered_map<VkDeviceAddress, Allocation> m_allocations;
 	};

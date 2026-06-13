@@ -1,4 +1,5 @@
 #include "command_buffer_impl.hpp"
+#include "acceleration_structure_impl.hpp"
 #include <tabris/types.hpp>
 #include "vk_util.hpp"
 
@@ -71,11 +72,40 @@ namespace pl {
 		vkCmdBindShadersEXT(m_cmd, shaders.count(), stages, shaderHandles);
 	}
 
+	void CommandBuffer::buildAccelerationStructures(View<AccelerationStructureBuildInfo> infos) {
+		tbrs::Vec<VkAccelerationStructureBuildGeometryInfoKHR> buildInfos;
+		tbrs::Vec<VkAccelerationStructureBuildRangeInfoKHR*> rangeInfos;
+		buildInfos.reserve(infos.count());
+		rangeInfos.reserve(infos.count());
+		for(const AccelerationStructureBuildInfo& info : infos) {
+			u64 scratchNeeded = 0;
+			if(info.mode == BuildMode::Build) {
+				buildInfos.push(info.buildInfo.target.vkBuildInfo());
+				buildInfos.back().mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
+				rangeInfos.push(info.buildInfo.target.vkBuildRanges().data());
+				scratchNeeded = info.buildInfo.target.buildScratchSize();
+			}
+			else {
+				buildInfos.push(info.updateInfo.src.vkBuildInfo());
+				buildInfos.back().mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR;
+				buildInfos.back().dstAccelerationStructure = info.updateInfo.dst.vkAccelerationStructure();
+				rangeInfos.push(info.updateInfo.src.vkBuildRanges().data());
+				scratchNeeded = info.updateInfo.src.updateScratchSize();
+			}
+
+			TransientBuffer& scratchBuffer = getTransientBuffer(scratchNeeded, true);
+			buildInfos.back().scratchData.deviceAddress = scratchBuffer.deviceAddress + scratchBuffer.writeOffset;
+			scratchBuffer.writeOffset += (scratchNeeded + (256 - 1)) & ~(256 - 1); // foo: conservative based on gpuinfo, on nv it's 128
+		}
+
+		vkCmdBuildAccelerationStructuresKHR(m_cmd, infos.count(), buildInfos.data(), rangeInfos.data());
+	}
+
 	void CommandBuffer::clearBuffer(BufferRange range, u32 value) {
 		vkCmdFillMemoryKHR(m_cmd, &VkDeviceAddressRangeKHR{
 			.address = range.address,
 			.size = range.size
-		}, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR, value);
+		}, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR, value);
 	}
 
 	void CommandBuffer::clearTexture(const Texture& texture, ClearValue value, TextureRegion region) {
@@ -129,7 +159,7 @@ namespace pl {
 				.size = sizeof(IndirectCommand),
 				.stride = sizeof(IndirectCommand)
 			},
-			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR,
+			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
 			.drawCount = 1
 		});
 	}
@@ -144,7 +174,7 @@ namespace pl {
 				.address = indirectBuffer,
 				.size = sizeof(IndirectCommand)
 			},
-			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR,
+			.addressFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
 		});
 	}
 
@@ -249,11 +279,14 @@ namespace pl {
 		return m_cmd;
 	}
 
-	tbrs::Vec<StagingBuffer>&& CommandBuffer::getStagingBuffers() const {
-		return std::move(m_stagingBuffers);
+	tbrs::Vec<TransientBuffer> CommandBuffer::getTransientBuffers() const {
+		tbrs::Vec<TransientBuffer> ret;
+		ret.append(m_scratchBuffers);
+		ret.append(m_stagingBuffers);
+		return ret;
 	}
 
-	CommandBuffer::CommandBuffer(VkCommandBuffer cmd, StagingAllocator* stagingAllocator)
+	CommandBuffer::CommandBuffer(VkCommandBuffer cmd, TransientAllocator* stagingAllocator)
 		: m_cmd(cmd), m_allocator(stagingAllocator) {
 	}
 
@@ -268,16 +301,13 @@ namespace pl {
 	}
 
 	void CommandBuffer::writeBufferImpl(DeviceAddress address, const void* data, u64 size) {
-		if(size < 65536) {
-			vkCmdUpdateMemoryKHR(m_cmd, &VkDeviceAddressRangeKHR{ address, size }, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR, size, data);
+		if(size < 65536 && (address & 0x3) == 0 && (size & 0x3) == 0) {
+			vkCmdUpdateMemoryKHR(m_cmd, &VkDeviceAddressRangeKHR{ address, size }, VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR, size, data);
 		}
 		else {
-			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < size) {
-				m_stagingBuffers.push(m_allocator->alloc(size));
-			}
-			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
-
+			TransientBuffer& stagingBuffer = getTransientBuffer(size);
 			memcpy(static_cast<byte*>(stagingBuffer.hostAddress) + stagingBuffer.writeOffset, data, size);
+
 			vkCmdCopyMemoryKHR(m_cmd, &VkCopyDeviceMemoryInfoKHR{
 				.regionCount = 1,
 				.pRegions = &VkDeviceMemoryCopyKHR{
@@ -290,7 +320,7 @@ namespace pl {
 						.address = address,
 						.size = size
 					},
-					.dstFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR | VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR
+					.dstFlags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR
 				}
 			});
 
@@ -306,11 +336,7 @@ namespace pl {
 			u32 depth = std::max(texture.extent().z >> level, 1u);
 			u64 levelSize = width * height * depth * vkFormatTexelBlockSize(texture.vkImageViewCreateInfo().format);
 
-			if(m_stagingBuffers.empty() || m_stagingBuffers.back().size - m_stagingBuffers.back().writeOffset < levelSize) {
-				m_stagingBuffers.push(m_allocator->alloc(levelSize));
-			}
-			StagingBuffer& stagingBuffer = m_stagingBuffers.back();
-
+			TransientBuffer& stagingBuffer = getTransientBuffer(levelSize);
 			memcpy(static_cast<byte*>(stagingBuffer.hostAddress) + stagingBuffer.writeOffset, data, levelSize);
 
 			// foo: batch VkBufferImageCopys while staging buffer has room
@@ -341,5 +367,13 @@ namespace pl {
 			stagingBuffer.writeOffset += levelSize;
 			data = static_cast<const byte*>(data) + levelSize;
 		}
+	}
+
+	TransientBuffer& CommandBuffer::getTransientBuffer(u64 size, b8 deviceLocal) {
+		tbrs::Vec<TransientBuffer>& buffers = deviceLocal ? m_scratchBuffers : m_stagingBuffers;
+		if(buffers.empty() || buffers.back().size <= buffers.back().writeOffset || buffers.back().size - buffers.back().writeOffset < size) {
+			buffers.push(m_allocator->allocate(size, deviceLocal));
+		}
+		return buffers.back();
 	}
 };

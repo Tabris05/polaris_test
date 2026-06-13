@@ -9,7 +9,7 @@
 #include "command_buffer_impl.hpp"
 #include "sync_impl.hpp"
 #include "descriptor_heap.hpp"
-#include "staging_allocator.hpp"
+#include "transient_allocator.hpp"
 
 
 namespace pl {
@@ -45,7 +45,7 @@ namespace pl {
 			struct Submission {
 				VkCommandBuffer cmd;
 				Event event;
-				tbrs::Vec<StagingBuffer> stagingBuffers;
+				tbrs::Vec<TransientBuffer> stagingBuffers;
 			};
 
 			VkQueue m_queue = {};
@@ -57,6 +57,6 @@ namespace pl {
 			tbrs::Vec<VkCommandBuffer> m_freeCmds;
 			tbrs::Vec<Submission> m_submittedCmds;
 
-			StagingAllocator* m_allocator = nullptr;
+			TransientAllocator* m_allocator = nullptr;
 	};
 }

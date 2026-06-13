@@ -7,7 +7,7 @@ namespace pl {
 	class Event {
 		public:
 			u64 value() const;
-			bool completed() const;
+			b8 completed() const;
 
 			void wait() const;
 			void signal();

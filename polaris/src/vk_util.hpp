@@ -1,7 +1,6 @@
 #pragma once
 
 #include <polaris/pod_types.hpp>
-#include "device_impl.hpp"
 
 template<typename T>
 T* operator&(T&& val) {
@@ -36,7 +35,14 @@ inline VkAccessFlags2 vkAccessMask(pl::PipelineStage stage) {
     }
     if((stage & pl::PipelineStage::IndirectRead) != pl::PipelineStage::None) {
         flags |= VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT;
-	}
+    }
+    if((stage & pl::PipelineStage::AccelerationStructureBuild) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
+    }
+    if((stage & pl::PipelineStage::AccelerationStructureUpdate) != pl::PipelineStage::None) {
+        flags |= VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR;
+        flags |= VK_ACCESS_2_ACCELERATION_STRUCTURE_WRITE_BIT_KHR;
+    }
 
 	return flags;
 }
@@ -327,6 +333,9 @@ inline VkPipelineStageFlags2 vkStageMask(pl::PipelineStage stage) {
     if((stage & pl::PipelineStage::IndirectRead) != pl::PipelineStage::None) {
         flags |= VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT;
     }
+    if((stage & pl::PipelineStage::AccelerationStructure) != pl::PipelineStage::None) {
+        flags |= VK_PIPELINE_STAGE_2_ACCELERATION_STRUCTURE_BUILD_BIT_KHR;
+    }
 
 	return flags;
 }
@@ -390,7 +399,7 @@ inline VkColorComponentFlags vkWriteMask(pl::WriteMask mask) {
 	return flags;
 }
 
-inline bool vkFormatIsDepthOrStencil(VkFormat format) {
+inline b8 vkFormatIsDepthOrStencil(VkFormat format) {
     switch(format) {
     case VK_FORMAT_D16_UNORM:
     case VK_FORMAT_X8_D24_UNORM_PACK32:

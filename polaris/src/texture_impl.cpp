@@ -100,7 +100,7 @@ namespace pl {
 
 		VkMemoryRequirements mrq;
 		vkGetImageMemoryRequirements(Device::get().vkDevice(), m_image, &mrq);
-		m_allocation = Device::get().deviceMemoryAllocator().allocate(mrq.size, 0).deviceAddress;
+		m_allocation = Device::get().deviceMemoryAllocator().allocate(mrq.size, mrq.alignment);
 		Device::get().deviceMemoryAllocator().bindImageMemory(m_image, m_allocation);
 
 		vkTransitionImageLayout(Device::get().vkDevice(), 1, &VkHostImageLayoutTransitionInfo{
