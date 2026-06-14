@@ -556,7 +556,7 @@ namespace pl {
 	struct ShaderCreateInfo {
 		ShaderStage stage;
 		const char* entryPoint = "main";
-		View<const u32> code;
+		View<u32> code;
 	};
 
 	struct NativeWindow {

@@ -45,7 +45,7 @@ using byte = u8;
 namespace pl {
 	template <typename T>
 	class View {
-		using ElemType = std::remove_reference_t<T>;
+		using ElemType = std::remove_const_t<T>;
 
 		public:
 
@@ -71,49 +71,68 @@ namespace pl {
 				return false;
 			}
 
-			ElemType* begin() const {
+			const ElemType* begin() const {
 				return m_elems;
 			}
 
-			ElemType* end() const {
+			const ElemType* end() const {
 				return m_elems + m_count;
 			}
 
-			ElemType* data() const {
+			const ElemType* data() const {
 				return m_elems;
 			}
 
-			ElemType& front() const {
+			const ElemType& front() const {
 				return m_elems[0];
 			}
 
-			ElemType& back() const {
+			const ElemType& back() const {
 				return m_elems[m_count - 1];
 			}
 
-			ElemType& operator[](u64 index) const {
+			const ElemType& operator[](u64 index) const {
 				return m_elems[index];
 			}
 
-			View(ElemType* data, u64 count) : m_elems(data), m_count(count) {}
-
-			View(const ElemType& elem) : m_elems(const_cast<ElemType*>(&elem)), m_count(1) {}
-
-			View(std::initializer_list<std::remove_cvref_t<T>> list): m_elems(const_cast<ElemType*>(std::data(list))), m_count(list.size()) {}
-
-			template <std::ranges::contiguous_range R> requires
-				std::same_as<std::ranges::range_value_t<R>, std::remove_cvref_t<T>> &&
-				std::convertible_to<decltype(std::ranges::data(std::declval<R&>())), ElemType*>
-			View(R&& range) : m_elems(range.data()), m_count(range.end() - range.begin()) {}
-
-			template <typename U> requires !std::same_as<U, T> && std::convertible_to<std::remove_reference_t<U>*, ElemType*>
-			View(View<U> other) : m_elems(other.data()), m_count(other.count()) {}
-
 			View() = default;
 
+			View(const ElemType& elem) : m_elems(&elem), m_count(1) {}
+
+			template <u64 N>
+			View(const ElemType(&arr)[N]) : m_elems(arr), m_count(N) {}
+
+			View(const ElemType* data, u64 count) : m_elems(data), m_count(count) {}
+
+			View(std::initializer_list<T> list) : m_elems(std::data(list)), m_count(list.size()) {}
+
+			template <std::ranges::contiguous_range R> requires std::same_as<std::remove_const_t<std::ranges::range_value_t<R>>, ElemType>
+			View(R&& range) : m_elems(range.data()), m_count(range.end() - range.begin()) {}
 
 		private:
-			ElemType* m_elems = nullptr;
+			const ElemType* m_elems = nullptr;
 			u64 m_count = 0;
 	};
+
+
+	template <typename T>
+	View(T& elem) -> View<std::remove_const_t<T>>;
+
+	template <typename T>
+	View(T&& elem) -> View<std::remove_const_t<T>>;
+
+	template <typename T, u64 N>
+	View(T(&arr)[N]) -> View<std::remove_const_t<T>>;
+
+	template <typename T>
+	View(T* data, u64 count) -> View<std::remove_const_t<T>>;
+
+	template <typename T>
+	View(std::initializer_list<T>) -> View<std::remove_const_t<T>>;
+
+	template <std::ranges::contiguous_range R>
+	View(R& range) -> View<std::remove_const_t<std::ranges::range_value_t<R>>>;
+
+	template <std::ranges::contiguous_range R>
+	View(R&& range) -> View<std::remove_const_t<std::ranges::range_value_t<R>>>;
 }

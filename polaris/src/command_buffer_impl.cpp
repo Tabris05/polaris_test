@@ -60,7 +60,7 @@ namespace pl {
 		});
 	}
 
-	void CommandBuffer::bindShaders(View<std::reference_wrapper<const Shader>> shaders) {
+	void CommandBuffer::bindShaders(View<std::reference_wrapper<Shader>> shaders) {
 		VkShaderStageFlagBits stages[3];
 		VkShaderEXT shaderHandles[3];
 

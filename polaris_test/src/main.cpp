@@ -131,10 +131,10 @@ Mesh makeMesh() {
 	});
 	
 	pl::CommandBuffer upload = uploadQueue.beginRecording();
-	upload.writeBuffer(vertexBuffer.deviceAddress(), pl::View<const Vertex>(vertices3));
-	upload.writeBuffer(triangleBuffer.deviceAddress(), pl::View<const u8>(meshletTriangles));
-	upload.writeBuffer(meshletBuffer.deviceAddress(), pl::View<const Meshlet>(meshlets2));
-	upload.writeTexture(texture, pl::View<const byte>(textureData, x * y * 4));
+	upload.writeBuffer(vertexBuffer.deviceAddress(), pl::View(vertices3));
+	upload.writeBuffer(triangleBuffer.deviceAddress(), pl::View(meshletTriangles));
+	upload.writeBuffer(meshletBuffer.deviceAddress(), pl::View(meshlets2));
+	upload.writeTexture(texture, pl::View(textureData, x * y * 4));
 	uploadQueue.submit(pl::SubmitInfo{ .commandBuffer = std::move(upload) }).wait();
 	
 	stbi_image_free(textureData);
@@ -266,6 +266,7 @@ int main() {
 		cmd.setViewport(pl::Rect3D<f32>{ .width = 1920.0f, .height = 1080.0f, .depth = 1.0f });
 		cmd.setScissor(pl::Rect2D<u32>{ .width = 1920u, .height = 1080u });
 		cmd.bindShaders({ meshShader, fragmentShader });
+		cmd.bindShaders(meshShader);
 		cmd.pushConstants(PushConstants{
 			.meshlets = mesh.meshletBuffer.deviceAddress<Meshlet>(),
 			.mvp = projection * view * model,

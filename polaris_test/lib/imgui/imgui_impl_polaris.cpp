@@ -397,7 +397,7 @@ bool ImGui_ImplPolaris_Init(ImGui_ImplPolaris_InitInfo* info)
 
     {
         pl::ShaderCreateInfo ci;
-        ci.code = pl::View<const u32>(shader, sizeof(shader) / 4);
+        ci.code = shader;
         ci.stage = pl::ShaderStage::Mesh;
         ci.entryPoint = "msmain";
         bd->ShaderMesh = new pl::Shader(ci);

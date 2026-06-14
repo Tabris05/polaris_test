@@ -18,7 +18,7 @@ namespace pl {
 
 	struct RenderPassBeginInfo {
 		Rect2D<u32> renderArea;
-		View<const RenderTargetInfo> colorTargets;
+		View<RenderTargetInfo> colorTargets;
 		std::optional<RenderTargetInfo> depthTarget;
 		std::optional<RenderTargetInfo> stencilTarget;
 	};
@@ -27,7 +27,7 @@ namespace pl {
 		public:
 			void barrier(PipelineStage src, PipelineStage dst);
 			void beginRenderPass(const RenderPassBeginInfo& info);
-			void bindShaders(View<std::reference_wrapper<const Shader>> shaders);
+			void bindShaders(View<std::reference_wrapper<Shader>> shaders);
 			void buildAccelerationStructures(View<AccelerationStructureBuildInfo> infos);
 			void clearBuffer(BufferRange range, u32 value);
 			void clearTexture(const Texture& texture, ClearValue value, TextureRegion region = {});
