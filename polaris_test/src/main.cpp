@@ -266,7 +266,6 @@ int main() {
 		cmd.setViewport(pl::Rect3D<f32>{ .width = 1920.0f, .height = 1080.0f, .depth = 1.0f });
 		cmd.setScissor(pl::Rect2D<u32>{ .width = 1920u, .height = 1080u });
 		cmd.bindShaders({ meshShader, fragmentShader });
-		cmd.bindShaders(meshShader);
 		cmd.pushConstants(PushConstants{
 			.meshlets = mesh.meshletBuffer.deviceAddress<Meshlet>(),
 			.mvp = projection * view * model,

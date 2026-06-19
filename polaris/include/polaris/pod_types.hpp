@@ -348,7 +348,7 @@ namespace pl {
 		return lhs;
 	}
 
-	enum class GeometryInstanceFlags : u32 {
+	enum class GeometryInstanceFlags : u8 {
 		None = 0,
 		DisableFaceCulling = 1 << 0,
 		FlipFrontFace = 1 << 1,
@@ -378,7 +378,7 @@ namespace pl {
 		return lhs;
 	}
 
-	enum class AcelerationStructureCreateFlags : u8 {
+	enum class AccelerationStructureCreateFlags : u8 {
 		None = 0,
 		AllowUpdate = 1 << 0,
 		AllowCompaction = 1 << 1,
@@ -387,24 +387,24 @@ namespace pl {
 		LowMemory = 1 << 4
 	};
 
-	inline AcelerationStructureCreateFlags operator~(AcelerationStructureCreateFlags val) {
-		return static_cast<AcelerationStructureCreateFlags>(~static_cast<u8>(val));
+	inline AccelerationStructureCreateFlags operator~(AccelerationStructureCreateFlags val) {
+		return static_cast<AccelerationStructureCreateFlags>(~static_cast<u8>(val));
 	}
 
-	inline AcelerationStructureCreateFlags operator&(AcelerationStructureCreateFlags lhs, AcelerationStructureCreateFlags rhs) {
-		return static_cast<AcelerationStructureCreateFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
+	inline AccelerationStructureCreateFlags operator&(AccelerationStructureCreateFlags lhs, AccelerationStructureCreateFlags rhs) {
+		return static_cast<AccelerationStructureCreateFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
 	}
 
-	inline AcelerationStructureCreateFlags operator|(AcelerationStructureCreateFlags lhs, AcelerationStructureCreateFlags rhs) {
-		return static_cast<AcelerationStructureCreateFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
+	inline AccelerationStructureCreateFlags operator|(AccelerationStructureCreateFlags lhs, AccelerationStructureCreateFlags rhs) {
+		return static_cast<AccelerationStructureCreateFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
 	}
 
-	inline AcelerationStructureCreateFlags& operator&=(AcelerationStructureCreateFlags& lhs, AcelerationStructureCreateFlags rhs) {
+	inline AccelerationStructureCreateFlags& operator&=(AccelerationStructureCreateFlags& lhs, AccelerationStructureCreateFlags rhs) {
 		lhs = lhs & rhs;
 		return lhs;
 	}
 
-	inline AcelerationStructureCreateFlags& operator|=(AcelerationStructureCreateFlags& lhs, AcelerationStructureCreateFlags rhs) {
+	inline AccelerationStructureCreateFlags& operator|=(AccelerationStructureCreateFlags& lhs, AccelerationStructureCreateFlags rhs) {
 		lhs = lhs | rhs;
 		return lhs;
 	}
@@ -625,7 +625,7 @@ namespace pl {
 
 	struct AccelerationStructureCreateInfo {
 		View<AccelerationStructureGeometryInfo> geometries;
-		AcelerationStructureCreateFlags flags;
+		AccelerationStructureCreateFlags flags;
 	};
 
 	union ClearValue {
