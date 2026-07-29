@@ -314,41 +314,41 @@ namespace pl {
 		None
 	};
 
-	enum class GeometryType : u8 {
+	enum class ASGeometryType : u8 {
 		Triangles,
 		AABBs,
 		Instances
 	};
 
-	enum class GeometryFlags : u8 {
+	enum class ASGeometryFlags : u8 {
 		None = 0,
 		Opaque = 1 << 0,
 		NoDuplicateAnyHitInvocation = 1 << 1,
 	};
 
-	inline GeometryFlags operator~(GeometryFlags val) {
-		return static_cast<GeometryFlags>(~static_cast<u8>(val));
+	inline ASGeometryFlags operator~(ASGeometryFlags val) {
+		return static_cast<ASGeometryFlags>(~static_cast<u8>(val));
 	}
 
-	inline GeometryFlags operator&(GeometryFlags lhs, GeometryFlags rhs) {
-		return static_cast<GeometryFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
+	inline ASGeometryFlags operator&(ASGeometryFlags lhs, ASGeometryFlags rhs) {
+		return static_cast<ASGeometryFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
 	}
 
-	inline GeometryFlags operator|(GeometryFlags lhs, GeometryFlags rhs) {
-		return static_cast<GeometryFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
+	inline ASGeometryFlags operator|(ASGeometryFlags lhs, ASGeometryFlags rhs) {
+		return static_cast<ASGeometryFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
 	}
 
-	inline GeometryFlags& operator&=(GeometryFlags& lhs, GeometryFlags rhs) {
+	inline ASGeometryFlags& operator&=(ASGeometryFlags& lhs, ASGeometryFlags rhs) {
 		lhs = lhs & rhs;
 		return lhs;
 	}
 
-	inline GeometryFlags& operator|=(GeometryFlags& lhs, GeometryFlags rhs) {
+	inline ASGeometryFlags& operator|=(ASGeometryFlags& lhs, ASGeometryFlags rhs) {
 		lhs = lhs | rhs;
 		return lhs;
 	}
 
-	enum class GeometryInstanceFlags : u8 {
+	enum class ASGeometryInstanceFlags : u8 {
 		None = 0,
 		DisableFaceCulling = 1 << 0,
 		FlipFrontFace = 1 << 1,
@@ -356,29 +356,29 @@ namespace pl {
 		ForceNoOpaque = 1 << 3
 	};
 
-	inline GeometryInstanceFlags operator~(GeometryInstanceFlags val) {
-		return static_cast<GeometryInstanceFlags>(~static_cast<u8>(val));
+	inline ASGeometryInstanceFlags operator~(ASGeometryInstanceFlags val) {
+		return static_cast<ASGeometryInstanceFlags>(~static_cast<u8>(val));
 	}
 
-	inline GeometryInstanceFlags operator&(GeometryInstanceFlags lhs, GeometryInstanceFlags rhs) {
-		return static_cast<GeometryInstanceFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
+	inline ASGeometryInstanceFlags operator&(ASGeometryInstanceFlags lhs, ASGeometryInstanceFlags rhs) {
+		return static_cast<ASGeometryInstanceFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
 	}
 
-	inline GeometryInstanceFlags operator|(GeometryInstanceFlags lhs, GeometryInstanceFlags rhs) {
-		return static_cast<GeometryInstanceFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
+	inline ASGeometryInstanceFlags operator|(ASGeometryInstanceFlags lhs, ASGeometryInstanceFlags rhs) {
+		return static_cast<ASGeometryInstanceFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
 	}
 
-	inline GeometryInstanceFlags& operator&=(GeometryInstanceFlags& lhs, GeometryInstanceFlags rhs) {
+	inline ASGeometryInstanceFlags& operator&=(ASGeometryInstanceFlags& lhs, ASGeometryInstanceFlags rhs) {
 		lhs = lhs & rhs;
 		return lhs;
 	}
 
-	inline GeometryInstanceFlags& operator|=(GeometryInstanceFlags& lhs, GeometryInstanceFlags rhs) {
+	inline ASGeometryInstanceFlags& operator|=(ASGeometryInstanceFlags& lhs, ASGeometryInstanceFlags rhs) {
 		lhs = lhs | rhs;
 		return lhs;
 	}
 
-	enum class AccelerationStructureCreateFlags : u8 {
+	enum class ASCreateFlags : u8 {
 		None = 0,
 		AllowUpdate = 1 << 0,
 		AllowCompaction = 1 << 1,
@@ -387,29 +387,29 @@ namespace pl {
 		LowMemory = 1 << 4
 	};
 
-	inline AccelerationStructureCreateFlags operator~(AccelerationStructureCreateFlags val) {
-		return static_cast<AccelerationStructureCreateFlags>(~static_cast<u8>(val));
+	inline ASCreateFlags operator~(ASCreateFlags val) {
+		return static_cast<ASCreateFlags>(~static_cast<u8>(val));
 	}
 
-	inline AccelerationStructureCreateFlags operator&(AccelerationStructureCreateFlags lhs, AccelerationStructureCreateFlags rhs) {
-		return static_cast<AccelerationStructureCreateFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
+	inline ASCreateFlags operator&(ASCreateFlags lhs, ASCreateFlags rhs) {
+		return static_cast<ASCreateFlags>(static_cast<u8>(lhs) & static_cast<u8>(rhs));
 	}
 
-	inline AccelerationStructureCreateFlags operator|(AccelerationStructureCreateFlags lhs, AccelerationStructureCreateFlags rhs) {
-		return static_cast<AccelerationStructureCreateFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
+	inline ASCreateFlags operator|(ASCreateFlags lhs, ASCreateFlags rhs) {
+		return static_cast<ASCreateFlags>(static_cast<u8>(lhs) | static_cast<u8>(rhs));
 	}
 
-	inline AccelerationStructureCreateFlags& operator&=(AccelerationStructureCreateFlags& lhs, AccelerationStructureCreateFlags rhs) {
+	inline ASCreateFlags& operator&=(ASCreateFlags& lhs, ASCreateFlags rhs) {
 		lhs = lhs & rhs;
 		return lhs;
 	}
 
-	inline AccelerationStructureCreateFlags& operator|=(AccelerationStructureCreateFlags& lhs, AccelerationStructureCreateFlags rhs) {
+	inline ASCreateFlags& operator|=(ASCreateFlags& lhs, ASCreateFlags rhs) {
 		lhs = lhs | rhs;
 		return lhs;
 	}
 
-	enum class BuildMode : u8 {
+	enum class ASBuildMode : u8 {
 		Build,
 		Update
 	};
@@ -598,8 +598,8 @@ namespace pl {
 		b8 vsync;
 	};
 
-	struct AccelerationStructureGeometryInfo {
-		GeometryType type;
+	struct ASGeometryInfo {
+		ASGeometryType type;
 		union {
 			struct {
 				DeviceAddress vertexData;
@@ -608,12 +608,12 @@ namespace pl {
 				u8 indexWidth;
 				DeviceAddress indexData;
 				DeviceAddress transform;
-				GeometryFlags flags;
+				ASGeometryFlags flags;
 			} triangles;
 
 			struct {
 				DeviceAddress data;
-				GeometryFlags flags;
+				ASGeometryFlags flags;
 			} aabbs;
 
 			struct {
@@ -623,9 +623,9 @@ namespace pl {
 		u32 primitiveCount;
 	};
 
-	struct AccelerationStructureCreateInfo {
-		View<AccelerationStructureGeometryInfo> geometries;
-		AccelerationStructureCreateFlags flags;
+	struct AccelStructCreateInfo {
+		View<ASGeometryInfo> geometries;
+		ASCreateFlags flags;
 	};
 
 	union ClearValue {
@@ -722,27 +722,27 @@ namespace pl {
 		f32 lineWidth = 1.0f;
 	};
 
-	struct AccelerationStructureBuildInfo {
-		BuildMode mode;
+	struct ASBuildInfo {
+		ASBuildMode mode;
 		union {
 			struct {
-				const class AccelerationStructure& target;
+				const class AccelStruct& target;
 			} buildInfo;
 
 			struct {
-				const class AccelerationStructure& src;
-				const class AccelerationStructure& dst;
+				const class AccelStruct& src;
+				const class AccelStruct& dst;
 			} updateInfo;
 		};
 	};
 
-	struct AccelerationStructureInstance {
+	struct ASInstance {
 		f32 transform[3][4]; // foo: eventually want mat3x4 type
 		u32	instanceCustomIndex : 24;
 		u32	mask : 8;
 		byte padding[3];
-		GeometryInstanceFlags flags;
-		DeviceAddress accelerationStructureReference;
+		ASGeometryInstanceFlags flags;
+		DeviceAddress asReference;
 	};
 
 	struct IndirectCommand {

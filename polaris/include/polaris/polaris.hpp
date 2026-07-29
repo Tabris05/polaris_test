@@ -4,7 +4,7 @@
 
 #include "util_types.hpp"
 #include "pod_types.hpp"
-#include "acceleration_structure.hpp"
+#include "accel_struct.hpp"
 #include "buffer.hpp"
 #include "command_buffer.hpp"
 #include "device.hpp"
@@ -14,11 +14,11 @@
 #include "sync.hpp"
 #include "texture.hpp"
 
-using vec3u8 = pl::vec3<u8>;
+using u8vec3 = pl::vec3<u8>;
 
-using vec2f32 = pl::vec2<f32>;
-using vec3f32 = pl::vec3<f32>;
-using vec4f32 = pl::vec4<f32>;
+using f32vec2 = pl::vec2<f32>;
+using f32vec3 = pl::vec3<f32>;
+using f32vec4 = pl::vec4<f32>;
 
 template<typename T> using Texture1D = pl::TextureHandle;
 template<typename T> using Texture1DArray = pl::TextureHandle;

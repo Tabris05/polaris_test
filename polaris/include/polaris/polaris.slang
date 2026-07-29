@@ -16,173 +16,173 @@ public typedef float16_t f16;
 public typedef float32_t f32;
 public typedef float64_t f64;
 
-public typedef bool2 vec2b8;
-public typedef bool3 vec3b8;
-public typedef bool4 vec4b8;
+public typedef bool2 b8vec2;
+public typedef bool3 b8vec3;
+public typedef bool4 b8vec4;
 
-public typedef int8_t2 vec2i8;
-public typedef int8_t3 vec3i8;
-public typedef int8_t4 vec4i8;
+public typedef int8_t2 i8vec2;
+public typedef int8_t3 i8vec3;
+public typedef int8_t4 i8vec4;
 
-public typedef int16_t2 vec2i16;
-public typedef int16_t3 vec3i16;
-public typedef int16_t4 vec4i16;
+public typedef int16_t2 i16vec2;
+public typedef int16_t3 i16vec3;
+public typedef int16_t4 i16vec4;
 
-public typedef int32_t2 vec2i32;
-public typedef int32_t3 vec3i32;
-public typedef int32_t4 vec4i32;
+public typedef int32_t2 i32vec2;
+public typedef int32_t3 i32vec3;
+public typedef int32_t4 i32vec4;
 
-public typedef int64_t2 vec2i64;
-public typedef int64_t3 vec3i64;
-public typedef int64_t4 vec4i64;
+public typedef int64_t2 i64vec2;
+public typedef int64_t3 i64vec3;
+public typedef int64_t4 i64vec4;
 
-public typedef uint8_t2 vec2u8;
-public typedef uint8_t3 vec3u8;
-public typedef uint8_t4 vec4u8;
+public typedef uint8_t2 u8vec2;
+public typedef uint8_t3 u8vec3;
+public typedef uint8_t4 u8vec4;
 
-public typedef uint16_t2 vec2u16;
-public typedef uint16_t3 vec3u16;
-public typedef uint16_t4 vec4u16;
+public typedef uint16_t2 u16vec2;
+public typedef uint16_t3 u16vec3;
+public typedef uint16_t4 u16vec4;
 
-public typedef uint32_t2 vec2u32;
-public typedef uint32_t3 vec3u32;
-public typedef uint32_t4 vec4u32;
+public typedef uint32_t2 u32vec2;
+public typedef uint32_t3 u32vec3;
+public typedef uint32_t4 u32vec4;
 
-public typedef uint64_t2 vec2u64;
-public typedef uint64_t3 vec3u64;
-public typedef uint64_t4 vec4u64;
+public typedef uint64_t2 u64vec2;
+public typedef uint64_t3 u64vec3;
+public typedef uint64_t4 u64vec4;
 
-public typedef float16_t2 vec2f16;
-public typedef float16_t3 vec3f16;
-public typedef float16_t4 vec4f16;
+public typedef float16_t2 f16vec2;
+public typedef float16_t3 f16vec3;
+public typedef float16_t4 f16vec4;
 
-public typedef float32_t2 vec2f32;
-public typedef float32_t3 vec3f32;
-public typedef float32_t4 vec4f32;
+public typedef float32_t2 f32vec2;
+public typedef float32_t3 f32vec3;
+public typedef float32_t4 f32vec4;
 
-public typedef float64_t2 vec2f64;
-public typedef float64_t3 vec3f64;
-public typedef float64_t4 vec4f64;
+public typedef float64_t2 f64vec2;
+public typedef float64_t3 f64vec3;
+public typedef float64_t4 f64vec4;
 
-public typedef bool2x2 mat2b8;
-public typedef bool3x3 mat3b8;
-public typedef bool4x4 mat4b8;
-public typedef bool2x3 mat2x3b8;
-public typedef bool3x2 mat3x2b8;
-public typedef bool2x4 mat2x4b8;
-public typedef bool4x2 mat4x2b8;
-public typedef bool3x4 mat3x4b8;
-public typedef bool4x3 mat4x3b8;
+public typedef bool2x2 b8mat2;
+public typedef bool3x3 b8mat3;
+public typedef bool4x4 b8mat4;
+public typedef bool2x3 b8mat2x3;
+public typedef bool3x2 b8mat3x2;
+public typedef bool2x4 b8mat2x4;
+public typedef bool4x2 b8mat4x2;
+public typedef bool3x4 b8mat3x4;
+public typedef bool4x3 b8mat4x3;
 
-public typedef int8_t2x2 mat2i8;
-public typedef int8_t3x3 mat3i8;
-public typedef int8_t4x4 mat4i8;
-public typedef int8_t2x3 mat2x3i8;
-public typedef int8_t3x2 mat3x2i8;
-public typedef int8_t2x4 mat2x4i8;
-public typedef int8_t4x2 mat4x2i8;
-public typedef int8_t3x4 mat3x4i8;
-public typedef int8_t4x3 mat4x3i8;
+public typedef int8_t2x2 i8mat2;
+public typedef int8_t3x3 i8mat3;
+public typedef int8_t4x4 i8mat4;
+public typedef int8_t2x3 i8mat2x3;
+public typedef int8_t3x2 i8mat3x2;
+public typedef int8_t2x4 i8mat2x4;
+public typedef int8_t4x2 i8mat4x2;
+public typedef int8_t3x4 i8mat3x4;
+public typedef int8_t4x3 i8mat4x3;
 
-public typedef int16_t2x2 mat2i16;
-public typedef int16_t3x3 mat3i16;
-public typedef int16_t4x4 mat4i16;
-public typedef int16_t2x3 mat2x3i16;
-public typedef int16_t3x2 mat3x2i16;
-public typedef int16_t2x4 mat2x4i16;
-public typedef int16_t4x2 mat4x2i16;
-public typedef int16_t3x4 mat3x4i16;
-public typedef int16_t4x3 mat4x3i16;
+public typedef int16_t2x2 i16mat2;
+public typedef int16_t3x3 i16mat3;
+public typedef int16_t4x4 i16mat4;
+public typedef int16_t2x3 i16mat2x3;
+public typedef int16_t3x2 i16mat3x2;
+public typedef int16_t2x4 i16mat2x4;
+public typedef int16_t4x2 i16mat4x2;
+public typedef int16_t3x4 i16mat3x4;
+public typedef int16_t4x3 i16mat4x3;
 
-public typedef int32_t2x2 mat2i32;
-public typedef int32_t3x3 mat3i32;
-public typedef int32_t4x4 mat4i32;
-public typedef int32_t2x3 mat2x3i32;
-public typedef int32_t3x2 mat3x2i32;
-public typedef int32_t2x4 mat2x4i32;
-public typedef int32_t4x2 mat4x2i32;
-public typedef int32_t3x4 mat3x4i32;
-public typedef int32_t4x3 mat4x3i32;
+public typedef int32_t2x2 i32mat2;
+public typedef int32_t3x3 i32mat3;
+public typedef int32_t4x4 i32mat4;
+public typedef int32_t2x3 i32mat2x3;
+public typedef int32_t3x2 i32mat3x2;
+public typedef int32_t2x4 i32mat2x4;
+public typedef int32_t4x2 i32mat4x2;
+public typedef int32_t3x4 i32mat3x4;
+public typedef int32_t4x3 i32mat4x3;
 
-public typedef int64_t2x2 mat2i64;
-public typedef int64_t3x3 mat3i64;
-public typedef int64_t4x4 mat4i64;
-public typedef int64_t2x3 mat2x3i64;
-public typedef int64_t3x2 mat3x2i64;
-public typedef int64_t2x4 mat2x4i64;
-public typedef int64_t4x2 mat4x2i64;
-public typedef int64_t3x4 mat3x4i64;
-public typedef int64_t4x3 mat4x3i64;
+public typedef int64_t2x2 i64mat2;
+public typedef int64_t3x3 i64mat3;
+public typedef int64_t4x4 i64mat4;
+public typedef int64_t2x3 i64mat2x3;
+public typedef int64_t3x2 i64mat3x2;
+public typedef int64_t2x4 i64mat2x4;
+public typedef int64_t4x2 i64mat4x2;
+public typedef int64_t3x4 i64mat3x4;
+public typedef int64_t4x3 i64mat4x3;
 
-public typedef uint8_t2x2 mat2u8;
-public typedef uint8_t3x3 mat3u8;
-public typedef uint8_t4x4 mat4u8;
-public typedef uint8_t2x3 mat2x3u8;
-public typedef uint8_t3x2 mat3x2u8;
-public typedef uint8_t2x4 mat2x4u8;
-public typedef uint8_t4x2 mat4x2u8;
-public typedef uint8_t3x4 mat3x4u8;
-public typedef uint8_t4x3 mat4x3u8;
+public typedef uint8_t2x2 u8mat2;
+public typedef uint8_t3x3 u8mat3;
+public typedef uint8_t4x4 u8mat4;
+public typedef uint8_t2x3 u8mat2x3;
+public typedef uint8_t3x2 u8mat3x2;
+public typedef uint8_t2x4 u8mat2x4;
+public typedef uint8_t4x2 u8mat4x2;
+public typedef uint8_t3x4 u8mat3x4;
+public typedef uint8_t4x3 u8mat4x3;
 
-public typedef uint16_t2x2 mat2u16;
-public typedef uint16_t3x3 mat3u16;
-public typedef uint16_t4x4 mat4u16;
-public typedef uint16_t2x3 mat2x3u16;
-public typedef uint16_t3x2 mat3x2u16;
-public typedef uint16_t2x4 mat2x4u16;
-public typedef uint16_t4x2 mat4x2u16;
-public typedef uint16_t3x4 mat3x4u16;
-public typedef uint16_t4x3 mat4x3u16;
+public typedef uint16_t2x2 u16mat2;
+public typedef uint16_t3x3 u16mat3;
+public typedef uint16_t4x4 u16mat4;
+public typedef uint16_t2x3 u16mat2x3;
+public typedef uint16_t3x2 u16mat3x2;
+public typedef uint16_t2x4 u16mat2x4;
+public typedef uint16_t4x2 u16mat4x2;
+public typedef uint16_t3x4 u16mat3x4;
+public typedef uint16_t4x3 u16mat4x3;
 
-public typedef uint32_t2x2 mat2u32;
-public typedef uint32_t3x3 mat3u32;
-public typedef uint32_t4x4 mat4u32;
-public typedef uint32_t2x3 mat2x3u32;
-public typedef uint32_t3x2 mat3x2u32;
-public typedef uint32_t2x4 mat2x4u32;
-public typedef uint32_t4x2 mat4x2u32;
-public typedef uint32_t3x4 mat3x4u32;
-public typedef uint32_t4x3 mat4x3u32;
+public typedef uint32_t2x2 u32mat2;
+public typedef uint32_t3x3 u32mat3;
+public typedef uint32_t4x4 u32mat4;
+public typedef uint32_t2x3 u32mat2x3;
+public typedef uint32_t3x2 u32mat3x2;
+public typedef uint32_t2x4 u32mat2x4;
+public typedef uint32_t4x2 u32mat4x2;
+public typedef uint32_t3x4 u32mat3x4;
+public typedef uint32_t4x3 u32mat4x3;
 
-public typedef int64_t2x2 mat2u64;
-public typedef int64_t3x3 mat3u64;
-public typedef int64_t4x4 mat4u64;
-public typedef int64_t2x3 mat2x3u64;
-public typedef int64_t3x2 mat3x2u64;
-public typedef int64_t2x4 mat2x4u64;
-public typedef int64_t4x2 mat4x2u64;
-public typedef int64_t3x4 mat3x4u64;
-public typedef int64_t4x3 mat4x3u64;
+public typedef uint64_t2x2 u64mat2;
+public typedef uint64_t3x3 u64mat3;
+public typedef uint64_t4x4 u64mat4;
+public typedef uint64_t2x3 u64mat2x3;
+public typedef uint64_t3x2 u64mat3x2;
+public typedef uint64_t2x4 u64mat2x4;
+public typedef uint64_t4x2 u64mat4x2;
+public typedef uint64_t3x4 u64mat3x4;
+public typedef uint64_t4x3 u64mat4x3;
 
-public typedef float16_t2x2 mat2f16;
-public typedef float16_t3x3 mat3f16;
-public typedef float16_t4x4 mat4f16;
-public typedef float16_t2x3 mat2x3f16;
-public typedef float16_t3x2 mat3x2f16;
-public typedef float16_t2x4 mat2x4f16;
-public typedef float16_t4x2 mat4x2f16;
-public typedef float16_t3x4 mat3x4f16;
-public typedef float16_t4x3 mat4x3f16;
+public typedef float16_t2x2 f16mat2;
+public typedef float16_t3x3 f16mat3;
+public typedef float16_t4x4 f16mat4;
+public typedef float16_t2x3 f16mat2x3;
+public typedef float16_t3x2 f16mat3x2;
+public typedef float16_t2x4 f16mat2x4;
+public typedef float16_t4x2 f16mat4x2;
+public typedef float16_t3x4 f16mat3x4;
+public typedef float16_t4x3 f16mat4x3;
 
-public typedef float32_t2x2 mat2f32;
-public typedef float32_t3x3 mat3f32;
-public typedef float32_t4x4 mat4f32;
-public typedef float32_t2x3 mat2x3f32;
-public typedef float32_t3x2 mat3x2f32;
-public typedef float32_t2x4 mat2x4f32;
-public typedef float32_t4x2 mat4x2f32;
-public typedef float32_t3x4 mat3x4f32;
-public typedef float32_t4x3 mat4x3f32;
+public typedef float32_t2x2 f32mat2;
+public typedef float32_t3x3 f32mat3;
+public typedef float32_t4x4 f32mat4;
+public typedef float32_t2x3 f32mat2x3;
+public typedef float32_t3x2 f32mat3x2;
+public typedef float32_t2x4 f32mat2x4;
+public typedef float32_t4x2 f32mat4x2;
+public typedef float32_t3x4 f32mat3x4;
+public typedef float32_t4x3 f32mat4x3;
 
-public typedef float64_t2x2 mat2f64;
-public typedef float64_t3x3 mat3f64;
-public typedef float64_t4x4 mat4f64;
-public typedef float64_t2x3 mat2x3f64;
-public typedef float64_t3x2 mat3x2f64;
-public typedef float64_t2x4 mat2x4f64;
-public typedef float64_t4x2 mat4x2f64;
-public typedef float64_t3x4 mat3x4f64;
-public typedef float64_t4x3 mat4x3f64;
+public typedef float64_t2x2 f64mat2;
+public typedef float64_t3x3 f64mat3;
+public typedef float64_t4x4 f64mat4;
+public typedef float64_t2x3 f64mat2x3;
+public typedef float64_t3x2 f64mat3x2;
+public typedef float64_t2x4 f64mat2x4;
+public typedef float64_t4x2 f64mat4x2;
+public typedef float64_t3x4 f64mat3x4;
+public typedef float64_t4x3 f64mat4x3;
 
 public struct TextureHandle<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int, let isMS : int, let access : int> {
     typealias TextureType = _Texture<TexelType, Shape, isArray, isMS, 0, access, 0, 0, 0>;
@@ -192,63 +192,56 @@ public struct TextureHandle<TexelType : ITexelElement, Shape : __ITextureShape, 
     const u32 handle = textureMask;
 
     TextureType getTexture() {
-        return DescriptorHandle<TextureType>(NonUniformResourceIndex(handle & textureMask));
+        return ResourceDescriptorHeap[NonUniformResourceIndex(handle & textureMask)];
     }
 
     SamplerState getSampler() {
-        return DescriptorHandle<SamplerState>(NonUniformResourceIndex(handle >> samplerOffset));
+        return SamplerDescriptorHeap[NonUniformResourceIndex(handle >> samplerOffset)];
     }
 
     SamplerComparisonState getComparisonSampler() {
-        return DescriptorHandle<SamplerComparisonState>(NonUniformResourceIndex(handle >> samplerOffset));
+        return SamplerDescriptorHeap[NonUniformResourceIndex(handle >> samplerOffset)];
     }
 
-    // foo: this generates bad spirv (individual processing per element)
-    // I'd love to be able to specialize per-number of components but Slang doesn't seem to have any notion of precedence when it comes to overloads, so that's fun
-    // until they figure out their generic system a bit more I guess I'm stuck with this
-    // this should be a rareish path anyways so it being a few extra ALU ops shouldn't be horrendous
-    // (and maybe IHV optimizers can fix it up internally?)
-    TexelType unpackInvalidColor() {
-        vector<TexelType.Element, TexelType.elementCount> ret;
-
-        ret[0] = TexelType.Element(((handle >> 20) & 0x7)) / TexelType.Element(4);
-        if (TexelType.elementCount > 1) {
-            ret[1] = TexelType.Element(((handle >> 23) & 0x7)) / TexelType.Element(4);
-        }
-        if (TexelType.elementCount > 2) {
-            ret[2] = TexelType.Element(((handle >> 26) & 0x7)) / TexelType.Element(4);
-        }
-        if (TexelType.elementCount > 3) {
-            ret[3] = TexelType.Element(((handle >> 29) & 0x7)) / TexelType.Element(4);
+    // foo: this function is completely broken, it emits inefficient spirv and for reasons both known and unknown will only output black
+    T unpackInvalidColor<T : ITexelElement = TexelType>() {
+        vector<T.Element, T.elementCount> ret;
+        for (i32 i = 0; i < T.elementCount; i++) {
+            ret[i] = T.Element((handle >> uint(20 + i * 3)) & 0x7) / (T is IFloat ? T.Element(4) : T.Element(1));
         }
 
-        return reinterpret<TexelType>(ret);
+        return reinterpret<T>(ret);
+    }
+
+    TexelType invalidColorOr(IFunc<TexelType> fn) {
+        if ((handle & textureMask) == textureMask) {
+            return unpackInvalidColor();
+        }
+
+        return fn();
+    }
+
+    T allOnesOr<T : IInteger>(IFunc<T> fn) {
+        if ((handle & textureMask) == textureMask) {
+            return T(1);
+        }
+
+        return fn();
     }
 }
 
-// foo: would like to make a function that takes a lambda so the invalid check is only written once, but that crashes the compiler of this wonderful language
-// also, I don't think I trust the compiler to not generate really bad spirv for that...
 __generic<TexelType : ITexelElement, Shape : __ITextureShape, let isArray : int>
 public extension TextureHandle<TexelType, Shape, isArray, 0, 0> {
     public TexelType __subscript(vector<int, Shape.dimensions + isArray> location) {
-        if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor();
-        }
-        return getTexture()[location];
+        return invalidColorOr(() => getTexture()[location]);
     }
 
     public TexelType load(vector<int, Shape.dimensions + isArray + 1> location) {
-        if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor();
-        }
-        return getTexture().Load(location);
+        return invalidColorOr(() => getTexture().Load(location));
     }
 
     public TexelType sample(vector<float, Shape.dimensions + isArray> location) {
-        if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor();
-        }
-        return getTexture().Sample(getSampler(), location);
+        return invalidColorOr(() => getTexture().Sample(getSampler(), location));
     }
 
     public TexelType sampleLevel(vector<float, Shape.dimensions + isArray> location, float level, constexpr vector<int, Shape.planeDimensions> offset = vector<int, Shape.planeDimensions>(0)) {
@@ -259,10 +252,10 @@ public extension TextureHandle<TexelType, Shape, isArray, 0, 0> {
     }
 
     public float sampleAndCompare(vector<float, Shape.dimensions + isArray> location, float value) {
-        if ((handle & textureMask) == textureMask) {
-            return 0.0f;
+        if ((handle & textureMask) != textureMask) {
+            return getTexture().SampleCmp(getComparisonSampler(), location, value);
         }
-        return getTexture().SampleCmp(getComparisonSampler(), location, value);
+        return 0.0f;
     }
 }
 
@@ -271,419 +264,374 @@ public extension TextureHandle<TexelType, Shape, isArray, 0, 1> {
     public __subscript(vector<uint, Shape.dimensions + isArray> location) -> TexelType
     {
         get {
-            if ((handle & textureMask) == textureMask) {
-                return unpackInvalidColor();
-            }
-            return getTexture()[location];
+            return invalidColorOr(() => getTexture()[location]);
         }
 
         set(TexelType newValue) {
-            if ((handle & textureMask) == textureMask) {
-                return;
+            if ((handle & textureMask) != textureMask) {
+                getTexture()[location] = newValue;
             }
-            getTexture()[location] =  newValue;
         }
     }
 
     public TexelType load(vector<int, Shape.dimensions + isArray> location) {
-        if ((handle & textureMask) == textureMask) {
-            return unpackInvalidColor();
-        }
-        return getTexture().Load(location);
+        return invalidColorOr(() => getTexture().Load(location));
     }
 
     public void store(vector<uint, Shape.dimensions + isArray> location, TexelType texel) {
-        if ((handle & textureMask) == textureMask) {
-            return;
+        if ((handle & textureMask) != textureMask) {
+            getTexture().Store(location, texel);
         }
-        return getTexture().Store(location, texel);
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape1D, 0, 0, 0> {
     public u16 extent(u8 level = 0) {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        u32 extent, numLevels;
-        getTexture().GetDimensions(level, extent, numLevels);
-        return u16(extent);
+        return allOnesOr(() => {
+            u32 extent, numLevels;
+            getTexture().GetDimensions(level, extent, numLevels);
+            return u16(extent);
+        });
     }
 
     public u8 levels() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        u32 extent, numLevels;
-        getTexture().GetDimensions(0, extent, numLevels);
-        return u8(numLevels);
+        return allOnesOr(() => {
+            u32 extent, numLevels;
+            getTexture().GetDimensions(0, extent, numLevels);
+            return u8(numLevels);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape1D, 0, 0, 1> {
     public u16 extent() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        u32 extent;
-        getTexture().GetDimensions(extent);
-        return u16(extent);
+        return allOnesOr(() => {
+            u32 extent;
+            getTexture().GetDimensions(extent);
+            return u16(extent);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape1D, 1, 0, 0> {
     public u16 extent(u8 level = 0) {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(level, extent.x, extent.y, extent.z);
-        return u16(extent.x);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(level, extent.x, extent.y, extent.z);
+            return u16(extent.x);
+        });
     }
 
     public u8 levels() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(0, extent.x, extent.y, extent.z);
-        return u8(extent.z);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(0, extent.x, extent.y, extent.z);
+            return u8(extent.z);
+        });
     }
 
     public u16 layers() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec2u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y);
-        return u16(extent.y);
+        return allOnesOr(() => {
+            u32vec2 extent;
+            getTexture().GetDimensions(extent.x, extent.y);
+            return u16(extent.y);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape1D, 1, 0, 1> {
     public u16 extent() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec2u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y);
-        return u16(extent.x);
+        return allOnesOr(() => {
+            u32vec2 extent;
+            getTexture().GetDimensions(extent.x, extent.y);
+            return u16(extent.x);
+        });
     }
 
     public u16 layers() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec2u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y);
-        return u16(extent.y);
+        return allOnesOr(() => {
+            u32vec2 extent;
+            getTexture().GetDimensions(extent.x, extent.y);
+            return u16(extent.y);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape2D, 0, 0, 0> {
-    public vec2u16 extent(u8 level = 0) {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(level, extent.x, extent.y, extent.z);
-        return vec2u16(extent.xy);
+    public u16vec2 extent(u8 level = 0) {
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(level, extent.x, extent.y, extent.z);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u8 levels() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(0, extent.x, extent.y, extent.z);
-        return u8(extent.z);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(0, extent.x, extent.y, extent.z);
+            return u8(extent.z);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape2D, 0, 0, 1> {
-    public vec2u16 extent() {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec2u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y);
-        return vec2u16(extent.xy);
+    public u16vec2 extent() {
+        return allOnesOr(() => {
+            u32vec2 extent;
+            getTexture().GetDimensions(extent.x, extent.y);
+            return u16vec2(extent.xy);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape2D, 1, 0, 0> {
-    public vec2u16 extent(u8 level = 0) {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(level, extent.x, extent.y, extent.z, extent.w);
-        return vec2u16(extent.xy);
+    public u16vec2 extent(u8 level = 0) {
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(level, extent.x, extent.y, extent.z, extent.w);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u8 levels() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(0, extent.x, extent.y, extent.z, extent.w);
-        return u8(extent.w);
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(0, extent.x, extent.y, extent.z, extent.w);
+            return u8(extent.w);
+        });
     }
 
     public u16 layers() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return u16(extent.z);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u16(extent.z);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape2D, 1, 0, 1> {
-    public vec2u16 extent() {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return vec2u16(extent.xy);
+    public u16vec2 extent() {
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u16 layers() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return u16(extent.z);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u16(extent.z);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape2D, 0, 1, 0> {
-    public vec2u16 extent(u8 level = 0) {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return vec2u16(extent.xy);
+    public u16vec2 extent(u8 level = 0) {
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u8 samples() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return u8(extent.z);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u8(extent.z);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape2D, 0, 1, 1> {
-    public vec2u16 extent() {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return vec2u16(extent.xy);
+    public u16vec2 extent() {
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u8 samples() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return u8(extent.z);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u8(extent.z);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape2D, 1, 1, 0> {
-    public vec2u16 extent(u8 level = 0) {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
-        return vec2u16(extent.xy);
+    public u16vec2 extent(u8 level = 0) {
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u16 layers() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
-        return u16(extent.z);
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
+            return u16(extent.z);
+        });
     }
 
     public u8 samples() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
-        return u8(extent.w);
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
+            return u8(extent.w);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape2D, 1, 1, 1> {
-    public vec2u16 extent() {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
-        return vec2u16(extent.xy);
+    public u16vec2 extent() {
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u16 layers() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
-        return u16(extent.z);
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
+            return u16(extent.z);
+        });
     }
 
     public u8 samples() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
-        return u8(extent.w);
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z, extent.w);
+            return u8(extent.w);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape3D, 0, 0, 0> {
-    public vec3u16 extent(u8 level = 0) {
-        if ((handle & textureMask) == textureMask) {
-            return vec3u16(1, 1, 1);
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(level, extent.x, extent.y, extent.z, extent.w);
-        return vec3u16(extent.xyz);
+    public u16vec3 extent(u8 level = 0) {
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(level, extent.x, extent.y, extent.z, extent.w);
+            return u16vec3(extent.xyz);
+        });
     }
 
     public u8 levels() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(0, extent.x, extent.y, extent.z, extent.w);
-        return u8(extent.w);
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(0, extent.x, extent.y, extent.z, extent.w);
+            return u8(extent.w);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __Shape3D, 0, 0, 1> {
-    public vec3u16 extent() {
-        if ((handle & textureMask) == textureMask) {
-            return vec3u16(1, 1, 1);
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return vec3u16(extent.xyz);
+    public u16vec3 extent() {
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u16vec3(extent.xyz);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __ShapeCube, 0, 0, 0> {
-    public vec2u16 extent(u8 level = 0) {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(level, extent.x, extent.y, extent.z);
-        return vec2u16(extent.xy);
+    public u16vec2 extent(u8 level = 0) {
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(level, extent.x, extent.y, extent.z);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u8 levels() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(0, extent.x, extent.y, extent.z);
-        return u8(extent.z);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(0, extent.x, extent.y, extent.z);
+            return u8(extent.z);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __ShapeCube, 0, 0, 1> {
-    public vec2u16 extent() {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec2u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y);
-        return vec2u16(extent.xy);
+    public u16vec2 extent() {
+        return allOnesOr(() => {
+            u32vec2 extent;
+            getTexture().GetDimensions(extent.x, extent.y);
+            return u16vec2(extent.xy);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __ShapeCube, 1, 0, 0> {
-    public vec2u16 extent(u8 level = 0) {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(level, extent.x, extent.y, extent.z, extent.w);
-        return vec2u16(extent.xy);
+    public u16vec2 extent(u8 level = 0) {
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(level, extent.x, extent.y, extent.z, extent.w);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u8 levels() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec4u32 extent;
-        getTexture().GetDimensions(0, extent.x, extent.y, extent.z, extent.w);
-        return u8(extent.w);
+        return allOnesOr(() => {
+            u32vec4 extent;
+            getTexture().GetDimensions(0, extent.x, extent.y, extent.z, extent.w);
+            return u8(extent.w);
+        });
     }
 
     public u16 layers() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return u16(extent.z);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u16(extent.z);
+        });
     }
 }
 
 __generic<TexelType : ITexelElement>
 public extension TextureHandle<TexelType, __ShapeCube, 1, 0, 1> {
-    public vec2u16 extent() {
-        if ((handle & textureMask) == textureMask) {
-            return vec2u16(1, 1);
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return vec2u16(extent.xy);
+    public u16vec2 extent() {
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u16vec2(extent.xy);
+        });
     }
 
     public u16 layers() {
-        if ((handle & textureMask) == textureMask) {
-            return 1;
-        }
-        vec3u32 extent;
-        getTexture().GetDimensions(extent.x, extent.y, extent.z);
-        return u16(extent.z);
+        return allOnesOr(() => {
+            u32vec3 extent;
+            getTexture().GetDimensions(extent.x, extent.y, extent.z);
+            return u16(extent.z);
+        });
     }
 }
 

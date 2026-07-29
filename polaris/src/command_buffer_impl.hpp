@@ -28,7 +28,7 @@ namespace pl {
 			void barrier(PipelineStage src, PipelineStage dst);
 			void beginRenderPass(const RenderPassBeginInfo& info);
 			void bindShaders(View<std::reference_wrapper<Shader>> shaders);
-			void buildAccelerationStructures(View<AccelerationStructureBuildInfo> infos);
+			void buildAccelStructs(View<ASBuildInfo> infos);
 			void clearBuffer(BufferRange range, u32 value);
 			void clearTexture(const Texture& texture, ClearValue value, TextureRegion region = {});
 			void copyTexture(const Texture& src, const Texture& dst, TextureRegion srcRegion = {}, TextureRegion dstRegion = {});

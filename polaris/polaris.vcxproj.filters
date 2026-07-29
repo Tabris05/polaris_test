@@ -108,10 +108,10 @@
     <ClInclude Include="src\transient_allocator.hpp">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
-    <ClInclude Include="include\polaris\acceleration_structure.hpp">
+    <ClInclude Include="include\polaris\accel_struct.hpp">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
-    <ClInclude Include="src\acceleration_structure_impl.hpp">
+    <ClInclude Include="src\accel_struct_impl.hpp">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>
@@ -155,7 +155,7 @@
     <ClCompile Include="src\transient_allocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\acceleration_structure_impl.cpp">
+    <ClCompile Include="src\accel_struct_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

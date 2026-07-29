@@ -28,7 +28,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-using mat4f32 = glm::mat4;
+using glm::f32mat4;
 #include "../shared/push_constants.h"
 
 struct Mesh {
@@ -53,13 +53,13 @@ Mesh makeMesh() {
 	for(const auto& shape : shapes) {
 		for(const auto& index : shape.mesh.indices) {
 			vertices1.emplace_back(
-				vec3f32(
+				f32vec3(
 					attrib.vertices[3 * index.vertex_index + 0],
 					attrib.vertices[3 * index.vertex_index + 1],
 					attrib.vertices[3 * index.vertex_index + 2]
 				),
 
-				vec2f32(
+				f32vec2(
 					attrib.texcoords[2 * index.texcoord_index + 0],
 					1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
 				)
@@ -115,7 +115,7 @@ Mesh makeMesh() {
 	for(u64 i = 0; i < meshlets.size(); i++) {
 		meshlets2[i] = Meshlet{
 			vertexBuffer.deviceAddress<Vertex>() + meshlets[i].vertex_offset,
-			triangleBuffer.deviceAddress<vec3u8>() + meshlets[i].triangle_offset / 3,
+			triangleBuffer.deviceAddress<u8vec3>() + meshlets[i].triangle_offset / 3,
 			static_cast<u8>(meshlets[i].vertex_count),
 			static_cast<u8>(meshlets[i].triangle_count)
 		};

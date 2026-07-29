@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\polaris\acceleration_structure.hpp" />
+    <ClInclude Include="include\polaris\accel_struct.hpp" />
     <ClInclude Include="include\polaris\buffer.hpp" />
     <ClInclude Include="include\polaris\command_buffer.hpp" />
     <ClInclude Include="include\polaris\device.hpp" />
@@ -32,7 +32,7 @@
     <ClInclude Include="include\polaris\sync.hpp" />
     <ClInclude Include="include\polaris\texture.hpp" />
     <ClInclude Include="include\polaris\util_types.hpp" />
-    <ClInclude Include="src\acceleration_structure_impl.hpp" />
+    <ClInclude Include="src\accel_struct_impl.hpp" />
     <ClInclude Include="src\buffer_impl.hpp" />
     <ClInclude Include="src\command_buffer_impl.hpp" />
     <ClInclude Include="src\descriptor_heap.hpp" />
@@ -51,7 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="deps\volk\volk.cpp" />
-    <ClCompile Include="src\acceleration_structure_impl.cpp" />
+    <ClCompile Include="src\accel_struct_impl.cpp" />
     <ClCompile Include="src\buffer_impl.cpp" />
     <ClCompile Include="src\command_buffer_impl.cpp" />
     <ClCompile Include="src\descriptor_heap.cpp" />

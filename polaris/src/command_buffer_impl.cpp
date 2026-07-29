@@ -1,5 +1,5 @@
 #include "command_buffer_impl.hpp"
-#include "acceleration_structure_impl.hpp"
+#include "accel_struct_impl.hpp"
 #include <tabris/types.hpp>
 #include "vk_util.hpp"
 
@@ -72,14 +72,14 @@ namespace pl {
 		vkCmdBindShadersEXT(m_cmd, shaders.count(), stages, shaderHandles);
 	}
 
-	void CommandBuffer::buildAccelerationStructures(View<AccelerationStructureBuildInfo> infos) {
+	void CommandBuffer::buildAccelStructs(View<ASBuildInfo> infos) {
 		tbrs::Vec<VkAccelerationStructureBuildGeometryInfoKHR> buildInfos;
 		tbrs::Vec<VkAccelerationStructureBuildRangeInfoKHR*> rangeInfos;
 		buildInfos.reserve(infos.count());
 		rangeInfos.reserve(infos.count());
-		for(const AccelerationStructureBuildInfo& info : infos) {
+		for(const ASBuildInfo& info : infos) {
 			u64 scratchNeeded = 0;
-			if(info.mode == BuildMode::Build) {
+			if(info.mode == ASBuildMode::Build) {
 				buildInfos.push(info.buildInfo.target.vkBuildInfo());
 				buildInfos.back().mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
 				rangeInfos.push(info.buildInfo.target.vkBuildRanges().data());

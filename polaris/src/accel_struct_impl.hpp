@@ -5,17 +5,17 @@
 #include <volk/volk.h>
 
 namespace pl {
-	class AccelerationStructure {
+	class AccelStruct {
 		public:
 			DeviceAddress deviceAddress() const;
 
-			AccelerationStructure(const AccelerationStructureCreateInfo& ci);
-			AccelerationStructure(AccelerationStructure&& src);
-			AccelerationStructure& operator=(AccelerationStructure&& src);
-			~AccelerationStructure();
+			AccelStruct(const AccelStructCreateInfo& ci);
+			AccelStruct(AccelStruct&& src);
+			AccelStruct& operator=(AccelStruct&& src);
+			~AccelStruct();
 
-			AccelerationStructure(const AccelerationStructure&) = delete;
-			AccelerationStructure& operator=(const AccelerationStructure&) = delete;
+			AccelStruct(const AccelStruct&) = delete;
+			AccelStruct& operator=(const AccelStruct&) = delete;
 
 			// "public" functions that should not be included in the public header
 			VkAccelerationStructureKHR vkAccelerationStructure() const;

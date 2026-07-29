@@ -1,22 +1,22 @@
-#include "acceleration_structure_impl.hpp"
+#include "accel_struct_impl.hpp"
 #include "device_impl.hpp"
 #include "vk_util.hpp"
 
 namespace pl {
-	DeviceAddress AccelerationStructure::deviceAddress() const {
+	DeviceAddress AccelStruct::deviceAddress() const {
 		return m_address;
 	}
 
-	AccelerationStructure::AccelerationStructure(const AccelerationStructureCreateInfo& ci) : 
+	AccelStruct::AccelStruct(const AccelStructCreateInfo& ci) :
 		m_flags(static_cast<VkBuildAccelerationStructureFlagsKHR>(ci.flags)), m_type(VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR) {
 		tbrs::Vec<u32> maxPrimitives;
 		maxPrimitives.reserve(ci.geometries.count());
 		m_geometryInfos.reserve(ci.geometries.count());
 		m_buildRangeInfos.reserve(ci.geometries.count());
-		for(const AccelerationStructureGeometryInfo& gi : ci.geometries) {
+		for(const ASGeometryInfo& gi : ci.geometries) {
 			VkAccelerationStructureGeometryKHR geometry{};
 			switch(gi.type) {
-				case GeometryType::Triangles:
+				case ASGeometryType::Triangles:
 					geometry = VkAccelerationStructureGeometryKHR{
 						.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
 						.geometry{ .triangles{
@@ -31,7 +31,7 @@ namespace pl {
 						.flags = static_cast<VkGeometryFlagsKHR>(gi.triangles.flags)
 					};
 					break;
-				case GeometryType::AABBs:
+				case ASGeometryType::AABBs:
 					geometry = VkAccelerationStructureGeometryKHR{
 						.geometryType = VK_GEOMETRY_TYPE_AABBS_KHR,
 						.geometry{ .aabbs{
@@ -41,7 +41,7 @@ namespace pl {
 						.flags = static_cast<VkGeometryFlagsKHR>(gi.aabbs.flags)
 					};
 					break;
-				case GeometryType::Instances:
+				case ASGeometryType::Instances:
 					m_type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
 					geometry = VkAccelerationStructureGeometryKHR{
 						.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR,
@@ -68,28 +68,28 @@ namespace pl {
 		}, nullptr, &m_accelerationStructure);
 	}
 
-	AccelerationStructure::AccelerationStructure(AccelerationStructure&& src) {
-		memcpy(this, &src, sizeof(AccelerationStructure));
-		memset(&src, 0, sizeof(AccelerationStructure));
+	AccelStruct::AccelStruct(AccelStruct&& src) {
+		memcpy(this, &src, sizeof(AccelStruct));
+		memset(&src, 0, sizeof(AccelStruct));
 	}
 
-	AccelerationStructure& AccelerationStructure::operator=(AccelerationStructure&& src) {
-		this->~AccelerationStructure();
-		new (this) AccelerationStructure(std::move(src));
+	AccelStruct& AccelStruct::operator=(AccelStruct&& src) {
+		this->~AccelStruct();
+		new (this) AccelStruct(std::move(src));
 
 		return *this;
 	}
 
-	AccelerationStructure::~AccelerationStructure() {
+	AccelStruct::~AccelStruct() {
 		vkDestroyAccelerationStructureKHR(Device::get().vkDevice(), m_accelerationStructure, nullptr);
 		Device::get().deviceMemoryAllocator().free(m_address);
 	}
 
-	VkAccelerationStructureKHR AccelerationStructure::vkAccelerationStructure() const {
+	VkAccelerationStructureKHR AccelStruct::vkAccelerationStructure() const {
 		return m_accelerationStructure;
 	}
 
-	VkAccelerationStructureBuildGeometryInfoKHR AccelerationStructure::vkBuildInfo() const {
+	VkAccelerationStructureBuildGeometryInfoKHR AccelStruct::vkBuildInfo() const {
 		return VkAccelerationStructureBuildGeometryInfoKHR{
 			.type = m_type,
 			.flags = m_flags,
@@ -100,15 +100,15 @@ namespace pl {
 		};
 	}
 
-	const tbrs::Vec<VkAccelerationStructureBuildRangeInfoKHR>& AccelerationStructure::vkBuildRanges() const {
+	const tbrs::Vec<VkAccelerationStructureBuildRangeInfoKHR>& AccelStruct::vkBuildRanges() const {
 		return m_buildRangeInfos;
 	}
 
-	u64 AccelerationStructure::buildScratchSize() const {
+	u64 AccelStruct::buildScratchSize() const {
 		return m_buildScratchSize;
 	}
 
-	u64 AccelerationStructure::updateScratchSize() const {
+	u64 AccelStruct::updateScratchSize() const {
 		return m_updateScratchSize;
 	}
 }
