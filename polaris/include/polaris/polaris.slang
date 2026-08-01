@@ -203,14 +203,22 @@ public struct TextureHandle<TexelType : ITexelElement, Shape : __ITextureShape, 
         return SamplerDescriptorHeap[NonUniformResourceIndex(handle >> samplerOffset)];
     }
 
-    // foo: this function is completely broken, it emits inefficient spirv and for reasons both known and unknown will only output black
-    T unpackInvalidColor<T : ITexelElement = TexelType>() {
-        vector<T.Element, T.elementCount> ret;
-        for (i32 i = 0; i < T.elementCount; i++) {
-            ret[i] = T.Element((handle >> uint(20 + i * 3)) & 0x7) / (T is IFloat ? T.Element(4) : T.Element(1));
+    TexelType unpackInvalidColor() {
+        // for this function, I want to divide the invalid texel values by 4 if the TexelType is floating point (allows for expressing more SDR colors)
+        // and by 1 otherwise (since for integer types dividing by 4 just uselessly maps 0-3 to 0 and 4-7 to 1)
+        // Slang ostensibly supports optional conformance, which should let me ask if I'm in a floating point specialization or not,
+        // but it's broken in unfathomable ways so instead I'm just abusing the fact that 0.25 will round down to 0 for non floating point types
+        // update: this language thwarts me at every turn... for some reason casting with type parameters will always floor the results... why...
+        // now I must make an even worse solution that builds up the concept of a fraction from whole number values...
+        typealias T = TexelType.Element;
+        T normalizer = T(1) / T(2) * T(6) + T(1);
+
+        vector<T, TexelType.elementCount> ret;
+        for (i32 i = 0; i < TexelType.elementCount; i++) {
+            ret[i] = T((handle >> uint(20 + i * 3)) & 0x7) / normalizer;
         }
 
-        return reinterpret<T>(ret);
+        return reinterpret<TexelType>(ret);
     }
 
     TexelType invalidColorOr(IFunc<TexelType> fn) {
